@@ -184,7 +184,7 @@ function renderToday() {
     }
     return `<div class="slot ${items.length ? "" : "empty"}">
       <div class="slot-h"><b>${s.label}</b><span class="muted">${items.length ? r0(kc) + " kcal" : ""}</span></div>
-      ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+      ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="link mv" data-act="move-meal" data-id="${m.id}">Sposta</button><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
       <div class="slot-actions"><button class="link" data-act="food" data-slot="${s.id}">Aggiungi alimento</button>${hasYesterday(k, s.id) ? `<button class="link" data-act="copy-slot" data-slot="${s.id}">Come ieri</button>` : ""}${items.length ? `<button class="link" data-act="save-habit" data-slot="${s.id}">Salva come abituale</button>` : ""}</div>
       ${habitHtml(s.id, items.length)}
     </div>`;
@@ -835,6 +835,17 @@ function act(a, el) {
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
     case "del-habit": delete S.habits[el.dataset.slot]; break;
+    case "move-meal": {
+      const m = day(k).meals.find((x) => x.id === el.dataset.id);
+      if (!m) return;
+      return openDialog(`<h3>Sposta ${esc(m.name)}</h3><p class="muted small">Scegli il pasto di destinazione.</p>
+        <div class="list">${SLOTS.map((sl) => `<button class="item" data-act="do-move" data-id="${m.id}" data-slot="${sl.id}" ${sl.id === m.slot ? "disabled" : ""}><span>${sl.label}</span><span class="muted small">${sl.id === m.slot ? "pasto attuale" : ""}</span></button>`).join("")}</div>`);
+    }
+    case "do-move": {
+      const m = day(k, true).meals.find((x) => x.id === el.dataset.id);
+      if (m) m.slot = el.dataset.slot;
+      closeDialog(); toast("Alimento spostato"); break;
+    }
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
     case "add-water": {
       const ml = +el.dataset.ml;

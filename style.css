@@ -168,3 +168,6 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .card.due { border-color: var(--accent); }
 .nav button { font-size: 0.85rem; padding: 16px 2px; }
 .mtable .tr { grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; }
+
+.mv { font-size: 0.85rem; padding: 6px 4px; }
+.item:disabled { opacity: 0.45; cursor: default; }
