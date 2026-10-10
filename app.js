@@ -630,15 +630,50 @@ function foodDialog(slot) {
     <div class="btns"><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
 }
+const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
+const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
+
 function renderFoodList(q) {
-  const ql = q.trim().toLowerCase();
+  const ql = q.trim();
   const recents = ql ? [] : recentFoods();
-  const list = ql ? allFoods().filter((f) => f.name.toLowerCase().includes(ql)).slice(0, 40) : allFoods().slice(0, 0);
-  const item = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
-  $("#f-list").innerHTML = ql
-    ? (list.length ? list.map(item).join("") : `<p class="muted small">Nessun risultato. Usa "Alimento non in lista".</p>`)
-    : (recents.length ? `<div class="muted small">Usati di recente</div>${recents.map(item).join("")}` : "") +
+  const tokens = norm(ql).split(/\s+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
+  const list = ql ? allFoods().filter((f) => { const n = norm(f.name); return tokens.every((t) => n.includes(t)); }).slice(0, 40) : [];
+  if (!ql) {
+    $("#f-list").innerHTML = (recents.length ? `<div class="muted small">Usati di recente</div>${recents.map(foodItem).join("")}` : "") +
       `<div class="muted small">Categorie</div><div class="chips">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="food-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
+    return;
+  }
+  $("#f-list").innerHTML = (list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato nella lista dell'app.</p>`) +
+    `<div id="f-online"><button class="btn wide" data-act="search-online">Cerca online nei prodotti confezionati</button></div>`;
+  if (!list.length && ql.length >= 3) searchOnline(ql);
+}
+
+// Ricerca online su Open Food Facts (database pubblico, serve internet).
+async function searchOnline(q) {
+  const box = $("#f-online");
+  if (!box) return;
+  box.innerHTML = `<p class="muted small">Ricerca online in corso...</p>`;
+  try {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=25&lc=it&fields=product_name,brands,nutriments,serving_quantity`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("http " + r.status);
+    const j = await r.json();
+    const items = (j.products || []).map((p) => {
+      const n = p.nutriments || {};
+      const kcal = n["energy-kcal_100g"] ?? (n.energy_100g != null ? n.energy_100g / 4.184 : null);
+      if (!p.product_name || kcal == null || !Number.isFinite(+kcal)) return null;
+      const brand = p.brands ? ` (${p.brands.split(",")[0].trim()})` : "";
+      return { name: p.product_name + brand, kcal: Math.round(kcal), p: r1(+n.proteins_100g || 0), c: r1(+n.carbohydrates_100g || 0), f: r1(+n.fat_100g || 0), portion: Math.round(+p.serving_quantity) || 100, cat: "Online" };
+    }).filter(Boolean);
+    const cur = $("#f-online");
+    if (!cur || $("#f-search").value.trim() !== q) return;
+    cur.innerHTML = items.length
+      ? `<div class="muted small">Prodotti online, i valori vanno confrontati con l'etichetta</div>${items.map(foodItem).join("")}`
+      : `<p class="muted small">Nessun prodotto trovato online. Usa "Alimento non in lista" e copia i valori dalla confezione.</p>`;
+  } catch {
+    const cur = $("#f-online");
+    if (cur) cur.innerHTML = `<p class="muted small">Ricerca online non riuscita, controlla la connessione. Puoi usare "Alimento non in lista".</p><button class="btn wide" data-act="search-online">Riprova</button>`;
+  }
 }
 function foodCat(c) {
   $("#f-list").innerHTML = allFoods().filter((f) => f.cat === c).map((f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
@@ -770,6 +805,7 @@ function act(a, el) {
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; break;
     case "period": view.period = +el.dataset.n; break;
     case "food": return foodDialog(el.dataset.slot || defaultSlot());
+    case "search-online": return searchOnline($("#f-search").value.trim());
     case "food-cat": return foodCat(el.dataset.c);
     case "pick-food": return qtyDialog(JSON.parse(el.dataset.food), $("#f-slot").value);
     case "qty": $("#q-g").value = el.dataset.g; return updateQtyPreview();
