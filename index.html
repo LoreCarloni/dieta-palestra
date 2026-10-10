@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dieta e Palestra</title>
+  <meta name="description" content="Diario alimentare, acqua, allenamenti e coach personale per dimagrire.">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Dieta">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top"><h1>Dieta e Palestra</h1></header>
+  <main id="main"></main>
+  <nav class="nav">
+    <button data-tab="oggi">Oggi</button>
+    <button data-tab="report">Report</button>
+    <button data-tab="coach">Coach</button>
+    <button data-tab="profilo">Profilo</button>
+  </nav>
+  <dialog id="dlg">
+    <button class="dlg-x" data-act="dlg-close" aria-label="Chiudi">×</button>
+    <div id="dlg-body"></div>
+  </dialog>
+  <div id="toast" role="status"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
