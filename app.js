@@ -9,7 +9,7 @@ const defaultState = () => ({
   customFoods: [],
   habits: {},
   measures: [],
-  measureDay: 0,
+  measureDay: 1,
   reminders: { misure: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
@@ -24,7 +24,7 @@ function load() {
 let S = load();
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
-if (S.measureDay === undefined) S.measureDay = 0;
+if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
