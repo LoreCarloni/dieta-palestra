@@ -16,6 +16,7 @@ const FOODS = [
   ["Biscotti frollini", 460, 7, 68, 18, 30, "Colazione"],
   ["Cornetto vuoto", 410, 7, 50, 20, 50, "Colazione"],
   ["Cornetto alla crema", 390, 6.5, 48, 19, 70, "Colazione"],
+  ["Croissant al pistacchio, bar (media di 7 prodotti)", 413, 6.2, 45.3, 22.3, 80, "Colazione"],
   ["Fiocchi d'avena", 370, 13, 60, 7, 40, "Colazione"],
   ["Corn flakes", 375, 7, 84, 0.9, 30, "Colazione"],
   ["Muesli", 365, 9, 66, 6, 40, "Colazione"],
