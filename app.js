@@ -11,6 +11,7 @@ const defaultState = () => ({
   measures: [],
   measureDay: 1,
   required: ["colazione", "pranzo", "cena"],
+  wanted: [],
   reminders: { misure: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
@@ -26,6 +27,7 @@ let S = load();
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
 S.required = S.required || ["colazione", "pranzo", "cena"];
+S.wanted = S.wanted || [];
 const isReq = (sl) => S.required.includes(sl.id);
 if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
@@ -429,6 +431,10 @@ function reportText(n) {
   L.push(`Giorni registrati: ${st.tracked} su ${n}. Media kcal ${r0(st.kcal)}, proteine ${r0(st.p)} g, carboidrati ${r0(st.c)} g, grassi ${r0(st.f)} g, acqua ${r1(st.water / 1000)} L.`);
   L.push(`Bilancio medio ${r0(st.balance)} kcal al giorno, grasso perso stimato ${r1(st.estLossKg)} kg, variazione peso reale ${st.weightDelta === null ? "non disponibile" : r1(st.weightDelta) + " kg"}.`);
   L.push(`Movimento ${r0(st.exMin)} minuti totali, ${st.strength} sedute di forza. Calorie da alcol ${r0(st.alc)}.`);
+  const wanted = prunedWanted();
+  if (wanted.length) L.push(`ALIMENTI DA AGGIUNGERE ALLA LISTA: ${wanted.map((w) => w.name).join(", ")}`);
+  const ms = sortedMeasures().slice(-4);
+  if (ms.length) L.push(`MISURE recenti (peso, vita ombelico, vita bassa, coscia): ${ms.map((m) => `${m.date} ${fmtN(m.weight)} kg, ${fmtN(m.waist)}, ${fmtN(m.low)}, ${fmtN(m.thigh)}`).join(" | ")}`);
   L.push("");
   st.rows.forEach((r) => {
     L.push(`${fmtDate(r.k, { weekday: "short", day: "numeric", month: "short" })}${r.tracked ? "" : " (incompleto)"}: ${r0(r.t.kcal)} kcal, P ${r0(r.t.p)} C ${r0(r.t.c)} G ${r0(r.t.f)}, acqua ${r0(r.t.water)} ml, passi ${r.t.steps}, peso ${r.d.weight ?? "n.d."}`);
@@ -592,6 +598,10 @@ function renderProfile(first) {
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
   <section class="card">
+    <h2>Alimenti da aggiungere</h2>
+    ${prunedWanted().length ? `<p class="muted small">Cercati e non trovati. Arrivano con il report settimanale e li aggiungo alla lista.</p><div class="chips">${S.wanted.map((w, i) => `<span class="chip">${esc(w.name)} <button class="x mini" data-act="del-wanted" data-i="${i}" aria-label="Rimuovi">×</button></span>`).join("")}</div>` : `<p class="muted small">Nessun alimento in attesa. Quando cerchi qualcosa che non trovo, comparirà qui.</p>`}
+  </section>
+  <section class="card">
     <h2>Dati e backup</h2>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
     <div class="btns">
@@ -634,6 +644,24 @@ function foodDialog(slot) {
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
 const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
 
+// Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
+function prunedWanted() {
+  S.wanted = S.wanted.filter((w) => { const t = norm(w.name).split(/\s+/).filter((x) => x.length > 1); return !allFoods().some((f) => t.every((x) => norm(f.name).includes(x))); });
+  return S.wanted;
+}
+let wantedTimer = null;
+function trackMissing(q) {
+  clearTimeout(wantedTimer);
+  wantedTimer = setTimeout(() => {
+    const box = $("#f-search");
+    if (!box || box.value.trim() !== q || !dlg().open) return;
+    const key = norm(q).trim();
+    if (key.length < 3 || S.wanted.some((w) => norm(w.name).trim() === key)) return;
+    S.wanted.push({ name: q, date: todayKey() });
+    save();
+  }, 1500);
+}
+
 function renderFoodList(q) {
   const ql = q.trim();
   const recents = ql ? [] : recentFoods();
@@ -644,7 +672,8 @@ function renderFoodList(q) {
       `<div class="muted small">Categorie</div><div class="chips">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="food-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
     return;
   }
-  $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. Prova con il codice a barre o con "Alimento non in lista".</p>`;
+  $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. L'ho segnato nella lista degli alimenti da aggiungere. Intanto usa il codice a barre, "Alimento non in lista" o "Solo calorie".</p>`;
+  if (!list.length && ql.length >= 3) trackMissing(ql);
 }
 
 // ---------- Codice a barre ----------
@@ -934,6 +963,7 @@ function act(a, el) {
       toast("Misure caricate"); break;
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
+    case "del-wanted": S.wanted.splice(+el.dataset.i, 1); break;
     case "del-habit": delete S.habits[el.dataset.slot]; break;
     case "move-meal": {
       const m = day(k).meals.find((x) => x.id === el.dataset.id);
