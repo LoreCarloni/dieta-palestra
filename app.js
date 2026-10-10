@@ -10,6 +10,7 @@ const defaultState = () => ({
   habits: {},
   measures: [],
   measureDay: 1,
+  required: ["colazione", "pranzo", "cena"],
   reminders: { misure: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
@@ -24,6 +25,8 @@ function load() {
 let S = load();
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
+S.required = S.required || ["colazione", "pranzo", "cena"];
+const isReq = (sl) => S.required.includes(sl.id);
 if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
@@ -113,7 +116,7 @@ function isTracked(k) {
   if (!d) return false;
   if (d.closed) return true;
   const done = slotsDone(k);
-  return SLOTS.filter((s) => s.required && done.includes(s.id)).length >= 2;
+  return ["colazione", "pranzo", "cena"].filter((id) => done.includes(id)).length >= 2;
 }
 
 function periodStats(endKey, n) {
@@ -169,7 +172,7 @@ function renderToday() {
 
   const checklist = [
     ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
-    ...SLOTS.filter((s) => s.required).map((s) => ({ label: s.label, ok: done.includes(s.id), act: "food", slot: s.id })),
+    ...SLOTS.filter(isReq).map((s) => ({ label: s.label, ok: done.includes(s.id), act: "food", slot: s.id })),
     { label: `Acqua ${r1(t.water / 1000)} di ${r1(t.waterTarget / 1000)} litri`, ok: t.water >= t.waterTarget, act: "water" },
     { label: d.rest ? "Giorno di riposo" : "Allenamento o passi", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "exercise" },
     { label: "Chiudi la giornata", ok: d.closed, act: "close" },
@@ -179,7 +182,7 @@ function renderToday() {
   const slotHtml = SLOTS.map((s) => {
     const items = d.meals.filter((m) => m.slot === s.id);
     const kc = items.reduce((a, m) => a + m.kcal, 0);
-    if (!items.length && !s.required && s.id !== "spuntino" && s.id !== "merenda") {
+    if (!items.length && !isReq(s) && s.id !== "spuntino" && s.id !== "merenda") {
       return `<div class="slot empty"><div class="slot-h"><b>${s.label}</b><button class="link" data-act="food" data-slot="${s.id}">Aggiungi</button></div></div>`;
     }
     return `<div class="slot ${items.length ? "" : "empty"}">
@@ -583,6 +586,8 @@ function renderProfile(first) {
     <div class="grid2">
       ${Object.entries({ misure: "Peso e misure (settimanale)", colazione: "Colazione", pranzo: "Pranzo", acqua: "Controllo acqua", cena: "Cena", chiusura: "Chiusura giornata" }).map(([k, l]) => `<div class="field"><label>${l}</label><input type="time" value="${esc(S.reminders[k] || "")}" data-change="rem" data-k="${k}"></div>`).join("")}
     </div>
+    <div class="field"><label>Pasti da registrare ogni giorno (compaiono nella lista da inserire)</label>
+      <div class="chips">${SLOTS.map((sl) => `<label class="chip tick"><input type="checkbox" data-change="reqslot" data-id="${sl.id}" ${isReq(sl) ? "checked" : ""}> ${sl.label}</label>`).join("")}</div></div>
     <div class="field"><label>Giorno di peso e misure</label><select data-change="mday">${["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"].map((n, i) => `<option value="${i}" ${S.measureDay === i ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
@@ -891,7 +896,7 @@ function act(a, el) {
     case "close": {
       const d = day(k, true);
       if (!d.closed) {
-        const missing = SLOTS.filter((s) => s.required && !d.meals.some((m) => m.slot === s.id)).map((s) => s.label.toLowerCase());
+        const missing = SLOTS.filter((s) => isReq(s) && !d.meals.some((m) => m.slot === s.id)).map((s) => s.label.toLowerCase());
         if (missing.length && !confirm(`Mancano: ${missing.join(", ")}. Chiudere comunque la giornata?`)) return;
       }
       d.closed = !d.closed; if (d.closed) toast("Giornata chiusa"); break;
@@ -935,6 +940,7 @@ document.addEventListener("change", (e) => {
   if (c === "steps") { day(view.date, true).steps = Math.max(0, parseInt(t.value) || 0); save(); render(); }
   if (c === "weight") { const w = parseFloat(t.value); day(view.date, true).weight = w > 30 && w < 300 ? w : null; save(); render(); }
   if (c === "note") { day(view.date, true).note = t.value; save(); }
+  if (c === "reqslot") { S.required = SLOTS.map((x) => x.id).filter((id) => (id === t.dataset.id ? t.checked : S.required.includes(id))); save(); }
   if (c === "mday") { S.measureDay = +t.value; save(); }
   if (c === "rem") { S.reminders[t.dataset.k] = t.value; save(); }
   if (t.id === "import" && t.files[0]) {
