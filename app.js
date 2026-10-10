@@ -11,6 +11,7 @@ const defaultState = () => ({
   measures: [],
   measureDay: 1,
   required: ["colazione", "pranzo", "cena"],
+  wanted: [],
   reminders: { misure: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
@@ -26,6 +27,7 @@ let S = load();
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
 S.required = S.required || ["colazione", "pranzo", "cena"];
+S.wanted = S.wanted || [];
 const isReq = (sl) => S.required.includes(sl.id);
 if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
@@ -429,6 +431,10 @@ function reportText(n) {
   L.push(`Giorni registrati: ${st.tracked} su ${n}. Media kcal ${r0(st.kcal)}, proteine ${r0(st.p)} g, carboidrati ${r0(st.c)} g, grassi ${r0(st.f)} g, acqua ${r1(st.water / 1000)} L.`);
   L.push(`Bilancio medio ${r0(st.balance)} kcal al giorno, grasso perso stimato ${r1(st.estLossKg)} kg, variazione peso reale ${st.weightDelta === null ? "non disponibile" : r1(st.weightDelta) + " kg"}.`);
   L.push(`Movimento ${r0(st.exMin)} minuti totali, ${st.strength} sedute di forza. Calorie da alcol ${r0(st.alc)}.`);
+  const wanted = prunedWanted();
+  if (wanted.length) L.push(`ALIMENTI DA AGGIUNGERE ALLA LISTA: ${wanted.map((w) => w.name).join(", ")}`);
+  const ms = sortedMeasures().slice(-4);
+  if (ms.length) L.push(`MISURE recenti (peso, vita ombelico, vita bassa, coscia): ${ms.map((m) => `${m.date} ${fmtN(m.weight)} kg, ${fmtN(m.waist)}, ${fmtN(m.low)}, ${fmtN(m.thigh)}`).join(" | ")}`);
   L.push("");
   st.rows.forEach((r) => {
     L.push(`${fmtDate(r.k, { weekday: "short", day: "numeric", month: "short" })}${r.tracked ? "" : " (incompleto)"}: ${r0(r.t.kcal)} kcal, P ${r0(r.t.p)} C ${r0(r.t.c)} G ${r0(r.t.f)}, acqua ${r0(r.t.water)} ml, passi ${r.t.steps}, peso ${r.d.weight ?? "n.d."}`);
@@ -592,6 +598,11 @@ function renderProfile(first) {
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
   <section class="card">
+    <h2>Alimenti da aggiungere</h2>
+    ${prunedWanted().length ? `<p class="muted small">Cercati e non trovati. Arrivano con il report settimanale e li aggiungo alla lista.</p><div class="chips">${S.wanted.map((w, i) => `<span class="chip">${esc(w.name)} <button class="x mini" data-act="del-wanted" data-i="${i}" aria-label="Rimuovi">×</button></span>`).join("")}</div>` : `<p class="muted small">Nessun alimento in attesa. Quando cerchi qualcosa che non trovo, comparirà qui.</p>`}
+    <button class="btn wide" data-act="import-dialog">Incolla una lista di alimenti</button>
+  </section>
+  <section class="card">
     <h2>Dati e backup</h2>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
     <div class="btns">
@@ -628,11 +639,29 @@ function foodDialog(slot) {
     <div class="field"><label>Pasto</label><select id="f-slot">${slotSel}</select></div>
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
-    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
+    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
 const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
+
+// Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
+function prunedWanted() {
+  S.wanted = S.wanted.filter((w) => { const t = norm(w.name).split(/\s+/).filter((x) => x.length > 1); return !allFoods().some((f) => t.every((x) => norm(f.name).includes(x))); });
+  return S.wanted;
+}
+let wantedTimer = null;
+function trackMissing(q) {
+  clearTimeout(wantedTimer);
+  wantedTimer = setTimeout(() => {
+    const box = $("#f-search");
+    if (!box || box.value.trim() !== q || !dlg().open) return;
+    const key = norm(q).trim();
+    if (key.length < 3 || S.wanted.some((w) => norm(w.name).trim() === key)) return;
+    S.wanted.push({ name: q, date: todayKey() });
+    save();
+  }, 1500);
+}
 
 function renderFoodList(q) {
   const ql = q.trim();
@@ -644,7 +673,33 @@ function renderFoodList(q) {
       `<div class="muted small">Categorie</div><div class="chips">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="food-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
     return;
   }
-  $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. Prova con il codice a barre o con "Alimento non in lista".</p>`;
+  $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. L'ho segnato nella lista degli alimenti da aggiungere. Intanto usa il codice a barre, "Alimento non in lista" o "Solo calorie".</p>`;
+  if (!list.length && ql.length >= 3) trackMissing(ql);
+}
+
+// ---------- Importazione di una lista di alimenti ----------
+// Una riga per alimento: Nome; kcal; proteine; carboidrati; grassi; porzione (grammi, facoltativa). Valori per 100 g.
+function parseFoodList(text) {
+  const foods = [], errors = [];
+  text.split(/\r?\n/).forEach((raw, i) => {
+    const line = raw.trim();
+    if (!line || line.startsWith("#") || /^nome\b/i.test(line)) return;
+    const parts = line.split(/\t|;|\|/).map((x) => x.trim());
+    const [name, kcal, p, c, f, portion] = [parts[0], num1(parts[1]), num1(parts[2]), num1(parts[3]), num1(parts[4]), num1(parts[5])];
+    const bad = !name || [kcal, p, c, f].some((v) => v === null || v < 0) || kcal > 950 || p + c + f > 105;
+    if (parts.length < 5 || bad) return errors.push(`riga ${i + 1}: ${line.slice(0, 40)}`);
+    foods.push({ name, kcal: Math.round(kcal), p, c, f, portion: portion > 0 ? Math.round(portion) : 100, cat: "I miei alimenti" });
+  });
+  return { foods, errors };
+}
+function importDialog() {
+  openDialog(`
+    <h3>Incolla una lista di alimenti</h3>
+    <p class="muted small">Una riga per alimento, valori per 100 g, separati da punto e virgola: nome; kcal; proteine; carboidrati; grassi; porzione in grammi. Esempio:</p>
+    <pre class="ex">Croissant al pistacchio bar; 413; 6,2; 45,3; 22,3; 80
+Mozzarella di bufala; 288; 16,7; 0,4; 24,4; 125</pre>
+    <div class="field"><textarea id="imp-text" rows="8" placeholder="Incolla qui la lista" autofocus></textarea></div>
+    <button class="btn primary wide" data-act="import-list">Aggiungi alla lista</button>`);
 }
 
 // ---------- Codice a barre ----------
@@ -934,6 +989,18 @@ function act(a, el) {
       toast("Misure caricate"); break;
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
+    case "import-dialog": return importDialog();
+    case "import-list": {
+      const { foods, errors } = parseFoodList(val("#imp-text"));
+      if (!foods.length) return toast(errors.length ? "Nessuna riga valida, controlla il formato" : "Incolla almeno una riga");
+      const names = new Set(foods.map((f) => f.name.toLowerCase()));
+      S.customFoods = S.customFoods.filter((x) => !names.has(x.name.toLowerCase())).concat(foods);
+      closeDialog();
+      toast(`${foods.length} alimenti aggiunti${errors.length ? `, ${errors.length} righe non lette` : ""}`);
+      if (errors.length) alert("Righe non lette:\n" + errors.join("\n"));
+      break;
+    }
+    case "del-wanted": S.wanted.splice(+el.dataset.i, 1); break;
     case "del-habit": delete S.habits[el.dataset.slot]; break;
     case "move-meal": {
       const m = day(k).meals.find((x) => x.id === el.dataset.id);
