@@ -612,6 +612,7 @@ function openDialog(html) {
   if (f) setTimeout(() => f.focus(), 50);
 }
 function closeDialog() { if (dlg().open) dlg().close(); }
+document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
 
 function recentFoods() {
   const seen = new Map();
@@ -627,7 +628,7 @@ function foodDialog(slot) {
     <div class="field"><label>Pasto</label><select id="f-slot">${slotSel}</select></div>
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
-    <div class="btns"><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
+    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
@@ -643,38 +644,88 @@ function renderFoodList(q) {
       `<div class="muted small">Categorie</div><div class="chips">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="food-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
     return;
   }
-  $("#f-list").innerHTML = (list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato nella lista dell'app.</p>`) +
-    `<div id="f-online"><button class="btn wide" data-act="search-online">Cerca online nei prodotti confezionati</button></div>`;
-  if (!list.length && ql.length >= 3) searchOnline(ql);
+  $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. Prova con il codice a barre o con "Alimento non in lista".</p>`;
 }
 
-// Ricerca online su Open Food Facts (database pubblico, serve internet).
-async function searchOnline(q) {
-  const box = $("#f-online");
-  if (!box) return;
-  box.innerHTML = `<p class="muted small">Ricerca online in corso...</p>`;
+// ---------- Codice a barre ----------
+// Il codice identifica la confezione esatta; i valori arrivano da Open Food Facts, vanno confrontati con l'etichetta la prima volta.
+let scanner = null;
+let zxingPromise = null;
+function loadZxing() {
+  if (window.ZXing) return Promise.resolve();
+  if (!zxingPromise) zxingPromise = new Promise((ok, ko) => {
+    const el = document.createElement("script");
+    el.src = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
+    el.onload = ok; el.onerror = () => { zxingPromise = null; ko(new Error("zxing")); };
+    document.head.appendChild(el);
+  });
+  return zxingPromise;
+}
+function stopScan() { if (scanner) { try { scanner.reset(); } catch {} scanner = null; } }
+
+function barcodeDialog() {
+  openDialog(`
+    <h3>Scansiona il codice a barre</h3>
+    <video id="bc-video" playsinline muted></video>
+    <p class="muted small" id="bc-status">Inquadra il codice a barre sulla confezione.</p>
+    <div class="field"><label for="bc-manual">Oppure scrivi le cifre sotto le barre</label><input id="bc-manual" type="text" inputmode="numeric" placeholder="8000000000000"></div>
+    <button class="btn primary wide" data-act="bc-lookup">Cerca codice</button>`);
+  startScan();
+}
+async function startScan() {
+  const status = (t) => { const el = $("#bc-status"); if (el) el.textContent = t; };
   try {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=25&lc=it&fields=product_name,brands,nutriments,serving_quantity`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error("http " + r.status);
-    const j = await r.json();
-    const items = (j.products || []).map((p) => {
-      const n = p.nutriments || {};
-      const kcal = n["energy-kcal_100g"] ?? (n.energy_100g != null ? n.energy_100g / 4.184 : null);
-      if (!p.product_name || kcal == null || !Number.isFinite(+kcal)) return null;
-      const brand = p.brands ? ` (${p.brands.split(",")[0].trim()})` : "";
-      return { name: p.product_name + brand, kcal: Math.round(kcal), p: r1(+n.proteins_100g || 0), c: r1(+n.carbohydrates_100g || 0), f: r1(+n.fat_100g || 0), portion: Math.round(+p.serving_quantity) || 100, cat: "Online" };
-    }).filter(Boolean);
-    const cur = $("#f-online");
-    if (!cur || $("#f-search").value.trim() !== q) return;
-    cur.innerHTML = items.length
-      ? `<div class="muted small">Prodotti online, i valori vanno confrontati con l'etichetta</div>${items.map(foodItem).join("")}`
-      : `<p class="muted small">Nessun prodotto trovato online. Usa "Alimento non in lista" e copia i valori dalla confezione.</p>`;
+    await loadZxing();
+    if (!dlg().open || !$("#bc-video")) return;
+    const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]]]);
+    scanner = new ZXing.BrowserMultiFormatReader(hints, 300);
+    await scanner.decodeFromVideoDevice(null, "bc-video", (res) => {
+      if (res) { const code = res.getText(); stopScan(); lookupBarcode(code); }
+    });
   } catch {
-    const cur = $("#f-online");
-    if (cur) cur.innerHTML = `<p class="muted small">Ricerca online non riuscita, controlla la connessione. Puoi usare "Alimento non in lista".</p><button class="btn wide" data-act="search-online">Riprova</button>`;
+    status("Fotocamera non disponibile. Scrivi il codice a mano qui sotto.");
   }
 }
+
+function offProduct(p, code) {
+  const n = p.nutriments || {};
+  const kcal = n["energy-kcal_100g"] ?? (n.energy_100g != null ? n.energy_100g / 4.184 : null);
+  if (!p.product_name || kcal == null || !Number.isFinite(+kcal)) return null;
+  const brand = p.brands ? ` (${p.brands.split(",")[0].trim()})` : "";
+  const missing = ["proteins_100g", "carbohydrates_100g", "fat_100g"].some((k) => n[k] == null);
+  return { name: p.product_name + brand, kcal: Math.round(kcal), p: r1(+n.proteins_100g || 0), c: r1(+n.carbohydrates_100g || 0), f: r1(+n.fat_100g || 0), portion: Math.round(+p.serving_quantity) || 100, cat: "I miei alimenti", barcode: code, missing };
+}
+
+async function lookupBarcode(raw) {
+  const code = String(raw).replace(/\D/g, "");
+  if (code.length < 8) return toast("Codice non valido");
+  const slot = dlg().dataset.slot;
+  const known = S.customFoods.find((f) => f.barcode === code);
+  if (known) return qtyDialog(known, slot);
+  openDialog(`<h3>Ricerca del prodotto</h3><p class="muted small">Codice ${esc(code)}...</p>`);
+  dlg().dataset.slot = slot;
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,brands,nutriments,serving_quantity`);
+    const j = r.ok ? await r.json() : null;
+    const f = j && j.status === 1 ? offProduct(j.product, code) : null;
+    if (!f) {
+      openDialog(`<h3>Prodotto non trovato</h3><p class="muted small">Il codice ${esc(code)} non ha valori nutrizionali nel database. Inserisci i valori dall'etichetta.</p><button class="btn primary wide" data-act="custom-food">Inserisci dall'etichetta</button>`);
+      dlg().dataset.slot = slot;
+      return;
+    }
+    openDialog(`<h3>${esc(f.name)}</h3>
+      <p class="small">Per 100 g: <b>${f.kcal} kcal</b>, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
+      <p class="muted small">${f.missing ? "Alcuni valori mancano nel database. " : ""}Confronta questi numeri con la tabella sulla confezione prima di confermare: se coincidono, il prodotto resta salvato e non dovrai rifarlo.</p>
+      <button class="btn primary wide" data-act="bc-confirm">I valori coincidono, usa questo prodotto</button>
+      <button class="btn ghost wide" data-act="custom-food">Non coincidono, inserisco io</button>`);
+    dlg().dataset.slot = slot;
+    dlg().dataset.pending = JSON.stringify(f);
+  } catch {
+    openDialog(`<h3>Ricerca non riuscita</h3><p class="muted small">Controlla la connessione, oppure inserisci i valori dall'etichetta.</p><button class="btn primary wide" data-act="custom-food">Inserisci dall'etichetta</button>`);
+    dlg().dataset.slot = slot;
+  }
+}
+
 function foodCat(c) {
   $("#f-list").innerHTML = allFoods().filter((f) => f.cat === c).map((f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
@@ -805,7 +856,15 @@ function act(a, el) {
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; break;
     case "period": view.period = +el.dataset.n; break;
     case "food": return foodDialog(el.dataset.slot || defaultSlot());
-    case "search-online": return searchOnline($("#f-search").value.trim());
+    case "scan-barcode": dlg().dataset.slot = $("#f-slot").value; return barcodeDialog();
+    case "bc-lookup": stopScan(); return lookupBarcode($("#bc-manual").value);
+    case "bc-confirm": {
+      const f = JSON.parse(dlg().dataset.pending);
+      delete f.missing;
+      S.customFoods = S.customFoods.filter((x) => x.barcode !== f.barcode).concat(f);
+      save();
+      return qtyDialog(f, dlg().dataset.slot);
+    }
     case "food-cat": return foodCat(el.dataset.c);
     case "pick-food": return qtyDialog(JSON.parse(el.dataset.food), $("#f-slot").value);
     case "qty": $("#q-g").value = el.dataset.g; return updateQtyPreview();
