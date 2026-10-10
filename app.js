@@ -8,7 +8,9 @@ const defaultState = () => ({
   days: {},
   customFoods: [],
   habits: {},
-  reminders: { peso: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
+  measures: [],
+  measureDay: 1,
+  reminders: { misure: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
 function load() {
@@ -20,6 +22,9 @@ function load() {
   }
 }
 let S = load();
+S.reminders = { ...defaultState().reminders, ...S.reminders };
+S.measures = S.measures || [];
+if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
@@ -144,7 +149,7 @@ function render() {
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
   if (!S.profile) { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
-  main.innerHTML = { oggi: renderToday, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  main.innerHTML = { oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
   window.scrollTo(0, 0);
 }
 
@@ -163,7 +168,7 @@ function renderToday() {
   const remaining = tg.kcal - t.kcal;
 
   const checklist = [
-    { label: "Peso al mattino", ok: !!d.weight, act: "weight" },
+    ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
     ...SLOTS.filter((s) => s.required).map((s) => ({ label: s.label, ok: done.includes(s.id), act: "food", slot: s.id })),
     { label: `Acqua ${r1(t.water / 1000)} di ${r1(t.waterTarget / 1000)} litri`, ok: t.water >= t.waterTarget, act: "water" },
     { label: d.rest ? "Giorno di riposo" : "Allenamento o passi", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "exercise" },
@@ -264,6 +269,91 @@ function habitHtml(slot, hasItems) {
 function hasYesterday(k, slot) {
   const y = S.days[addDays(k, -1)];
   return y && y.meals.some((m) => m.slot === slot);
+}
+
+
+// ---------- Peso e misure settimanali ----------
+const MEAS_FIELDS = [["weight", "Peso (kg)"], ["waist", "Vita ombelico (cm)"], ["low", "Vita bassa (cm)"], ["thigh", "Coscia (cm)"]];
+const num1 = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : null; };
+const fmtN = (n) => (n === null || n === undefined ? "n.d." : n.toLocaleString("it-IT", { maximumFractionDigits: 1 }));
+const sortedMeasures = () => S.measures.slice().sort((a, b) => a.date.localeCompare(b.date));
+const lastWith = (f, list = sortedMeasures()) => list.filter((m) => m[f] !== null && m[f] !== undefined);
+
+function measureDue(k) {
+  if (k !== todayKey()) return false;
+  const done = S.measures.some((m) => m.date > addDays(k, -7) && m.date <= k && (m.waist !== null || m.weight !== null));
+  if (done) return false;
+  return parseKey(k).getDay() === S.measureDay || S.measures.length === 0 || sortedMeasures().slice(-1)[0].date <= addDays(k, -8);
+}
+
+function deltaText(list, f, unit) {
+  const l = lastWith(f, list);
+  if (l.length < 2) return "primo valore";
+  const diff = l[l.length - 1][f] - l[l.length - 2][f];
+  if (Math.abs(diff) < 0.05) return "invariato rispetto all'ultima volta";
+  return `${diff < 0 ? "meno" : "più"} ${fmtN(Math.abs(diff))} ${unit} rispetto all'ultima volta`;
+}
+
+function lineChart(list, f, label) {
+  const pts = lastWith(f, list);
+  if (pts.length < 2) return `<p class="muted small">${label}: servono almeno due misurazioni per vedere l'andamento.</p>`;
+  const W = 320, H = 130, pad = 6;
+  const t0 = parseKey(pts[0].date).getTime(), t1 = parseKey(pts[pts.length - 1].date).getTime();
+  const vs = pts.map((m) => m[f]);
+  const mn = Math.min(...vs) - 0.5, mx = Math.max(...vs) + 0.5;
+  const X = (m) => pad + ((parseKey(m.date).getTime() - t0) / Math.max(1, t1 - t0)) * (W - pad * 2);
+  const Y = (m) => H - pad - ((m[f] - mn) / (mx - mn)) * (H - pad * 2);
+  return `<div class="muted small">${label}</div>
+  <svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${label}"><polyline points="${pts.map((m) => `${X(m)},${Y(m)}`).join(" ")}" class="wline"/>${pts.map((m) => `<circle cx="${X(m)}" cy="${Y(m)}" r="3.5" class="wdot"><title>${m.date}: ${fmtN(m[f])}</title></circle>`).join("")}</svg>
+  <div class="muted small axis"><span>${fmtDate(pts[0].date, { day: "numeric", month: "short" })}: ${fmtN(pts[0][f])}</span><span>${fmtDate(pts[pts.length - 1].date, { day: "numeric", month: "short" })}: ${fmtN(pts[pts.length - 1][f])}</span></div>`;
+}
+
+function renderMeasures() {
+  const list = sortedMeasures();
+  const e = view.mEdit || { date: todayKey(), weight: null, waist: null, low: null, thigh: null, note: "" };
+  const inp = (f, l) => `<div class="field"><label for="m-${f}">${l}</label><input id="m-${f}" type="text" inputmode="decimal" value="${e[f] ?? ""}" placeholder="${fmtN(lastWith(f, list).slice(-1)[0]?.[f] ?? null) === "n.d." ? "" : fmtN(lastWith(f, list).slice(-1)[0][f])}"></div>`;
+  const wLast = lastWith("waist", list), wFirst = wLast[0], wEnd = wLast[wLast.length - 1];
+  const due = measureDue(todayKey());
+  const dayName = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"][S.measureDay];
+  return `
+  <section class="card ${due ? "due" : ""}">
+    <h2>${view.mEdit ? "Modifica misurazione" : "Nuova misurazione"} ${due ? '<span class="pill">Da fare oggi</span>' : ""}</h2>
+    <p class="muted small">Una volta a settimana, di ${dayName}, al mattino, dopo il bagno e prima di mangiare. Lascia vuoto ciò che non misuri.</p>
+    <div class="field"><label for="m-date">Data</label><input id="m-date" type="date" value="${e.date}" max="${todayKey()}"></div>
+    <div class="grid2">${inp("weight", "Peso (kg)")}${inp("waist", "Vita ombelico (cm)")}${inp("low", "Vita bassa (cm)")}${inp("thigh", "Coscia (cm)")}</div>
+    <div class="field"><label for="m-note">Note (come ti svegli, gonfiore, ciclo)</label><input id="m-note" type="text" value="${esc(e.note || "")}"></div>
+    <button class="btn primary wide" data-act="save-measure">${view.mEdit ? "Salva modifiche" : "Salva misurazione"}</button>
+    ${view.mEdit ? '<button class="btn ghost wide" data-act="cancel-measure">Annulla</button><button class="btn danger wide" data-act="del-measure">Elimina</button>' : ""}
+  </section>
+  ${list.length ? `<section class="card">
+    <h2>Andamento</h2>
+    <div class="stats">
+      <div class="stat"><div class="muted small">Vita ombelico</div><div class="stat-v">${fmtN(wEnd?.waist ?? null)}${wEnd ? " cm" : ""}</div><div class="muted small">${deltaText(list, "waist", "cm")}</div></div>
+      <div class="stat"><div class="muted small">Dall'inizio</div><div class="stat-v">${wFirst && wEnd && wFirst !== wEnd ? (Math.abs(wEnd.waist - wFirst.waist) < 0.05 ? "invariato" : `${wEnd.waist < wFirst.waist ? "meno " : "più "}${fmtN(Math.abs(wEnd.waist - wFirst.waist))} cm`) : "n.d."}</div><div class="muted small">vita ombelico</div></div>
+      <div class="stat"><div class="muted small">Peso</div><div class="stat-v">${fmtN(lastWith("weight", list).slice(-1)[0]?.weight ?? null)}${lastWith("weight", list).length ? " kg" : ""}</div><div class="muted small">${deltaText(list, "weight", "kg")}</div></div>
+      <div class="stat"><div class="muted small">Coscia</div><div class="stat-v">${fmtN(lastWith("thigh", list).slice(-1)[0]?.thigh ?? null)}${lastWith("thigh", list).length ? " cm" : ""}</div><div class="muted small">${deltaText(list, "thigh", "cm")}</div></div>
+    </div>
+    <p class="small">Per la pancia contano più la vita all'ombelico e come ti svegli la mattina del peso: il peso può restare uguale mentre la pancia scende.</p>
+    ${lineChart(list, "waist", "Vita ombelico, misura principale")}
+    ${lineChart(list, "low", "Vita bassa")}
+    ${lineChart(list, "weight", "Peso")}
+    ${lineChart(list, "thigh", "Coscia")}
+  </section>
+  <section class="card">
+    <h2>Storico</h2>
+    <div class="table mtable">
+      <div class="tr th"><span>Data</span><span>Peso</span><span>Ombel.</span><span>Bassa</span><span>Coscia</span></div>
+      ${list.slice().reverse().map((m) => `<button class="tr" data-act="edit-measure" data-id="${m.id}"><span>${esc(fmtDate(m.date, { day: "numeric", month: "short", year: "2-digit" }))}</span><span>${fmtN(m.weight)}</span><span>${fmtN(m.waist)}</span><span>${fmtN(m.low)}</span><span>${fmtN(m.thigh)}</span></button>`).join("")}
+    </div>
+    <p class="muted small">Tocca una riga per modificarla o eliminarla.</p>
+  </section>` : `<section class="card"><h2>Storico</h2><p class="muted small">Nessuna misurazione. Se hai già dei valori in un'altra app, puoi caricarli adesso.</p><button class="btn wide" data-act="seed-measures">Carica le mie misure precedenti</button></section>`}
+  <section class="card">
+    <h2>Come misurare</h2>
+    <details class="workout"><summary><b>Peso</b></summary><ul><li>Bilancia su pavimento duro, sempre la stessa</li><li>Senza vestiti</li><li>Una volta a settimana, stesso giorno</li></ul></details>
+    <details class="workout"><summary><b>Vita ombelico, misura principale</b></summary><ul><li>Metro esattamente sull'ombelico</li><li>Orizzontale intorno al corpo</li><li>Respirazione normale, non contrarre l'addome</li></ul></details>
+    <details class="workout"><summary><b>Vita bassa</b></summary><ul><li>2 o 3 cm sotto l'ombelico</li><li>Metro orizzontale, corpo rilassato</li></ul></details>
+    <details class="workout"><summary><b>Coscia</b></summary><ul><li>Metà coscia, circa 15 cm sotto l'inguine</li><li>Peso distribuito su entrambe le gambe</li><li>Muscolo rilassato</li></ul></details>
+  </section>`;
 }
 
 // ---------- Report ----------
@@ -491,8 +581,9 @@ function renderProfile(first) {
     <h2>Promemoria giornalieri</h2>
     <p class="muted small">Scarica il file e aprilo: il calendario del telefono ti avviserà ogni giorno agli orari scelti, con il link diretto all'app.</p>
     <div class="grid2">
-      ${Object.entries({ peso: "Peso", colazione: "Colazione", pranzo: "Pranzo", acqua: "Controllo acqua", cena: "Cena", chiusura: "Chiusura giornata" }).map(([k, l]) => `<div class="field"><label>${l}</label><input type="time" value="${esc(S.reminders[k] || "")}" data-change="rem" data-k="${k}"></div>`).join("")}
+      ${Object.entries({ misure: "Peso e misure (settimanale)", colazione: "Colazione", pranzo: "Pranzo", acqua: "Controllo acqua", cena: "Cena", chiusura: "Chiusura giornata" }).map(([k, l]) => `<div class="field"><label>${l}</label><input type="time" value="${esc(S.reminders[k] || "")}" data-change="rem" data-k="${k}"></div>`).join("")}
     </div>
+    <div class="field"><label>Giorno di peso e misure</label><select data-change="mday">${["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"].map((n, i) => `<option value="${i}" ${S.measureDay === i ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
   <section class="card">
@@ -625,18 +716,26 @@ function weightDialog() {
 }
 
 // ---------- Promemoria calendario ----------
+function ymdOfNext(wd) {
+  const d = new Date();
+  d.setDate(d.getDate() + ((wd - d.getDay() + 7) % 7));
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+}
 function buildIcs() {
   const url = location.href.split("#")[0];
-  const labels = { peso: "Pesati a digiuno", colazione: "Registra la colazione", pranzo: "Registra il pranzo", acqua: "Controlla quanta acqua hai bevuto", cena: "Registra la cena", chiusura: "Completa e chiudi la giornata" };
+  const labels = { misure: "Peso e misure della settimana: mattina, dopo il bagno, prima di mangiare", colazione: "Registra la colazione", pranzo: "Registra il pranzo", acqua: "Controlla quanta acqua hai bevuto", cena: "Registra la cena", chiusura: "Completa e chiudi la giornata" };
   const d = new Date();
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//dieta-palestra//IT", "CALSCALE:GREGORIAN"];
   Object.entries(S.reminders).forEach(([k, time]) => {
     if (!time) return;
+    if (!labels[k]) return;
     const hm = time.replace(":", "");
-    lines.push("BEGIN:VEVENT", `UID:dieta-palestra-${k}@local`, `DTSTAMP:${stamp}`, `DTSTART:${ymd}T${hm}00`, `DTEND:${ymd}T${hm}00`,
-      "RRULE:FREQ=DAILY", `SUMMARY:${labels[k]}`, `DESCRIPTION:Apri l'app: ${url}`, `URL:${url}`, "TRANSP:TRANSPARENT",
+    const rule = k === "misure" ? `RRULE:FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][S.measureDay]}` : "RRULE:FREQ=DAILY";
+    const start = k === "misure" ? ymdOfNext(S.measureDay) : ymd;
+    lines.push("BEGIN:VEVENT", `UID:dieta-palestra-${k}@local`, `DTSTAMP:${stamp}`, `DTSTART:${start}T${hm}00`, `DTEND:${start}T${hm}00`,
+      rule, `SUMMARY:${labels[k]}`, `DESCRIPTION:Apri l'app: ${url}`, `URL:${url}`, "TRANSP:TRANSPARENT",
       "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${labels[k]}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT");
   });
   lines.push("END:VCALENDAR");
@@ -715,6 +814,26 @@ function act(a, el) {
       if (h.auto && k === todayKey()) { const d = day(k, true); d.autoDone = d.autoDone || {}; d.autoDone[el.dataset.slot] = true; }
       toast(h.auto ? "Da domani si inserisce da solo" : "Automatico disattivato"); break;
     }
+    case "tab-misure": view.tab = "misure"; break;
+    case "save-measure": {
+      const m = { id: view.mEdit?.id || uid(), date: val("#m-date"), weight: num1(val("#m-weight")), waist: num1(val("#m-waist")), low: num1(val("#m-low")), thigh: num1(val("#m-thigh")), note: val("#m-note").trim() };
+      if (!m.date) return toast("Inserisci la data");
+      if (MEAS_FIELDS.every(([f]) => m[f] === null)) return toast("Inserisci almeno un valore");
+      if (m.weight !== null && !(m.weight > 30 && m.weight < 300)) return toast("Peso non valido");
+      const same = S.measures.find((x) => x.date === m.date && x.id !== m.id);
+      if (same) { MEAS_FIELDS.forEach(([f]) => { if (m[f] === null) m[f] = same[f]; }); m.note = m.note || same.note; S.measures = S.measures.filter((x) => x.id !== same.id); }
+      S.measures = S.measures.filter((x) => x.id !== m.id).concat(m);
+      if (m.weight !== null) day(m.date, true).weight = m.weight;
+      view.mEdit = null; toast("Misurazione salvata"); break;
+    }
+    case "edit-measure": view.mEdit = S.measures.find((x) => x.id === el.dataset.id); break;
+    case "cancel-measure": view.mEdit = null; break;
+    case "seed-measures": {
+      const seed = [["2026-02-05", 67.5, null], ["2026-09-05", null, 90.5], ["2026-09-10", 65.7, 91], ["2026-09-21", 66, 91.5]];
+      seed.forEach(([date, weight, waist]) => S.measures.push({ id: uid(), date, weight, waist, low: null, thigh: null, note: "" }));
+      toast("Misure caricate"); break;
+    }
+    case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
     case "del-habit": delete S.habits[el.dataset.slot]; break;
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
     case "add-water": {
@@ -791,7 +910,7 @@ function defaultSlot() {
 // ---------- Eventi ----------
 document.addEventListener("click", (e) => {
   const nav = e.target.closest(".nav button");
-  if (nav) { view.tab = nav.dataset.tab; if (view.tab === "oggi") view.date = todayKey(); return render(); }
+  if (nav) { view.tab = nav.dataset.tab; view.mEdit = null; if (view.tab === "oggi") view.date = todayKey(); return render(); }
   const el = e.target.closest("[data-act]");
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
@@ -805,6 +924,7 @@ document.addEventListener("change", (e) => {
   if (c === "steps") { day(view.date, true).steps = Math.max(0, parseInt(t.value) || 0); save(); render(); }
   if (c === "weight") { const w = parseFloat(t.value); day(view.date, true).weight = w > 30 && w < 300 ? w : null; save(); render(); }
   if (c === "note") { day(view.date, true).note = t.value; save(); }
+  if (c === "mday") { S.measureDay = +t.value; save(); }
   if (c === "rem") { S.reminders[t.dataset.k] = t.value; save(); }
   if (t.id === "import" && t.files[0]) {
     t.files[0].text().then((txt) => {
