@@ -7,6 +7,7 @@ const defaultState = () => ({
   profile: null,
   days: {},
   customFoods: [],
+  habits: {},
   reminders: { peso: "07:30", colazione: "08:00", pranzo: "13:30", acqua: "16:00", cena: "20:30", chiusura: "22:30" },
 });
 
@@ -37,6 +38,20 @@ const fmtDate = (k, opts = { weekday: "long", day: "numeric", month: "long" }) =
 const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
 
 let view = { tab: "oggi", date: todayKey(), period: 7 };
+
+// Pasti abituali: salvati per pasto, inseriti in automatico una sola volta al giorno se l'opzione e' attiva.
+function applyHabits(k) {
+  if (!S.profile || k !== todayKey()) return;
+  Object.entries(S.habits || {}).forEach(([slot, h]) => {
+    if (!h.auto || !h.items.length) return;
+    const d = day(k, true);
+    d.autoDone = d.autoDone || {};
+    if (d.autoDone[slot]) return;
+    d.autoDone[slot] = true;
+    if (!d.meals.some((m) => m.slot === slot)) d.meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot })));
+  });
+  save();
+}
 
 function day(k, create = false) {
   if (!S.days[k]) {
@@ -165,7 +180,8 @@ function renderToday() {
     return `<div class="slot ${items.length ? "" : "empty"}">
       <div class="slot-h"><b>${s.label}</b><span class="muted">${items.length ? r0(kc) + " kcal" : ""}</span></div>
       ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
-      <div class="slot-actions"><button class="link" data-act="food" data-slot="${s.id}">Aggiungi alimento</button>${hasYesterday(k, s.id) ? `<button class="link" data-act="copy-slot" data-slot="${s.id}">Come ieri</button>` : ""}</div>
+      <div class="slot-actions"><button class="link" data-act="food" data-slot="${s.id}">Aggiungi alimento</button>${hasYesterday(k, s.id) ? `<button class="link" data-act="copy-slot" data-slot="${s.id}">Come ieri</button>` : ""}${items.length ? `<button class="link" data-act="save-habit" data-slot="${s.id}">Salva come abituale</button>` : ""}</div>
+      ${habitHtml(s.id, items.length)}
     </div>`;
   }).join("");
 
@@ -233,6 +249,16 @@ function renderToday() {
     <div class="field"><label for="note">Note (fame, sonno, stress, ciclo, sgarri)</label><textarea id="note" rows="2" data-change="note">${esc(d.note)}</textarea></div>
     <button class="btn ${d.closed ? "ghost" : "primary"} wide" data-act="close">${d.closed ? "Riapri la giornata" : "Ho inserito tutto: chiudi la giornata"}</button>
   </section>`;
+}
+
+function habitHtml(slot, hasItems) {
+  const h = (S.habits || {})[slot];
+  if (!h || !h.items.length) return "";
+  const names = h.items.map((m) => m.name).join(", ");
+  return `<div class="habit"><div class="small muted">Abituale: ${esc(names)}</div>
+    <div class="slot-actions">${hasItems ? "" : `<button class="btn small-btn primary" data-act="add-habit" data-slot="${slot}">Aggiungi abituale</button>`}
+    <button class="link" data-act="toggle-auto" data-slot="${slot}">${h.auto ? "Automatico: attivo" : "Aggiungi ogni giorno in automatico"}</button>
+    <button class="link" data-act="del-habit" data-slot="${slot}">Rimuovi</button></div></div>`;
 }
 
 function hasYesterday(k, slot) {
@@ -672,6 +698,24 @@ function act(a, el) {
       day(k, true).meals.push(...src.map((m) => ({ ...m, id: uid() })));
       toast("Copiato da ieri"); break;
     }
+    case "save-habit": {
+      const items = day(k).meals.filter((m) => m.slot === el.dataset.slot).map(({ id, ...m }) => m);
+      const old = S.habits[el.dataset.slot];
+      S.habits[el.dataset.slot] = { items, auto: old ? old.auto : false };
+      toast("Salvato come pasto abituale"); break;
+    }
+    case "add-habit": {
+      const h = S.habits[el.dataset.slot];
+      day(k, true).meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot: el.dataset.slot })));
+      toast("Pasto abituale aggiunto"); break;
+    }
+    case "toggle-auto": {
+      const h = S.habits[el.dataset.slot];
+      h.auto = !h.auto;
+      if (h.auto && k === todayKey()) { const d = day(k, true); d.autoDone = d.autoDone || {}; d.autoDone[el.dataset.slot] = true; }
+      toast(h.auto ? "Da domani si inserisce da solo" : "Automatico disattivato"); break;
+    }
+    case "del-habit": delete S.habits[el.dataset.slot]; break;
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
     case "add-water": {
       const ml = +el.dataset.ml;
@@ -790,10 +834,11 @@ document.addEventListener("keydown", (e) => {
   }
 });
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && view.tab === "oggi" && !dlg().open) render();
+  if (document.visibilityState === "visible" && view.tab === "oggi" && !dlg().open) { applyHabits(todayKey()); render(); }
 });
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+applyHabits(todayKey());
 render();
