@@ -123,6 +123,7 @@ const FOODS = [
   // Snack e dolci
   ["Cioccolato fondente 70%", 600, 8, 46, 43, 20, "Snack"],
   ["Cioccolato al latte", 535, 7.6, 59, 30, 20, "Snack"],
+  ["Kinder Bueno (barretta da 2 pezzi)", 572, 8.6, 49.5, 37.3, 43, "Snack"],
   ["Gelato", 200, 3.5, 25, 10, 100, "Snack"],
   ["Patatine in busta", 536, 6.5, 53, 34, 25, "Snack"],
   ["Merendina", 430, 6, 58, 19, 35, "Snack"],

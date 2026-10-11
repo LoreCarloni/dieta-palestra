@@ -614,7 +614,7 @@ const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${
 
 // Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
 function prunedWanted() {
-  S.wanted = S.wanted.filter((w) => { const t = norm(w.name).split(/\s+/).filter((x) => x.length > 1); return !allFoods().some((f) => t.every((x) => norm(f.name).includes(x))); });
+  S.wanted = S.wanted.filter((w) => w.name.length <= 40 && !/kcal/i.test(w.name) && (() => { const t = norm(w.name).split(/\s+/).filter((x) => x.length > 1); return !allFoods().some((f) => t.every((x) => norm(f.name).includes(x))); })());
   return S.wanted;
 }
 let wantedTimer = null;
@@ -624,7 +624,7 @@ function trackMissing(q) {
     const box = $("#f-search");
     if (!box || box.value.trim() !== q || !dlg().open) return;
     const key = norm(q).trim();
-    if (key.length < 3 || S.wanted.some((w) => norm(w.name).trim() === key)) return;
+    if (key.length < 3 || key.length > 40 || /kcal/.test(key) || S.wanted.some((w) => norm(w.name).trim() === key)) return;
     S.wanted.push({ name: q, date: todayKey() });
     save();
   }, 1500);
@@ -635,6 +635,10 @@ function renderFoodList(q) {
   const recents = ql ? [] : recentFoods();
   const tokens = norm(ql).split(/\s+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
   const list = ql ? allFoods().filter((f) => { const n = norm(f.name); return tokens.every((t) => n.includes(t)); }).slice(0, 40) : [];
+  if (/kcal/i.test(ql) || ql.length > 60) {
+    $("#f-list").innerHTML = `<p class="small">Sembra un riepilogo di più alimenti, non il nome di un alimento.</p><button class="btn primary wide" data-act="diary-from-search">Importa come riepilogo</button>`;
+    return;
+  }
   if (!ql) {
     $("#f-list").innerHTML = (recents.length ? `<div class="muted small">Usati di recente</div>${recents.map(foodItem).join("")}` : "") +
       `<div class="muted small">Categorie</div><div class="chips">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="food-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
@@ -668,12 +672,13 @@ function parseDiary(text) {
   return items;
 }
 
-function diaryDialog() {
+function diaryDialog(prefill = "") {
   openDialog(`
     <h3>Incolla un riepilogo dei pasti</h3>
     <p class="muted small">Una riga per alimento, con le calorie e, se vuoi, proteine, carboidrati e grassi, per esempio: Caffè con zucchero: circa 10 kcal, 2,5 g di carboidrati. Le righe di totale vengono ignorate.</p>
     <div class="field"><textarea id="di-text" rows="9" placeholder="Incolla qui il riepilogo" autofocus></textarea></div>
     <button class="btn primary wide" data-act="diary-parse">Analizza</button>`);
+  if (prefill) $("#di-text").value = prefill;
 }
 function diaryPreview(items) {
   dlg().dataset.diary = JSON.stringify(items);
@@ -976,6 +981,7 @@ function act(a, el) {
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
     case "diary-dialog": return diaryDialog();
+    case "diary-from-search": return diaryDialog($("#f-search").value);
     case "diary-parse": {
       const items = parseDiary(val("#di-text"));
       if (!items.length) return toast("Non trovo righe con le calorie, scrivi ad esempio: Pasta: 300 kcal");
