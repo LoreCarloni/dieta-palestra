@@ -58,7 +58,7 @@ function applyHabits(k) {
     d.autoDone = d.autoDone || {};
     if (d.autoDone[slot]) return;
     d.autoDone[slot] = true;
-    if (!d.meals.some((m) => m.slot === slot)) d.meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot })));
+    if (!d.meals.some((m) => m.slot === slot)) d.meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot, auto: true })));
   });
   save();
 }
@@ -189,7 +189,7 @@ function renderToday() {
     }
     return `<div class="slot ${items.length ? "" : "empty"}">
       <div class="slot-h"><b>${s.label}</b><span class="muted">${items.length ? r0(kc) + " kcal" : ""}</span></div>
-      ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="link mv" data-act="move-meal" data-id="${m.id}">Sposta</button><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+      ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="link mv" data-act="move-meal" data-id="${m.id}">Sposta</button><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
       <div class="slot-actions"><button class="link" data-act="food" data-slot="${s.id}">Aggiungi alimento</button>${hasYesterday(k, s.id) ? `<button class="link" data-act="copy-slot" data-slot="${s.id}">Come ieri</button>` : ""}${items.length ? `<button class="link" data-act="save-habit" data-slot="${s.id}">Salva come abituale</button>` : ""}</div>
       ${habitHtml(s.id, items.length)}
     </div>`;
@@ -1132,8 +1132,11 @@ document.addEventListener("keydown", (e) => {
     if (primary) { e.preventDefault(); primary.click(); }
   }
 });
+let lastToday = todayKey();
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && view.tab === "oggi" && !dlg().open) { applyHabits(todayKey()); render(); }
+  if (document.visibilityState !== "visible") return;
+  if (todayKey() !== lastToday) { if (view.date === lastToday) view.date = todayKey(); lastToday = todayKey(); }
+  if (view.tab === "oggi" && !dlg().open) { applyHabits(todayKey()); render(); }
 });
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
