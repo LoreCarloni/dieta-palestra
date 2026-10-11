@@ -225,7 +225,7 @@ function renderToday() {
   </section>
 
   <section class="card">
-    <h2>Pasti</h2>
+    <h2>Pasti <button class="link" data-act="diary-dialog">Incolla un riepilogo</button></h2>
     ${slotHtml}
   </section>
 
@@ -677,6 +677,52 @@ function renderFoodList(q) {
   if (!list.length && ql.length >= 3) trackMissing(ql);
 }
 
+// ---------- Riepilogo incollato: suddivisione in pasti ----------
+// Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
+const SLOT_WORDS = [["colazione", /^colazione\b/i], ["spuntino", /^spuntino( mattina)?\b/i], ["pranzo", /^pranzo\b/i], ["merenda", /^merenda\b/i], ["cena", /^cena\b/i]];
+const BREAKFAST_WORDS = /\b(caffe|cappuccino|latte|cornetto|croissant|brioche|biscotti|fette biscottate|yogurt|cereali|fiocchi|spremuta|te|the|marmellata|miele|nutella|pancake)\b/;
+
+function parseDiary(text) {
+  const items = [];
+  let cur = null;
+  text.split(/\r?\n/).forEach((raw) => {
+    let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
+    if (!line) return;
+    for (const [id, re] of SLOT_WORDS) {
+      if (re.test(line)) { cur = id; line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
+    }
+    if (!line || /^(totale|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
+    const k = line.match(/(\d+(?:[.,]\d+)?)\s*kcal/i);
+    if (!k) return;
+    const grab = (word) => { const m = line.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(?:g|gr|grammi)?\\s*(?:di\\s+)?${word}`, "i")); return m ? num1(m[1]) : 0; };
+    const colon = line.indexOf(":");
+    let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s]+$/, "").trim();
+    if (!name) name = "Alimento";
+    items.push({ name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: grab("proteine"), c: grab("carboidrati"), f: grab("grassi"), slot: cur });
+  });
+  let seenLunch = false;
+  items.forEach((it) => { if (!it.slot) it.slot = BREAKFAST_WORDS.test(norm(it.name)) && !seenLunch ? "colazione" : "pranzo"; if (it.slot !== "colazione") seenLunch = true; });
+  return items;
+}
+
+function diaryDialog() {
+  openDialog(`
+    <h3>Incolla un riepilogo dei pasti</h3>
+    <p class="muted small">Una riga per alimento, con le calorie e, se vuoi, proteine, carboidrati e grassi, per esempio: Caffè con zucchero: circa 10 kcal, 2,5 g di carboidrati. Puoi scrivere Colazione, Pranzo o Cena sopra i gruppi di righe, altrimenti ti propongo io la suddivisione e la correggi prima di confermare.</p>
+    <div class="field"><textarea id="di-text" rows="9" placeholder="Incolla qui il riepilogo" autofocus></textarea></div>
+    <button class="btn primary wide" data-act="diary-parse">Analizza</button>`);
+}
+function diaryPreview(items) {
+  dlg().dataset.diary = JSON.stringify(items);
+  openDialog(`
+    <h3>Controlla la suddivisione</h3>
+    <p class="muted small">Cambia il pasto o togli la spunta a ciò che non vuoi aggiungere. Sono stime: ${items.length} alimenti, ${r0(items.reduce((a, x) => a + x.kcal, 0))} kcal in totale.</p>
+    ${items.map((it, i) => `<div class="di-row"><label class="di-chk"><input type="checkbox" data-di="chk" data-i="${i}" checked> <span><b>${esc(it.name)}</b><br><span class="muted small">${r0(it.kcal)} kcal, P ${r0(it.p)} C ${r0(it.c)} G ${r0(it.f)}</span></span></label>
+      <select data-di="slot" data-i="${i}">${SLOTS.map((sl) => `<option value="${sl.id}" ${sl.id === it.slot ? "selected" : ""}>${sl.label}</option>`).join("")}</select></div>`).join("")}
+    <button class="btn primary wide" data-act="diary-save">Aggiungi al diario</button>`);
+  dlg().dataset.diary = JSON.stringify(items);
+}
+
 // ---------- Importazione di una lista di alimenti ----------
 // Una riga per alimento: Nome; kcal; proteine; carboidrati; grassi; porzione (grammi, facoltativa). Valori per 100 g.
 function parseFoodList(text) {
@@ -989,6 +1035,23 @@ function act(a, el) {
       toast("Misure caricate"); break;
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
+    case "diary-dialog": return diaryDialog();
+    case "diary-parse": {
+      const items = parseDiary(val("#di-text"));
+      if (!items.length) return toast("Non trovo righe con le calorie, scrivi ad esempio: Pasta: 300 kcal");
+      return diaryPreview(items);
+    }
+    case "diary-save": {
+      const items = JSON.parse(dlg().dataset.diary);
+      let n = 0;
+      items.forEach((it, i) => {
+        if (!$(`[data-di=chk][data-i="${i}"]`).checked) return;
+        const slot = $(`[data-di=slot][data-i="${i}"]`).value;
+        day(k, true).meals.push({ id: uid(), slot, name: it.name, g: null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
+        n++;
+      });
+      closeDialog(); toast(`${n} alimenti aggiunti`); break;
+    }
     case "import-dialog": return importDialog();
     case "import-list": {
       const { foods, errors } = parseFoodList(val("#imp-text"));
