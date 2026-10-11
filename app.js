@@ -186,15 +186,15 @@ function renderToday() {
 
   <section class="card hero">
     <div class="hero-main">
-      <div><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></div>
+      <button class="macro-btn center" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
       <div class="hero-mid"><div class="big ${remaining < 0 ? "bad" : "good"}">${r0(Math.abs(remaining))}</div><div class="muted small">${remaining < 0 ? "kcal oltre obiettivo" : "kcal rimanenti"}</div></div>
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
-      <div><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</div>
-      <div><span class="muted small">Carboidrati</span><b>${r0(t.c)} di ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</div>
-      <div><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</div>
+      <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
+      <button class="macro-btn" data-act="macro" data-m="c"><span class="muted small">Carboidrati</span><b>${r0(t.c)} di ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</button>
+      <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
     </div>
     <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
@@ -648,6 +648,37 @@ function renderFoodList(q) {
   if (!list.length && ql.length >= 3) trackMissing(ql);
 }
 
+// ---------- Dettaglio di un nutriente: da dove arriva ----------
+const shortName = (n) => { const x = n.split(",")[0].trim(); return x.length > 38 ? x.slice(0, 36).trim() + "..." : x; };
+function macroDialog(m, k) {
+  const d = day(k), t = totals(k), tg = targets(k);
+  const cfg = {
+    kcal: { label: "Calorie", unit: "kcal", val: t.kcal, target: tg.kcal, key: "kcal", drinks: "kcal", tip: "Per ridurle agisci sulle voci in cima: porzioni più piccole, condimenti misurati, meno bevande zuccherate o alcoliche." },
+    p: { label: "Proteine", unit: "g", val: t.p, target: tg.protein, key: "p", tip: "Le proteine proteggono il muscolo e saziano: se mancano, aggiungi yogurt greco, uova, pesce, carne bianca o legumi." },
+    c: { label: "Carboidrati", unit: "g", val: t.c, target: tg.carbs, key: "c", drinks: "c", tip: "Per ridurli, riduci pane, pasta, dolci e bevande zuccherate, e non mettere due fonti di carboidrati nello stesso pasto." },
+    f: { label: "Grassi", unit: "g", val: t.f, target: tg.fat, key: "f", tip: "Un grammo di grasso vale 9 kcal. Misura l'olio, un cucchiaio vale circa 90 kcal. Occhio a formaggi, frutta secca, cioccolato, fritti e salumi." },
+  }[m];
+  const rows = d.meals.map((x) => ({ name: x.name, v: x[cfg.key] || 0, qty: x.g, qu: "g" }))
+    .concat(cfg.drinks ? d.drinks.map((x) => ({ name: x.name, v: x[cfg.drinks] || 0, qty: x.ml, qu: "ml" })) : [])
+    .filter((x) => x.v > 0.4).sort((a, b) => b.v - a.v);
+  const total = rows.reduce((a, x) => a + x.v, 0);
+  const diff = cfg.val - cfg.target;
+  const over = diff > 0.5;
+  const kind = m === "p" ? (diff < 0 ? "mancano" : "ok") : over ? "troppo" : "ok";
+  const status = m === "p"
+    ? (diff >= 0 ? `Obiettivo raggiunto, ${r0(diff)} ${cfg.unit} in più.` : `Ti mancano ${r0(-diff)} ${cfg.unit} per l'obiettivo.`)
+    : (over ? `Sei oltre l'obiettivo di ${r0(diff)} ${cfg.unit}.` : `Sei entro l'obiettivo, ti restano ${r0(Math.max(0, -diff))} ${cfg.unit}.`);
+  const top3 = rows.slice(0, 3);
+  const topShare = total ? Math.round((top3.reduce((a, x) => a + x.v, 0) / total) * 100) : 0;
+  openDialog(`
+    <h3>${cfg.label}: ${r0(cfg.val)} di ${r0(cfg.target)} ${cfg.unit}</h3>
+    <p class="${kind === "troppo" || kind === "mancano" ? "bad" : "good"}"><b>${status}</b></p>
+    ${rows.length ? `<p class="small">${top3.length > 1 ? `Le prime ${top3.length} voci pesano il ${topShare}% del totale: ${top3.map((x) => esc(shortName(x.name))).join(", ")}.` : `Quasi tutto viene da ${esc(shortName(top3[0].name))}.`}</p>
+    ${rows.map((x) => `<div class="mrow"><div class="mrow-h"><span>${esc(x.name)}</span><b>${r0(x.v)} ${cfg.unit}</b></div><div class="muted small">${Math.round((x.v / total) * 100)}% del totale${x.qty ? `, ${r0(x.qty)} ${x.qu}` : ""}</div>${bar(x.v, total, cfg.key === "kcal" ? "" : cfg.key)}</div>`).join("")}`
+      : `<p class="muted small">Non hai ancora inserito alimenti che ne contengano.</p>`}
+    <p class="muted small">${cfg.tip}</p>`);
+}
+
 // ---------- Riepilogo incollato: suddivisione in pasti ----------
 // Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
 const SLOT_WORDS = [/^colazione\b/i, /^spuntino( mattina)?\b/i, /^pranzo\b/i, /^merenda\b/i, /^cena\b/i];
@@ -980,6 +1011,7 @@ function act(a, el) {
       toast("Misure caricate"); break;
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
+    case "macro": return macroDialog(el.dataset.m, k);
     case "diary-dialog": return diaryDialog();
     case "diary-from-search": return diaryDialog($("#f-search").value);
     case "diary-parse": {
