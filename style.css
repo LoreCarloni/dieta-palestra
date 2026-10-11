@@ -185,3 +185,5 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 .di-chk { display: flex; gap: 8px; align-items: flex-start; color: var(--text); font-size: 0.95rem; }
 .di-chk input { width: auto; margin-top: 4px; }
 .di-row select { width: auto; max-width: 140px; padding: 8px; }
+
+.small-link { font-size: 0.8rem; padding: 2px 0; }

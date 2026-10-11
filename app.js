@@ -8,6 +8,7 @@ const defaultState = () => ({
   days: {},
   customFoods: [],
   habits: {},
+  dailyAuto: [],
   measures: [],
   measureDay: 1,
   required: ["colazione", "pranzo", "cena"],
@@ -26,9 +27,10 @@ function load() {
 let S = load();
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
-S.required = S.required || ["colazione", "pranzo", "cena"];
 S.wanted = S.wanted || [];
-const isReq = (sl) => S.required.includes(sl.id);
+S.dailyAuto = S.dailyAuto || [];
+Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
+S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
@@ -49,17 +51,13 @@ const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
 
 let view = { tab: "oggi", date: todayKey(), period: 7 };
 
-// Pasti abituali: salvati per pasto, inseriti in automatico una sola volta al giorno se l'opzione e' attiva.
+// Alimenti ripetuti ogni giorno: inseriti una sola volta all'apertura del giorno, ogni riga resta eliminabile.
 function applyHabits(k) {
-  if (!S.profile || k !== todayKey()) return;
-  Object.entries(S.habits || {}).forEach(([slot, h]) => {
-    if (!h.auto || !h.items.length) return;
-    const d = day(k, true);
-    d.autoDone = d.autoDone || {};
-    if (d.autoDone[slot]) return;
-    d.autoDone[slot] = true;
-    if (!d.meals.some((m) => m.slot === slot)) d.meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot, auto: true })));
-  });
+  if (!S.profile || k !== todayKey() || !S.dailyAuto.length) return;
+  const d = day(k, true);
+  if (d.autoDone) return;
+  d.autoDone = true;
+  d.meals.push(...S.dailyAuto.map((m) => ({ ...m, id: uid(), slot: "giorno", auto: true })));
   save();
 }
 
@@ -109,16 +107,10 @@ function totals(k) {
   return t;
 }
 
-function slotsDone(k) {
-  const d = day(k);
-  return SLOTS.filter((s) => d.meals.some((m) => m.slot === s.id)).map((s) => s.id);
-}
 function isTracked(k) {
   const d = S.days[k];
   if (!d) return false;
-  if (d.closed) return true;
-  const done = slotsDone(k);
-  return ["colazione", "pranzo", "cena"].filter((id) => done.includes(id)).length >= 2;
+  return d.closed || d.meals.length >= 3;
 }
 
 function periodStats(endKey, n) {
@@ -168,32 +160,22 @@ function renderToday() {
   const d = day(k);
   const t = totals(k);
   const tg = targets(k);
-  const done = slotsDone(k);
   const isToday = k === todayKey();
   const remaining = tg.kcal - t.kcal;
 
   const checklist = [
     ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
-    ...SLOTS.filter(isReq).map((s) => ({ label: s.label, ok: done.includes(s.id), act: "food", slot: s.id })),
+    { label: "Cosa hai mangiato oggi", ok: d.meals.length > 0, act: "food" },
     { label: `Acqua ${r1(t.water / 1000)} di ${r1(t.waterTarget / 1000)} litri`, ok: t.water >= t.waterTarget, act: "water" },
     { label: d.rest ? "Giorno di riposo" : "Allenamento o passi", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "exercise" },
     { label: "Chiudi la giornata", ok: d.closed, act: "close" },
   ];
   const todo = checklist.filter((c) => !c.ok).length;
 
-  const slotHtml = SLOTS.map((s) => {
-    const items = d.meals.filter((m) => m.slot === s.id);
-    const kc = items.reduce((a, m) => a + m.kcal, 0);
-    if (!items.length && !isReq(s) && s.id !== "spuntino" && s.id !== "merenda") {
-      return `<div class="slot empty"><div class="slot-h"><b>${s.label}</b><button class="link" data-act="food" data-slot="${s.id}">Aggiungi</button></div></div>`;
-    }
-    return `<div class="slot ${items.length ? "" : "empty"}">
-      <div class="slot-h"><b>${s.label}</b><span class="muted">${items.length ? r0(kc) + " kcal" : ""}</span></div>
-      ${items.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="link mv" data-act="move-meal" data-id="${m.id}">Sposta</button><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
-      <div class="slot-actions"><button class="link" data-act="food" data-slot="${s.id}">Aggiungi alimento</button>${hasYesterday(k, s.id) ? `<button class="link" data-act="copy-slot" data-slot="${s.id}">Come ieri</button>` : ""}${items.length ? `<button class="link" data-act="save-habit" data-slot="${s.id}">Salva come abituale</button>` : ""}</div>
-      ${habitHtml(s.id, items.length)}
-    </div>`;
-  }).join("");
+  const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
+  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+    ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}
+    <div class="slot-actions"><button class="btn small-btn primary" data-act="food">Aggiungi alimento</button>${hasYesterday(k) ? `<button class="link" data-act="copy-yesterday">Come ieri</button>` : ""}</div>`;
 
   return `
   <div class="datebar">
@@ -225,8 +207,9 @@ function renderToday() {
   </section>
 
   <section class="card">
-    <h2>Pasti <button class="link" data-act="diary-dialog">Incolla un riepilogo</button></h2>
-    ${slotHtml}
+    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
+    ${mealsHtml}
+    <button class="link" data-act="diary-dialog">Incolla un riepilogo di più alimenti</button>
   </section>
 
   <section class="card">
@@ -261,19 +244,9 @@ function renderToday() {
   </section>`;
 }
 
-function habitHtml(slot, hasItems) {
-  const h = (S.habits || {})[slot];
-  if (!h || !h.items.length) return "";
-  const names = h.items.map((m) => m.name).join(", ");
-  return `<div class="habit"><div class="small muted">Abituale: ${esc(names)}</div>
-    <div class="slot-actions">${hasItems ? "" : `<button class="btn small-btn primary" data-act="add-habit" data-slot="${slot}">Aggiungi abituale</button>`}
-    <button class="link" data-act="toggle-auto" data-slot="${slot}">${h.auto ? "Automatico: attivo" : "Aggiungi ogni giorno in automatico"}</button>
-    <button class="link" data-act="del-habit" data-slot="${slot}">Rimuovi</button></div></div>`;
-}
-
-function hasYesterday(k, slot) {
+function hasYesterday(k) {
   const y = S.days[addDays(k, -1)];
-  return y && y.meals.some((m) => m.slot === slot);
+  return !!(y && y.meals.length);
 }
 
 
@@ -438,10 +411,7 @@ function reportText(n) {
   L.push("");
   st.rows.forEach((r) => {
     L.push(`${fmtDate(r.k, { weekday: "short", day: "numeric", month: "short" })}${r.tracked ? "" : " (incompleto)"}: ${r0(r.t.kcal)} kcal, P ${r0(r.t.p)} C ${r0(r.t.c)} G ${r0(r.t.f)}, acqua ${r0(r.t.water)} ml, passi ${r.t.steps}, peso ${r.d.weight ?? "n.d."}`);
-    SLOTS.forEach((s) => {
-      const items = r.d.meals.filter((m) => m.slot === s.id);
-      if (items.length) L.push(`  ${s.label}: ${items.map((m) => `${m.name}${m.g ? " " + r0(m.g) + "g" : ""} (${r0(m.kcal)})`).join(", ")}`);
-    });
+    if (r.d.meals.length) L.push(`  Alimenti: ${r.d.meals.map((m) => `${m.name}${m.g ? " " + r0(m.g) + "g" : ""} (${r0(m.kcal)})`).join(", ")}`);
     if (r.d.drinks.length) L.push(`  Bevande: ${r.d.drinks.map((x) => `${x.name} ${r0(x.ml)}ml (${r0(x.kcal)})`).join(", ")}`);
     if (r.d.ex.length) L.push(`  Attività: ${r.d.ex.map((e) => `${e.name} ${r0(e.min)} min (${r0(e.kcal)} kcal)${e.note ? " " + e.note : ""}`).join(", ")}`);
     if (r.d.rest) L.push("  Giorno di riposo");
@@ -592,8 +562,6 @@ function renderProfile(first) {
     <div class="grid2">
       ${Object.entries({ misure: "Peso e misure (settimanale)", colazione: "Colazione", pranzo: "Pranzo", acqua: "Controllo acqua", cena: "Cena", chiusura: "Chiusura giornata" }).map(([k, l]) => `<div class="field"><label>${l}</label><input type="time" value="${esc(S.reminders[k] || "")}" data-change="rem" data-k="${k}"></div>`).join("")}
     </div>
-    <div class="field"><label>Pasti da registrare ogni giorno (compaiono nella lista da inserire)</label>
-      <div class="chips">${SLOTS.map((sl) => `<label class="chip tick"><input type="checkbox" data-change="reqslot" data-id="${sl.id}" ${isReq(sl) ? "checked" : ""}> ${sl.label}</label>`).join("")}</div></div>
     <div class="field"><label>Giorno di peso e misure</label><select data-change="mday">${["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"].map((n, i) => `<option value="${i}" ${S.measureDay === i ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
@@ -632,11 +600,10 @@ function recentFoods() {
 }
 function allFoods() { return [...S.customFoods.map((f) => ({ ...f, cat: "I miei alimenti" })), ...FOODS]; }
 
-function foodDialog(slot) {
-  const slotSel = SLOTS.map((s) => `<option value="${s.id}" ${s.id === slot ? "selected" : ""}>${s.label}</option>`).join("");
+function foodDialog() {
   openDialog(`
     <h3>Aggiungi alimento</h3>
-    <div class="field"><label>Pasto</label><select id="f-slot">${slotSel}</select></div>
+    <input id="f-slot" type="hidden" value="giorno">
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
     <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
@@ -679,17 +646,15 @@ function renderFoodList(q) {
 
 // ---------- Riepilogo incollato: suddivisione in pasti ----------
 // Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
-const SLOT_WORDS = [["colazione", /^colazione\b/i], ["spuntino", /^spuntino( mattina)?\b/i], ["pranzo", /^pranzo\b/i], ["merenda", /^merenda\b/i], ["cena", /^cena\b/i]];
-const BREAKFAST_WORDS = /\b(caffe|cappuccino|latte|cornetto|croissant|brioche|biscotti|fette biscottate|yogurt|cereali|fiocchi|spremuta|te|the|marmellata|miele|nutella|pancake)\b/;
+const SLOT_WORDS = [/^colazione\b/i, /^spuntino( mattina)?\b/i, /^pranzo\b/i, /^merenda\b/i, /^cena\b/i];
 
 function parseDiary(text) {
   const items = [];
-  let cur = null;
   text.split(/\r?\n/).forEach((raw) => {
     let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
     if (!line) return;
-    for (const [id, re] of SLOT_WORDS) {
-      if (re.test(line)) { cur = id; line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
+    for (const re of SLOT_WORDS) {
+      if (re.test(line)) { line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
     }
     if (!line || /^(totale|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
     const k = line.match(/(\d+(?:[.,]\d+)?)\s*kcal/i);
@@ -698,27 +663,24 @@ function parseDiary(text) {
     const colon = line.indexOf(":");
     let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s]+$/, "").trim();
     if (!name) name = "Alimento";
-    items.push({ name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: grab("proteine"), c: grab("carboidrati"), f: grab("grassi"), slot: cur });
+    items.push({ name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: grab("proteine"), c: grab("carboidrati"), f: grab("grassi") });
   });
-  let seenLunch = false;
-  items.forEach((it) => { if (!it.slot) it.slot = BREAKFAST_WORDS.test(norm(it.name)) && !seenLunch ? "colazione" : "pranzo"; if (it.slot !== "colazione") seenLunch = true; });
   return items;
 }
 
 function diaryDialog() {
   openDialog(`
     <h3>Incolla un riepilogo dei pasti</h3>
-    <p class="muted small">Una riga per alimento, con le calorie e, se vuoi, proteine, carboidrati e grassi, per esempio: Caffè con zucchero: circa 10 kcal, 2,5 g di carboidrati. Puoi scrivere Colazione, Pranzo o Cena sopra i gruppi di righe, altrimenti ti propongo io la suddivisione e la correggi prima di confermare.</p>
+    <p class="muted small">Una riga per alimento, con le calorie e, se vuoi, proteine, carboidrati e grassi, per esempio: Caffè con zucchero: circa 10 kcal, 2,5 g di carboidrati. Le righe di totale vengono ignorate.</p>
     <div class="field"><textarea id="di-text" rows="9" placeholder="Incolla qui il riepilogo" autofocus></textarea></div>
     <button class="btn primary wide" data-act="diary-parse">Analizza</button>`);
 }
 function diaryPreview(items) {
   dlg().dataset.diary = JSON.stringify(items);
   openDialog(`
-    <h3>Controlla la suddivisione</h3>
-    <p class="muted small">Cambia il pasto o togli la spunta a ciò che non vuoi aggiungere. Sono stime: ${items.length} alimenti, ${r0(items.reduce((a, x) => a + x.kcal, 0))} kcal in totale.</p>
-    ${items.map((it, i) => `<div class="di-row"><label class="di-chk"><input type="checkbox" data-di="chk" data-i="${i}" checked> <span><b>${esc(it.name)}</b><br><span class="muted small">${r0(it.kcal)} kcal, P ${r0(it.p)} C ${r0(it.c)} G ${r0(it.f)}</span></span></label>
-      <select data-di="slot" data-i="${i}">${SLOTS.map((sl) => `<option value="${sl.id}" ${sl.id === it.slot ? "selected" : ""}>${sl.label}</option>`).join("")}</select></div>`).join("")}
+    <h3>Controlla gli alimenti</h3>
+    <p class="muted small">Togli la spunta a ciò che non vuoi aggiungere. Sono stime: ${items.length} alimenti, ${r0(items.reduce((a, x) => a + x.kcal, 0))} kcal in totale.</p>
+    ${items.map((it, i) => `<div class="di-row"><label class="di-chk"><input type="checkbox" data-di="chk" data-i="${i}" checked> <span><b>${esc(it.name)}</b><br><span class="muted small">${r0(it.kcal)} kcal, P ${r0(it.p)} C ${r0(it.c)} G ${r0(it.f)}</span></span></label></div>`).join("")}
     <button class="btn primary wide" data-act="diary-save">Aggiungi al diario</button>`);
   dlg().dataset.diary = JSON.stringify(items);
 }
@@ -956,8 +918,8 @@ function act(a, el) {
     case "next-day": if (k < todayKey()) view.date = addDays(k, 1); break;
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; break;
     case "period": view.period = +el.dataset.n; break;
-    case "food": return foodDialog(el.dataset.slot || defaultSlot());
-    case "scan-barcode": dlg().dataset.slot = $("#f-slot").value; return barcodeDialog();
+    case "food": return foodDialog();
+    case "scan-barcode": dlg().dataset.slot = "giorno"; return barcodeDialog();
     case "bc-lookup": stopScan(); return lookupBarcode($("#bc-manual").value);
     case "bc-confirm": {
       const f = JSON.parse(dlg().dataset.pending);
@@ -967,7 +929,7 @@ function act(a, el) {
       return qtyDialog(f, dlg().dataset.slot);
     }
     case "food-cat": return foodCat(el.dataset.c);
-    case "pick-food": return qtyDialog(JSON.parse(el.dataset.food), $("#f-slot").value);
+    case "pick-food": return qtyDialog(JSON.parse(el.dataset.food), "giorno");
     case "qty": $("#q-g").value = el.dataset.g; return updateQtyPreview();
     case "save-food": {
       const f = JSON.parse(dlg().dataset.food);
@@ -977,7 +939,7 @@ function act(a, el) {
       day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "custom-food": dlg().dataset.slot = $("#f-slot").value; return customFoodDialog();
+    case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
     case "save-custom": {
       const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100 };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
@@ -985,35 +947,13 @@ function act(a, el) {
       save();
       return qtyDialog({ ...f, cat: "I miei alimenti" }, dlg().dataset.slot);
     }
-    case "quick-kcal": dlg().dataset.slot = $("#f-slot").value; return quickKcalDialog();
+    case "quick-kcal": dlg().dataset.slot = "giorno"; return quickKcalDialog();
     case "save-quick": {
       const kc = num("#k-kcal");
       if (!(kc > 0)) return toast("Inserisci le calorie");
       const p = num("#k-p") || 0;
       day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: val("#k-name").trim() || "Stima", g: null, kcal: kc, p, c: Math.max(0, (kc * 0.45) / 4), f: Math.max(0, (kc - p * 4 - kc * 0.45) / 9) });
       closeDialog(); toast("Aggiunto"); break;
-    }
-    case "copy-slot": {
-      const src = S.days[addDays(k, -1)].meals.filter((m) => m.slot === el.dataset.slot);
-      day(k, true).meals.push(...src.map((m) => ({ ...m, id: uid() })));
-      toast("Copiato da ieri"); break;
-    }
-    case "save-habit": {
-      const items = day(k).meals.filter((m) => m.slot === el.dataset.slot).map(({ id, ...m }) => m);
-      const old = S.habits[el.dataset.slot];
-      S.habits[el.dataset.slot] = { items, auto: old ? old.auto : false };
-      toast("Salvato come pasto abituale"); break;
-    }
-    case "add-habit": {
-      const h = S.habits[el.dataset.slot];
-      day(k, true).meals.push(...h.items.map((m) => ({ ...m, id: uid(), slot: el.dataset.slot })));
-      toast("Pasto abituale aggiunto"); break;
-    }
-    case "toggle-auto": {
-      const h = S.habits[el.dataset.slot];
-      h.auto = !h.auto;
-      if (h.auto && k === todayKey()) { const d = day(k, true); d.autoDone = d.autoDone || {}; d.autoDone[el.dataset.slot] = true; }
-      toast(h.auto ? "Da domani si inserisce da solo" : "Automatico disattivato"); break;
     }
     case "tab-misure": view.tab = "misure"; break;
     case "save-measure": {
@@ -1046,8 +986,7 @@ function act(a, el) {
       let n = 0;
       items.forEach((it, i) => {
         if (!$(`[data-di=chk][data-i="${i}"]`).checked) return;
-        const slot = $(`[data-di=slot][data-i="${i}"]`).value;
-        day(k, true).meals.push({ id: uid(), slot, name: it.name, g: null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
+        day(k, true).meals.push({ id: uid(), slot: "giorno", name: it.name, g: null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
         n++;
       });
       closeDialog(); toast(`${n} alimenti aggiunti`); break;
@@ -1064,17 +1003,24 @@ function act(a, el) {
       break;
     }
     case "del-wanted": S.wanted.splice(+el.dataset.i, 1); break;
-    case "del-habit": delete S.habits[el.dataset.slot]; break;
-    case "move-meal": {
+    case "copy-yesterday": {
+      const src = S.days[addDays(k, -1)].meals;
+      const d = day(k, true);
+      d.meals.push(...src.filter((m) => !d.meals.some((x) => x.name === m.name)).map((m) => ({ ...m, id: uid(), auto: false })));
+      toast("Copiato da ieri"); break;
+    }
+    case "toggle-repeat": {
       const m = day(k).meals.find((x) => x.id === el.dataset.id);
       if (!m) return;
-      return openDialog(`<h3>Sposta ${esc(m.name)}</h3><p class="muted small">Scegli il pasto di destinazione.</p>
-        <div class="list">${SLOTS.map((sl) => `<button class="item" data-act="do-move" data-id="${m.id}" data-slot="${sl.id}" ${sl.id === m.slot ? "disabled" : ""}><span>${sl.label}</span><span class="muted small">${sl.id === m.slot ? "pasto attuale" : ""}</span></button>`).join("")}</div>`);
-    }
-    case "do-move": {
-      const m = day(k, true).meals.find((x) => x.id === el.dataset.id);
-      if (m) m.slot = el.dataset.slot;
-      closeDialog(); toast("Alimento spostato"); break;
+      const i = S.dailyAuto.findIndex((x) => x.name === m.name);
+      if (i >= 0) { S.dailyAuto.splice(i, 1); toast("Non si ripete più"); }
+      else {
+        const { id, auto, slot, ...rest } = m;
+        S.dailyAuto.push(rest);
+        if (k === todayKey()) day(k, true).autoDone = true;
+        toast("Si inserirà da solo ogni giorno");
+      }
+      break;
     }
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
     case "add-water": {
@@ -1121,8 +1067,7 @@ function act(a, el) {
     case "close": {
       const d = day(k, true);
       if (!d.closed) {
-        const missing = SLOTS.filter((s) => isReq(s) && !d.meals.some((m) => m.slot === s.id)).map((s) => s.label.toLowerCase());
-        if (missing.length && !confirm(`Mancano: ${missing.join(", ")}. Chiudere comunque la giornata?`)) return;
+        if (!d.meals.length && !confirm("Non hai inserito nessun alimento. Chiudere comunque la giornata?")) return;
       }
       d.closed = !d.closed; if (d.closed) toast("Giornata chiusa"); break;
     }
@@ -1143,10 +1088,6 @@ function act(a, el) {
   render();
 }
 
-function defaultSlot() {
-  const h = new Date().getHours();
-  return h < 10 ? "colazione" : h < 12 ? "spuntino" : h < 15 ? "pranzo" : h < 18 ? "merenda" : "cena";
-}
 
 // ---------- Eventi ----------
 document.addEventListener("click", (e) => {
@@ -1165,7 +1106,6 @@ document.addEventListener("change", (e) => {
   if (c === "steps") { day(view.date, true).steps = Math.max(0, parseInt(t.value) || 0); save(); render(); }
   if (c === "weight") { const w = parseFloat(t.value); day(view.date, true).weight = w > 30 && w < 300 ? w : null; save(); render(); }
   if (c === "note") { day(view.date, true).note = t.value; save(); }
-  if (c === "reqslot") { S.required = SLOTS.map((x) => x.id).filter((id) => (id === t.dataset.id ? t.checked : S.required.includes(id))); save(); }
   if (c === "mday") { S.measureDay = +t.value; save(); }
   if (c === "rem") { S.reminders[t.dataset.k] = t.value; save(); }
   if (t.id === "import" && t.files[0]) {
