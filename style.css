@@ -187,3 +187,10 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 .di-row select { width: auto; max-width: 140px; padding: 8px; }
 
 .small-link { font-size: 0.8rem; padding: 2px 0; }
+
+.macro-btn { border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; font-size: 0.85rem; cursor: pointer; color: inherit; }
+.macro-btn.center { text-align: center; align-items: center; }
+.macros .macro-btn { width: 100%; }
+.mrow { margin: 8px 0; }
+.mrow-h { display: flex; justify-content: space-between; gap: 10px; }
+.mrow .bar { margin: 4px 0 2px; height: 6px; }
