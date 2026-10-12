@@ -211,6 +211,7 @@ function renderToday() {
   <section class="card">
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
     <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}</div>
+    ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
   </section>
 
@@ -650,6 +651,21 @@ function renderFoodList(q) {
   if (!list.length && ql.length >= 3) trackMissing(ql);
 }
 
+// ---------- Ricalcolo con i valori aggiornati ----------
+const FOOD_ALIAS = { "Pane bianco": "Pane bianco (tipo 00)", "Mozzarella": "Mozzarella di vacca", "Parmigiano": "Parmigiano Reggiano", "Manzo magro (crudo)": "Manzo magro (fesa, crudo)", "Petto di tacchino (crudo)": "Fesa di tacchino (cruda)", "Lonza di maiale (cruda)": "Lonza di maiale (lombo leggero, crudo)" };
+function recalcChanges(k) {
+  const out = [];
+  day(k).meals.forEach((m) => {
+    if (!m.ref || !m.g) return;
+    const name = FOOD_ALIAS[m.ref.name] || m.ref.name;
+    const cur = allFoods().find((f) => f.name === name);
+    if (!cur) return;
+    const n = { kcal: (cur.kcal * m.g) / 100, p: (cur.p * m.g) / 100, c: (cur.c * m.g) / 100, f: (cur.f * m.g) / 100 };
+    if (Math.abs(n.kcal - m.kcal) > 0.5 || Math.abs(n.p - m.p) > 0.2 || Math.abs(n.c - m.c) > 0.2 || Math.abs(n.f - m.f) > 0.2) out.push({ m, cur, n });
+  });
+  return out;
+}
+
 // ---------- Commento della giornata ----------
 const SWEET_RE = /cioccolat|kinder|nutella|biscott|merendin|gelato|patatine|pringles|snack|dolc|torta|tiramis|brioche|croissant|cornetto|galletta|nocciol|caramell|barretta|crema/i;
 function dayComment(k) {
@@ -1079,6 +1095,14 @@ function act(a, el) {
     }
     case "del-measure": if (confirm("Eliminare questa misurazione?")) { S.measures = S.measures.filter((x) => x.id !== view.mEdit?.id); view.mEdit = null; } break;
     case "macro": return macroDialog(el.dataset.m, k);
+    case "recalc": {
+      const ch = recalcChanges(k);
+      ch.forEach(({ m, cur, n }) => {
+        m.name = cur.name; m.kcal = n.kcal; m.p = n.p; m.c = n.c; m.f = n.f;
+        m.ref = { name: cur.name, kcal: cur.kcal, p: cur.p, c: cur.c, f: cur.f, portion: cur.portion, cat: cur.cat };
+      });
+      toast(`${ch.length} ${ch.length === 1 ? "alimento aggiornato" : "alimenti aggiornati"}`); break;
+    }
     case "diary-dialog": return diaryDialog();
     case "diary-from-search": return diaryDialog($("#f-search").value);
     case "diary-parse": {
