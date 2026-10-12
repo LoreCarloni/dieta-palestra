@@ -611,8 +611,7 @@ function foodDialog() {
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
-const sourceText = (f) => (f.src ? "fonte: " + esc(f.src) : f.barcode ? "da codice a barre" : f.cat === "I miei alimenti" ? "inserito da te" : "valore medio stimato");
-const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g<br>${sourceText(f)}</span></button>`;
+const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
 
 // Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
 function prunedWanted() {
