@@ -185,8 +185,8 @@ function renderToday() {
 
   <section class="card hero">
     <div class="hero-main">
-      <button class="macro-btn center" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
-      <div class="hero-mid"><div class="big ${remaining < 0 ? "bad" : "good"}">${r0(Math.abs(remaining))}</div><div class="muted small">${remaining < 0 ? "kcal oltre obiettivo" : "kcal rimanenti"}</div></div>
+      <div><div class="big ${remaining < 0 ? "bad" : "good"}">${r0(Math.abs(remaining))}</div><div class="muted small">${remaining < 0 ? "kcal oltre obiettivo" : "kcal rimanenti"}</div></div>
+      <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
     ${bar(t.kcal, tg.kcal)}
