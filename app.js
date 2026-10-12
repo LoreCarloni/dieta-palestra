@@ -199,6 +199,8 @@ function renderToday() {
     <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
 
+  ${commentHtml(k)}
+
   <section class="card">
     <h2>Da inserire ${isToday ? "oggi" : "in questo giorno"} <span class="pill ${todo ? "" : "ok"}">${todo ? todo + " da fare" : "Completo"}</span></h2>
     <div class="checklist">
@@ -646,6 +648,48 @@ function renderFoodList(q) {
   }
   $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. L'ho segnato nella lista degli alimenti da aggiungere. Intanto usa il codice a barre, "Alimento non in lista" o "Solo calorie".</p>`;
   if (!list.length && ql.length >= 3) trackMissing(ql);
+}
+
+// ---------- Commento della giornata ----------
+const SWEET_RE = /cioccolat|kinder|nutella|biscott|merendin|gelato|patatine|pringles|snack|dolc|torta|tiramis|brioche|croissant|cornetto|galletta|nocciol|caramell|barretta|crema/i;
+function dayComment(k) {
+  const d = day(k), t = totals(k), tg = targets(k);
+  if (!d.meals.length) return null;
+  const items = d.meals.map((m) => ({ name: m.name, kcal: m.kcal, p: m.p, c: m.c, f: m.f, g: m.g }))
+    .concat(d.drinks.map((x) => ({ name: x.name, kcal: x.kcal, p: 0, c: x.c, f: 0, g: x.ml })));
+  const top = (key, n = 3) => items.filter((x) => x[key] > 0.4).sort((a, b) => b[key] - a[key]).slice(0, n);
+  const list = (arr, key, unit) => arr.map((x) => `${shortName(x.name)} (${r0(x[key])} ${unit})`).join(", ");
+  const ratio = t.kcal / tg.kcal;
+  const verdict = ratio <= 1.05 ? { lvl: "good", text: "Giornata in linea" } : ratio <= 1.25 ? { lvl: "warn", text: "Giornata un po' sopra l'obiettivo" } : { lvl: "bad", text: "Giornata fuori obiettivo" };
+  if (verdict.lvl === "good" && t.f > tg.fat * 1.25) { verdict.lvl = "warn"; verdict.text = "Calorie in linea ma grassi troppo alti"; }
+  const lines = [];
+  const diff = t.kcal - tg.kcal;
+  lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
+  const fOver = t.f - tg.fat;
+  if (fOver > tg.fat * 0.1) lines.push({ lvl: "bad", text: `Troppi grassi: ${r0(t.f)} g su ${r0(tg.fat)}, ${r0(fOver)} g in più, cioè circa ${r0(fOver * 9)} kcal. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
+  const cOver = t.c - tg.carbs;
+  if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
+  if (t.p < tg.protein * 0.85) lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}. Aggiungi una fonte magra a ogni pasto.` });
+  else lines.push({ lvl: "good", text: `Proteine a posto: ${r0(t.p)} g su ${r0(tg.protein)}.` });
+  const sweet = items.filter((x) => SWEET_RE.test(x.name));
+  const sweetKcal = sweet.reduce((a, x) => a + x.kcal, 0);
+  if (sweetKcal >= Math.max(150, t.kcal * 0.12)) lines.push({ lvl: "warn", text: `Snack e dolci: ${r0(sweetKcal)} kcal, il ${Math.round((sweetKcal / t.kcal) * 100)}% della giornata (${sweet.sort((a, b) => b.kcal - a.kcal).slice(0, 3).map((x) => shortName(x.name)).join(", ")}). Sono calorie facili da evitare.` });
+  if (t.alcKcal > 0) lines.push({ lvl: "warn", text: `Alcol: ${r0(t.alcKcal)} kcal. Non sazia e rallenta l'uso dei grassi come energia.` });
+  if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
+  else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
+  if (t.water < t.waterTarget * 0.7) lines.push({ lvl: "warn", text: `Acqua scarsa: ${r1(t.water / 1000)} L su ${r1(t.waterTarget / 1000)} L.` });
+  const tips = [];
+  if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
+  if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
+  if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
+  if (t.exMin === 0) tips.push("fai almeno 8000 passi");
+  lines.push({ lvl: "tip", text: tips.length ? `Per domani: ${tips.join("; ")}.` : "Per domani: continua così." });
+  return { verdict, lines };
+}
+function commentHtml(k) {
+  const c = dayComment(k);
+  if (!c) return "";
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${c.lines.map((l) => `<div class="advice ${l.lvl === "tip" ? "" : l.lvl}"><p>${esc(l.text)}</p></div>`).join("")}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
