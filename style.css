@@ -194,3 +194,5 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 .mrow { margin: 8px 0; }
 .mrow-h { display: flex; justify-content: space-between; gap: 10px; }
 .mrow .bar { margin: 4px 0 2px; height: 6px; }
+
+.upd-bar { position: fixed; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top)); z-index: 20; border: 0; background: var(--accent); color: var(--card); font-weight: 600; padding: 12px; border-radius: 12px; cursor: pointer; }
