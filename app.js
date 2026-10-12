@@ -683,23 +683,46 @@ function macroDialog(m, k) {
 // Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
 const SLOT_WORDS = [/^colazione\b/i, /^spuntino( mattina)?\b/i, /^pranzo\b/i, /^merenda\b/i, /^cena\b/i];
 
+const MACRO_WORDS = { p: "proteine|proteina|prot", c: "carboidrati|carboidrato|carbo|carb|zuccheri", f: "grassi|grasso|lipidi|lipide" };
+function grabMacro(line, key) {
+  const w = `(?:${MACRO_WORDS[key]})\\b\\.?`;
+  const after = line.match(new RegExp(`${w}\\s*[:=]?\\s*(?:circa\\s+)?(\\d+(?:[.,]\\d+)?)`, "i"));
+  if (after) return num1(after[1]);
+  const before = line.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(?:g|gr|grammi|grammo)?\\s*(?:di\\s+)?${w}`, "i"));
+  return before ? num1(before[1]) : null;
+}
+const NEWLINES = new RegExp("[\\r\\n" + String.fromCharCode(8232, 8233) + "]+");
 function parseDiary(text) {
   const items = [];
-  text.split(/\r?\n/).forEach((raw) => {
+  const clean = text.replace(new RegExp("[" + String.fromCharCode(8216, 8217) + "]", "g"), "'");
+  const lines = [];
+  clean.split(NEWLINES).forEach((raw) => {
+    // più frasi sulla stessa riga: separale dopo il punto
+    raw.split(/(?<=[.!])\s+(?=[A-ZÀ-Ý])/).forEach((x) => lines.push(x));
+  });
+  lines.forEach((raw) => {
     let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
     if (!line) return;
     for (const re of SLOT_WORDS) {
       if (re.test(line)) { line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
     }
     if (!line || /^(totale|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
-    const k = line.match(/(\d+(?:[.,]\d+)?)\s*kcal/i);
-    if (!k) return;
-    const grab = (word) => { const m = line.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(?:g|gr|grammi)?\\s*(?:di\\s+)?${word}`, "i")); return m ? num1(m[1]) : 0; };
+    const k = line.match(/(\d+(?:[.,]\d+)?)\s*(?:kcal|calorie|cal)\b/i);
+    if (!k) {
+      // riga di sola descrizione dei macro: appartiene all'alimento precedente
+      const last = items[items.length - 1];
+      if (last) ["p", "c", "f"].forEach((key) => { const v = grabMacro(line, key); if (v !== null && !last.hasMacro[key]) { last[key] = v; last.hasMacro[key] = true; } });
+      return;
+    }
     const colon = line.indexOf(":");
-    let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s]+$/, "").trim();
+    let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s\-–]+$/, "").trim();
     if (!name) name = "Alimento";
-    items.push({ name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: grab("proteine"), c: grab("carboidrati"), f: grab("grassi") });
+    const rest = line.slice(k.index);
+    const item = { name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, hasMacro: { p: false, c: false, f: false } };
+    ["p", "c", "f"].forEach((key) => { const v = grabMacro(rest, key); if (v !== null) { item[key] = v; item.hasMacro[key] = true; } });
+    items.push(item);
   });
+  items.forEach((it) => { it.noMacro = !it.hasMacro.p && !it.hasMacro.c && !it.hasMacro.f; delete it.hasMacro; });
   return items;
 }
 
@@ -716,7 +739,7 @@ function diaryPreview(items) {
   openDialog(`
     <h3>Controlla gli alimenti</h3>
     <p class="muted small">Togli la spunta a ciò che non vuoi aggiungere. Sono stime: ${items.length} alimenti, ${r0(items.reduce((a, x) => a + x.kcal, 0))} kcal in totale.</p>
-    ${items.map((it, i) => `<div class="di-row"><label class="di-chk"><input type="checkbox" data-di="chk" data-i="${i}" checked> <span><b>${esc(it.name)}</b><br><span class="muted small">${r0(it.kcal)} kcal, P ${r0(it.p)} C ${r0(it.c)} G ${r0(it.f)}</span></span></label></div>`).join("")}
+    ${items.map((it, i) => `<div class="di-row"><label class="di-chk"><input type="checkbox" data-di="chk" data-i="${i}" checked> <span><b>${esc(it.name)}</b><br><span class="muted small">${r0(it.kcal)} kcal, P ${r1(it.p)} C ${r1(it.c)} G ${r1(it.f)}</span>${it.noMacro ? ' <span class="bad small">macro non letti</span>' : ""}</span></label></div>`).join("")}
     <button class="btn primary wide" data-act="diary-save">Aggiungi al diario</button>`);
   dlg().dataset.diary = JSON.stringify(items);
 }
