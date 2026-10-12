@@ -50,18 +50,18 @@ const FOODS = [
   ["Pesto", 470, 5, 6, 47, 20, "Condimenti"],
   ["Ragù", 140, 9, 4, 10, 80, "Condimenti"],
   // Proteine
-  ["Petto di pollo (crudo)", 100, 23, 0, 1, 150, "Proteine"],
-  ["Petto di tacchino (crudo)", 107, 24, 0, 1.2, 150, "Proteine"],
+  ["Petto di pollo (crudo)", 100, 23.3, 0, 0.8, 150, "Proteine", "tabelle INRAN"],
+  ["Fesa di tacchino (cruda)", 107, 24, 0, 1.2, 150, "Proteine", "tabelle INRAN"],
   ["Manzo magro (crudo)", 130, 21, 0, 5, 150, "Proteine"],
   ["Macinato di manzo 10% grassi", 175, 20, 0, 10, 150, "Proteine"],
   ["Hamburger di manzo", 220, 18, 2, 15, 120, "Proteine"],
   ["Lonza di maiale (cruda)", 160, 21, 0, 8, 150, "Proteine"],
   ["Salmone (crudo)", 185, 20, 0, 12, 150, "Proteine"],
-  ["Tonno al naturale", 103, 25, 0, 0.3, 80, "Proteine"],
+  ["Tonno al naturale", 103, 25.1, 0, 0.3, 80, "Proteine", "tabelle INRAN"],
   ["Tonno sott'olio sgocciolato", 190, 25, 0, 10, 80, "Proteine"],
   ["Merluzzo o nasello", 70, 16, 0, 0.5, 200, "Proteine"],
   ["Orata o branzino", 120, 20, 0, 4, 200, "Proteine"],
-  ["Gamberi", 70, 15, 0.5, 0.8, 150, "Proteine"],
+  ["Gamberi", 71, 13.6, 0.5, 0.6, 150, "Proteine", "tabelle INRAN"],
   ["Prosciutto crudo", 250, 27, 0, 15, 50, "Proteine"],
   ["Prosciutto cotto", 180, 19, 1, 11, 50, "Proteine"],
   ["Bresaola", 151, 32, 0, 2.6, 50, "Proteine"],
@@ -70,7 +70,7 @@ const FOODS = [
   ["Salame", 400, 25, 1, 33, 30, "Proteine"],
   ["Mozzarella", 253, 18.7, 0.7, 19.5, 125, "Proteine"],
   ["Mozzarella light", 165, 19, 1, 9, 125, "Proteine"],
-  ["Parmigiano", 392, 33, 0, 28, 10, "Proteine"],
+  ["Parmigiano Reggiano", 402, 32.4, 0, 29.7, 10, "Proteine", "Consorzio del Parmigiano Reggiano"],
   ["Ricotta vaccina", 146, 8.8, 3.5, 10.9, 100, "Proteine"],
   ["Fiocchi di latte", 98, 12, 3, 4.3, 150, "Proteine"],
   ["Formaggio stagionato", 400, 27, 0, 32, 50, "Proteine"],
@@ -117,7 +117,7 @@ const FOODS = [
   ["Pistacchi", 560, 20, 28, 45, 30, "Frutta secca"],
   ["Arachidi", 567, 26, 16, 49, 30, "Frutta secca"],
   // Condimenti
-  ["Olio extravergine d'oliva", 884, 0, 0, 100, 10, "Condimenti"],
+  ["Olio extravergine d'oliva", 899, 0, 0, 99.9, 10, "Condimenti", "EnteCRA"],
   ["Maionese", 680, 1, 1, 75, 15, "Condimenti"],
   ["Ketchup", 112, 1.2, 26, 0.1, 15, "Condimenti"],
   // Snack e dolci
@@ -132,7 +132,7 @@ const FOODS = [
   ["Sushi misto", 150, 6, 28, 2, 300, "Piatti"],
   ["Kebab", 215, 12, 20, 10, 350, "Piatti"],
   ["Panino hamburger fast food", 255, 13, 30, 9, 220, "Piatti"],
-].map(([name, kcal, p, c, f, portion, cat]) => ({ name, kcal, p, c, f, portion, cat }));
+].map(([name, kcal, p, c, f, portion, cat, src]) => ({ name, kcal, p, c, f, portion, cat, src }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
 const DRINKS = [
