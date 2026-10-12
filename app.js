@@ -1203,6 +1203,37 @@ document.addEventListener("visibilitychange", () => {
   if (view.tab === "oggi" && !dlg().open) { applyHabits(todayKey()); render(); }
 });
 
+// Aggiornamento automatico: al rientro nell'app controlla se app.js sul sito è cambiato.
+let seenStamp = null;
+async function codeStamp() {
+  try {
+    const r = await fetch("app.js", { method: "HEAD", cache: "no-store" });
+    return (r.headers.get("etag") || "") + (r.headers.get("last-modified") || "") || null;
+  } catch { return null; }
+}
+async function checkUpdate() {
+  const now = await codeStamp();
+  if (!now) return;
+  if (seenStamp === null) { seenStamp = now; return; }
+  if (now !== seenStamp && !$("#upd")) {
+    const bar = document.createElement("button");
+    bar.id = "upd"; bar.className = "upd-bar";
+    bar.textContent = "Nuova versione disponibile, tocca per aggiornare";
+    bar.onclick = async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+        const ks = await caches.keys();
+        await Promise.all(ks.map((k) => caches.delete(k)));
+      } catch {}
+      location.reload();
+    };
+    document.body.appendChild(bar);
+  }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
+checkUpdate();
+
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
