@@ -174,8 +174,7 @@ function renderToday() {
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
   const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
-    ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}
-    <div class="slot-actions"><button class="btn small-btn primary" data-act="food">Aggiungi alimento</button>${hasYesterday(k) ? `<button class="link" data-act="copy-yesterday">Come ieri</button>` : ""}</div>`;
+    ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
   <div class="datebar">
@@ -210,8 +209,8 @@ function renderToday() {
 
   <section class="card">
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
+    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}</div>
     ${mealsHtml}
-    <button class="link" data-act="diary-dialog">Incolla un riepilogo di più alimenti</button>
   </section>
 
   <section class="card">
