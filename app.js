@@ -189,6 +189,7 @@ function renderToday() {
       <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
+    <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
       <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
