@@ -694,6 +694,20 @@ function dayComment(k) {
   if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
   else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
   if (t.water < t.waterTarget * 0.7) lines.push({ lvl: "warn", text: `Acqua scarsa: ${r1(t.water / 1000)} L su ${r1(t.waterTarget / 1000)} L.` });
+  if (!d.closed && k === todayKey()) {
+    const hour = new Date().getHours();
+    const meal = hour < 11 ? "il pranzo" : hour < 17 ? "il prossimo pasto" : "la cena";
+    const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
+    const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
+    const parts = [];
+    if (rem < 250) parts.push(`${rem <= 0 ? "Hai già finito il budget della giornata" : `Ti restano solo ${r0(rem)} kcal`}: per ${meal} resta leggero, verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti. Non compensare saltando i pasti di domani.`);
+    else {
+      const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
+      parts.push(`Ti restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. Per ${meal}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
+    }
+    if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
+    lines.push({ lvl: "tip", text: parts.join(" ") });
+  }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
   if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
@@ -766,7 +780,7 @@ function parseDiary(text) {
     for (const re of SLOT_WORDS) {
       if (re.test(line)) { line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
     }
-    if (!line || /^(totale|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
+    if (!line || /^(totale|giornata|in totale|ho stimato|stima per|riepilogo|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
     const k = line.match(/(\d+(?:[.,]\d+)?)\s*(?:kcal|calorie|cal)\b/i);
     if (!k) {
       // riga di sola descrizione dei macro: appartiene all'alimento precedente
