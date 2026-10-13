@@ -173,7 +173,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="meal-date" data-kind="meal" data-id="${m.id}">Cambia data</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -226,7 +226,7 @@ function renderToday() {
         <button class="btn ghost" data-act="drink">Altra bevanda</button>
       </div>
     </div>
-    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="meal-date" data-kind="drink" data-id="${x.id}">Cambia data</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
   </section>
 
   <section class="card">
@@ -1116,6 +1116,33 @@ function act(a, el) {
         m.ref = { name: cur.name, kcal: cur.kcal, p: cur.p, c: cur.c, f: cur.f, portion: cur.portion, cat: cur.cat };
       });
       toast(`${ch.length} ${ch.length === 1 ? "alimento aggiornato" : "alimenti aggiornati"}`); break;
+    }
+    case "meal-date": {
+      const list = el.dataset.kind === "drink" ? day(k).drinks : day(k).meals;
+      const it = list.find((x) => x.id === el.dataset.id);
+      if (!it) return;
+      openDialog(`<h3>Cambia data</h3><p class="muted small">${esc(it.name)}, ${r0(it.kcal)} kcal. Scegli il giorno a cui appartiene: i totali dei due giorni si ricalcolano.</p>
+        <div class="field"><label for="md-date">Data</label><input id="md-date" type="date" value="${k}" max="${todayKey()}"></div>
+        <div class="btns"><button class="btn ghost" data-act="md-set" data-d="${addDays(k, -1)}">Giorno prima</button><button class="btn ghost" data-act="md-set" data-d="${todayKey()}">Oggi</button></div>
+        <button class="btn primary wide" data-act="save-date">Salva</button>`);
+      dlg().dataset.kind = el.dataset.kind; dlg().dataset.id = el.dataset.id; dlg().dataset.from = k;
+      return;
+    }
+    case "md-set": $("#md-date").value = el.dataset.d; return;
+    case "save-date": {
+      const from = dlg().dataset.from, to = val("#md-date"), kind = dlg().dataset.kind, id = dlg().dataset.id;
+      if (!to) return toast("Scegli una data");
+      if (to > todayKey()) return toast("Non puoi scegliere una data futura");
+      if (to === from) { closeDialog(); return; }
+      const src = day(from, true), dst = day(to, true);
+      const key = kind === "drink" ? "drinks" : "meals";
+      const it = src[key].find((x) => x.id === id);
+      if (!it) { closeDialog(); return; }
+      src[key] = src[key].filter((x) => x.id !== id);
+      dst[key].push(it);
+      closeDialog();
+      toast(`Spostato al ${fmtDate(to, { day: "numeric", month: "long" })}: ${r0(totals(to).kcal)} kcal in quel giorno, ${r0(totals(from).kcal)} kcal nel giorno di partenza`);
+      break;
     }
     case "diary-dialog": return diaryDialog();
     case "diary-from-search": return diaryDialog($("#f-search").value);
