@@ -142,12 +142,15 @@ function periodStats(endKey, n) {
 }
 
 // ---------- Rendering principale ----------
+let resetScroll = false;
 function render() {
+  const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
   if (!S.profile) { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
   main.innerHTML = { oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, resetScroll ? 0 : keepY);
+  resetScroll = false;
 }
 
 function bar(value, target, cls = "") {
@@ -199,6 +202,13 @@ function renderToday() {
     <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
 
+  <section class="card">
+    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
+    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
+    ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
+    ${mealsHtml}
+  </section>
+
   ${commentHtml(k)}
 
   <section class="card">
@@ -206,13 +216,6 @@ function renderToday() {
     <div class="checklist">
       ${checklist.map((c) => `<button class="check ${c.ok ? "ok" : ""}" data-act="${c.act}" ${c.slot ? `data-slot="${c.slot}"` : ""}><span class="dot"></span>${esc(c.label)}</button>`).join("")}
     </div>
-  </section>
-
-  <section class="card">
-    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
-    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
-    ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
-    ${mealsHtml}
   </section>
 
   <section class="card">
@@ -1097,10 +1100,10 @@ function act(a, el) {
   const val = (id) => $(id).value;
   const num = (id) => parseFloat($(id).value);
   switch (a) {
-    case "prev-day": view.date = addDays(k, -1); break;
-    case "next-day": if (k < todayKey()) view.date = addDays(k, 1); break;
-    case "goto": view.date = el.dataset.k; view.tab = "oggi"; break;
-    case "period": view.period = +el.dataset.n; break;
+    case "prev-day": view.date = addDays(k, -1); resetScroll = true; break;
+    case "next-day": if (k < todayKey()) view.date = addDays(k, 1); resetScroll = true; break;
+    case "goto": view.date = el.dataset.k; view.tab = "oggi"; resetScroll = true; break;
+    case "period": view.period = +el.dataset.n; resetScroll = true; break;
     case "food": return foodDialog();
     case "scan-barcode": dlg().dataset.slot = "giorno"; return barcodeDialog();
     case "bc-lookup": stopScan(); return lookupBarcode($("#bc-manual").value);
@@ -1138,7 +1141,7 @@ function act(a, el) {
       day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: val("#k-name").trim() || "Stima", g: null, kcal: kc, p, c: Math.max(0, (kc * 0.45) / 4), f: Math.max(0, (kc - p * 4 - kc * 0.45) / 9) });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "tab-misure": view.tab = "misure"; break;
+    case "tab-misure": view.tab = "misure"; resetScroll = true; break;
     case "save-measure": {
       const m = { id: view.mEdit?.id || uid(), date: val("#m-date"), weight: num1(val("#m-weight")), waist: num1(val("#m-waist")), low: num1(val("#m-low")), thigh: num1(val("#m-thigh")), note: val("#m-note").trim() };
       if (!m.date) return toast("Inserisci la data");
@@ -1150,7 +1153,7 @@ function act(a, el) {
       if (m.weight !== null) day(m.date, true).weight = m.weight;
       view.mEdit = null; toast("Misurazione salvata"); break;
     }
-    case "edit-measure": view.mEdit = S.measures.find((x) => x.id === el.dataset.id); break;
+    case "edit-measure": resetScroll = true; view.mEdit = S.measures.find((x) => x.id === el.dataset.id); break;
     case "cancel-measure": view.mEdit = null; break;
     case "seed-measures": {
       const seed = [["2026-02-05", 67.5, null], ["2026-09-05", null, 90.5], ["2026-09-10", 65.7, 91], ["2026-09-21", 66, 91.5]];
@@ -1359,7 +1362,7 @@ function act(a, el) {
 // ---------- Eventi ----------
 document.addEventListener("click", (e) => {
   const nav = e.target.closest(".nav button");
-  if (nav) { view.tab = nav.dataset.tab; view.mEdit = null; if (view.tab === "oggi") view.date = todayKey(); return render(); }
+  if (nav) { resetScroll = true; view.tab = nav.dataset.tab; view.mEdit = null; if (view.tab === "oggi") view.date = todayKey(); return render(); }
   const el = e.target.closest("[data-act]");
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
@@ -1395,7 +1398,7 @@ document.addEventListener("submit", (e) => {
   S.profile = { sex: fd.get("sex"), age: n("age"), height: n("height"), weight: n("weight"), goalWeight: n("goalWeight"), rate: n("rate"), activity: n("activity"), trainDays: n("trainDays"), level: fd.get("level") };
   save();
   toast("Profilo salvato");
-  view.tab = "oggi"; view.date = todayKey();
+  view.tab = "oggi"; view.date = todayKey(); resetScroll = true;
   render();
 });
 document.addEventListener("keydown", (e) => {
