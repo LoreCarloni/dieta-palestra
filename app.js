@@ -173,7 +173,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="meal-date" data-kind="meal" data-id="${m.id}">Cambia data</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -210,7 +210,7 @@ function renderToday() {
 
   <section class="card">
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
-    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}</div>
+    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
   </section>
@@ -226,7 +226,7 @@ function renderToday() {
         <button class="btn ghost" data-act="drink">Altra bevanda</button>
       </div>
     </div>
-    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="meal-date" data-kind="drink" data-id="${x.id}">Cambia data</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
   </section>
 
   <section class="card">
@@ -649,6 +649,56 @@ function renderFoodList(q) {
   }
   $("#f-list").innerHTML = list.length ? list.map(foodItem).join("") : `<p class="muted small">Nessun risultato. L'ho segnato nella lista degli alimenti da aggiungere. Intanto usa il codice a barre, "Alimento non in lista" o "Solo calorie".</p>`;
   if (!list.length && ql.length >= 3) trackMissing(ql);
+}
+
+// ---------- Modifica di una voce e copia da data ----------
+function entryList(k, kind) { return kind === "drink" ? day(k).drinks : day(k).meals; }
+function editDialog(kind, id, k) {
+  const it = entryList(k, kind).find((x) => x.id === id);
+  if (!it) return;
+  const qty = kind === "drink" ? it.ml : it.g;
+  const fld = (fid, label, v, extra = "") => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="text" inputmode="decimal" value="${v === null || v === undefined ? "" : r1(v)}" ${extra}></div>`;
+  openDialog(`
+    <h3>Modifica</h3>
+    <div class="field"><label for="ed-name">Nome</label><input id="ed-name" type="text" value="${esc(it.name)}"></div>
+    <div class="grid2">
+      ${qty ? fld("ed-qty", kind === "drink" ? "Quantità (ml)" : "Quantità (g)", qty) : ""}
+      ${fld("ed-kcal", "Calorie (kcal)", it.kcal)}
+      ${kind === "drink" ? fld("ed-c", "Carboidrati (g)", it.c) : fld("ed-p", "Proteine (g)", it.p) + fld("ed-c", "Carboidrati (g)", it.c) + fld("ed-f", "Grassi (g)", it.f)}
+    </div>
+    ${qty ? '<p class="muted small">Se cambi la quantità, calorie e macro si riscalano in proporzione; puoi poi correggerli a mano.</p>' : ""}
+    <div class="field"><label for="ed-date">Data</label><input id="ed-date" type="date" value="${k}" max="${todayKey()}"></div>
+    <div class="btns"><button class="btn ghost" data-act="ed-date-set" data-d="${addDays(k, -1)}">Giorno prima</button><button class="btn ghost" data-act="ed-date-set" data-d="${todayKey()}">Oggi</button></div>
+    <button class="btn primary wide" data-act="save-entry">Salva modifiche</button>`);
+  dlg().dataset.kind = kind; dlg().dataset.id = id; dlg().dataset.from = k;
+  dlg().dataset.orig = JSON.stringify({ qty: qty || 0, kcal: it.kcal, p: it.p || 0, c: it.c || 0, f: it.f || 0 });
+}
+function scaleEdit(v) {
+  const o = JSON.parse(dlg().dataset.orig);
+  const q = num1(v);
+  if (!(o.qty > 0) || !(q > 0)) return;
+  const r = q / o.qty, set = (id, val) => { const el = $("#" + id); if (el) el.value = r1(val); };
+  set("ed-kcal", o.kcal * r); set("ed-p", o.p * r); set("ed-c", o.c * r); set("ed-f", o.f * r);
+}
+function copyDialog() {
+  openDialog(`
+    <h3>Copia da data</h3>
+    <p class="muted small">Scegli il giorno da cui copiare: gli alimenti selezionati si aggiungono a ${view.date === todayKey() ? "oggi" : esc(fmtDate(view.date, { day: "numeric", month: "long" }))}.</p>
+    <div class="field"><label for="cp-date">Copia da</label><input id="cp-date" type="date" value="${addDays(view.date, -1)}" max="${todayKey()}"></div>
+    <div id="cp-list"></div>`);
+  renderCopyList(addDays(view.date, -1));
+}
+function renderCopyList(from) {
+  const box = $("#cp-list");
+  if (!box) return;
+  if (!from || from === view.date) { box.innerHTML = `<p class="muted small">Scegli un giorno diverso da quello aperto.</p>`; return; }
+  const d = day(from);
+  const rows = d.meals.map((x, i) => ({ kind: "meal", i, x })).concat(d.drinks.map((x, i) => ({ kind: "drink", i, x })));
+  if (!rows.length) { box.innerHTML = `<p class="muted small">Nessun alimento registrato in quel giorno.</p>`; return; }
+  const tot = rows.reduce((a, r) => a + r.x.kcal, 0);
+  box.innerHTML = `<p class="small">${rows.length} voci, ${r0(tot)} kcal in totale.</p>
+    ${rows.map((r) => `<label class="di-chk cp-row"><input type="checkbox" data-cp="${r.kind}" data-i="${r.i}" checked> <span><b>${esc(r.x.name)}</b><br><span class="muted small">${r0(r.x.kcal)} kcal${r.kind === "drink" ? ", " + r0(r.x.ml) + " ml" : r.x.g ? ", " + r0(r.x.g) + " g" : ""}</span></span></label>`).join("")}
+    <button class="btn primary wide" data-act="copy-run">Copia nel giorno aperto</button>`;
 }
 
 // ---------- Ricalcolo con i valori aggiornati ----------
@@ -1117,6 +1167,53 @@ function act(a, el) {
       });
       toast(`${ch.length} ${ch.length === 1 ? "alimento aggiornato" : "alimenti aggiornati"}`); break;
     }
+    case "edit-entry": return editDialog(el.dataset.kind, el.dataset.id, k);
+    case "ed-date-set": $("#ed-date").value = el.dataset.d; return;
+    case "save-entry": {
+      const from = dlg().dataset.from, kind = dlg().dataset.kind, id = dlg().dataset.id;
+      const it = entryList(from, kind).find((x) => x.id === id);
+      if (!it) { closeDialog(); return; }
+      const name = val("#ed-name").trim();
+      const kcal = num1(val("#ed-kcal"));
+      if (!name || kcal === null || kcal < 0) return toast("Nome e calorie sono obbligatori");
+      const read = (sel) => { const el2 = $(sel); return el2 ? Math.max(0, num1(el2.value) ?? 0) : 0; };
+      const before = { kcal: it.kcal, p: it.p || 0, c: it.c || 0, f: it.f || 0 };
+      it.name = name; it.kcal = kcal; it.c = read("#ed-c");
+      if (kind === "meal") { it.p = read("#ed-p"); it.f = read("#ed-f"); }
+      const q = $("#ed-qty") ? num1(val("#ed-qty")) : null;
+      if (q > 0) { if (kind === "drink") it.ml = q; else it.g = q; }
+      if (kind === "meal" && it.ref && (it.ref.name !== name || Math.abs(before.kcal - it.kcal) > 0.5 || Math.abs(before.p - it.p) > 0.2 || Math.abs(before.c - it.c) > 0.2 || Math.abs(before.f - it.f) > 0.2)) {
+        const exp = it.g ? { kcal: (it.ref.kcal * it.g) / 100, p: (it.ref.p * it.g) / 100, c: (it.ref.c * it.g) / 100, f: (it.ref.f * it.g) / 100 } : null;
+        if (!exp || Math.abs(exp.kcal - it.kcal) > 0.5 || Math.abs(exp.p - it.p) > 0.2 || Math.abs(exp.c - it.c) > 0.2 || Math.abs(exp.f - it.f) > 0.2 || it.ref.name !== name) delete it.ref;
+      }
+      const to = val("#ed-date");
+      if (to && to !== from) {
+        if (to > todayKey()) return toast("Non puoi scegliere una data futura");
+        const key = kind === "drink" ? "drinks" : "meals";
+        day(from, true)[key] = day(from, true)[key].filter((x) => x.id !== id);
+        day(to, true)[key].push(it);
+        closeDialog();
+        toast(`Spostato al ${fmtDate(to, { day: "numeric", month: "long" })}: ${r0(totals(to).kcal)} kcal in quel giorno, ${r0(totals(from).kcal)} kcal nel giorno di partenza`);
+        break;
+      }
+      closeDialog(); toast("Modifiche salvate"); break;
+    }
+    case "copy-from-date": return copyDialog();
+    case "copy-run": {
+      const from = $("#cp-date").value;
+      if (!from || from === view.date) return toast("Scegli un giorno diverso da quello aperto");
+      const src = day(from), d2 = day(k, true);
+      let n = 0;
+      document.querySelectorAll("#cp-list input[data-cp]").forEach((c) => {
+        if (!c.checked) return;
+        const list = c.dataset.cp === "drink" ? src.drinks : src.meals;
+        const it = list[+c.dataset.i];
+        if (!it) return;
+        (c.dataset.cp === "drink" ? d2.drinks : d2.meals).push({ ...it, id: uid(), auto: false });
+        n++;
+      });
+      closeDialog(); toast(`${n} voci copiate`); break;
+    }
     case "meal-date": {
       const list = el.dataset.kind === "drink" ? day(k).drinks : day(k).meals;
       const it = list.find((x) => x.id === el.dataset.id);
@@ -1269,9 +1366,11 @@ document.addEventListener("click", (e) => {
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "q-g") updateQtyPreview();
+  if (e.target.id === "ed-qty") scaleEdit(e.target.value);
 });
 document.addEventListener("change", (e) => {
   const t = e.target;
+  if (t.id === "cp-date") return renderCopyList(t.value);
   const c = t.dataset.change;
   if (c === "steps") { day(view.date, true).steps = Math.max(0, parseInt(t.value) || 0); save(); render(); }
   if (c === "weight") { const w = parseFloat(t.value); day(view.date, true).weight = w > 30 && w < 300 ? w : null; save(); render(); }
