@@ -176,7 +176,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -229,7 +229,7 @@ function renderToday() {
         <button class="btn ghost" data-act="drink">Altra bevanda</button>
       </div>
     </div>
-    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+    ${d.drinks.map((x) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="drink" data-id="${x.id}"><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
   </section>
 
   <section class="card">
