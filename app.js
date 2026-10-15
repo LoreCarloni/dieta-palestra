@@ -700,7 +700,7 @@ function renderCopyList(from) {
   if (!rows.length) { box.innerHTML = `<p class="muted small">Nessun alimento registrato in quel giorno.</p>`; return; }
   const tot = rows.reduce((a, r) => a + r.x.kcal, 0);
   box.innerHTML = `<p class="small">${rows.length} voci, ${r0(tot)} kcal in totale.</p>
-    ${rows.map((r) => `<label class="di-chk cp-row"><input type="checkbox" data-cp="${r.kind}" data-i="${r.i}" checked> <span><b>${esc(r.x.name)}</b><br><span class="muted small">${r0(r.x.kcal)} kcal${r.kind === "drink" ? ", " + r0(r.x.ml) + " ml" : r.x.g ? ", " + r0(r.x.g) + " g" : ""}</span></span></label>`).join("")}
+    ${rows.map((r) => `<label class="di-chk cp-row"><input type="checkbox" data-cp="${r.kind}" data-i="${r.i}"> <span><b>${esc(r.x.name)}</b><br><span class="muted small">${r0(r.x.kcal)} kcal${r.kind === "drink" ? ", " + r0(r.x.ml) + " ml" : r.x.g ? ", " + r0(r.x.g) + " g" : ""}</span></span></label>`).join("")}
     <button class="btn primary wide" data-act="copy-run">Copia nel giorno aperto</button>`;
 }
 
