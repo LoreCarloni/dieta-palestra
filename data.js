@@ -186,6 +186,8 @@ const EXERCISES = [
   ["Pilates", 3.0],
   ["Stretching", 2.3],
   ["Calcio", 7.0],
+  ["Krav Maga (corso)", 9.0],
+  ["Arti marziali", 7.0],
   ["Padel", 6.0],
   ["Tennis", 7.3],
   ["Ballo", 5.0],
