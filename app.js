@@ -176,7 +176,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -229,7 +229,7 @@ function renderToday() {
         <button class="btn ghost" data-act="drink">Altra bevanda</button>
       </div>
     </div>
-    ${d.drinks.map((x) => `<div class="row"><div><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+    ${d.drinks.map((x) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="drink" data-id="${x.id}"><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
   </section>
 
   <section class="card">
@@ -238,6 +238,7 @@ function renderToday() {
     <div class="field inline"><label for="steps">Passi del giorno</label><input id="steps" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps"></div>
     <div class="btns">
       <button class="btn" data-act="exercise">Aggiungi allenamento</button>
+      <button class="btn ghost" data-act="activity-dialog">Incolla un riepilogo allenamenti</button>
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
   </section>
@@ -806,6 +807,31 @@ function macroDialog(m, k) {
     <p class="muted small">${cfg.tip}</p>`);
 }
 
+// ---------- Riepilogo allenamenti incollato ----------
+// Una riga per attività: nome, minuti, note facoltative. Esempio: Krav Maga, 75 minuti, corso serale
+function parseActivity(text) {
+  const out = [], errors = [];
+  text.replace(/[  ]/g, " ").split(/\r?\n/).forEach((raw, i) => {
+    const line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
+    if (!line || /^(totale|giorno|riepilogo|nota|stasera|domani)/i.test(line)) return;
+    const m = line.match(/(\d+(?:[.,]\d+)?)\s*(?:minuti|minuto|min\b|m\b|')/i) || line.match(/[,;|]\s*(\d+(?:[.,]\d+)?)\s*(?:$|[,;|])/);
+    if (!m) return errors.push(`riga ${i + 1}: ${line.slice(0, 40)}`);
+    const min = num1(m[1]);
+    const name = line.slice(0, m.index).replace(/[,;|:\s-]+$/, "").trim() || "Attività";
+    const rest = line.slice(m.index + m[0].length).replace(/^[,;|\s-]+/, "").trim();
+    const hit = EXERCISES.find((e) => norm(e.name).includes(norm(name)) || norm(name).includes(norm(e.name)));
+    out.push({ name: hit ? hit.name : name, met: hit ? hit.met : 5, min, note: rest, generic: !hit });
+  });
+  return { out, errors };
+}
+function activityDialog() {
+  openDialog(`
+    <h3>Incolla un riepilogo allenamenti</h3>
+    <p class="muted small">Una riga per attività con i minuti, per esempio: Krav Maga, 75 minuti, corso serale. Le attività non in elenco usano una stima generica.</p>
+    <div class="field"><textarea id="act-text" rows="7" placeholder="Incolla qui" autofocus></textarea></div>
+    <button class="btn primary wide" data-act="activity-save">Aggiungi</button>`);
+}
+
 // ---------- Riepilogo incollato: suddivisione in pasti ----------
 // Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
 const SLOT_WORDS = [/^colazione\b/i, /^spuntino( mattina)?\b/i, /^pranzo\b/i, /^merenda\b/i, /^cena\b/i];
@@ -1316,6 +1342,17 @@ function act(a, el) {
       const w = el.dataset.w;
       const cardio = /cardio/i.test(w), hiit = /intervalli/i.test(w);
       return exerciseDialog({ name: cardio ? "Camminata in salita" : hiit ? "HIIT" : "Pesi moderato", min: cardio ? 40 : hiit ? 25 : 60, note: w });
+    }
+    case "activity-dialog": return activityDialog();
+    case "activity-save": {
+      const { out, errors } = parseActivity(val("#act-text"));
+      if (!out.length) return toast(errors.length ? "Nessuna riga valida: scrivi i minuti, per esempio 60 minuti" : "Incolla almeno una riga");
+      const w = weightAt(k), dd = day(k, true);
+      out.forEach((e) => dd.ex.push({ id: uid(), name: e.name, met: e.met, min: e.min, kcal: (e.met * w * e.min) / 60, net: ((e.met - 1) * w * e.min) / 60, note: e.note, generic: e.generic }));
+      dd.rest = false;
+      closeDialog();
+      toast(`${out.length} attività aggiunte${errors.length ? `, ${errors.length} righe non lette` : ""}`);
+      break;
     }
     case "save-ex": {
       const e = EXERCISES[+val("#e-type")];
