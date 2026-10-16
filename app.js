@@ -29,6 +29,7 @@ S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
 S.wanted = S.wanted || [];
 S.dailyAuto = S.dailyAuto || [];
+S.plans = S.plans || [];
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
@@ -239,6 +240,7 @@ function renderToday() {
     <div class="btns">
       <button class="btn" data-act="exercise">Aggiungi allenamento</button>
       <button class="btn ghost" data-act="activity-dialog">Incolla un riepilogo allenamenti</button>
+      <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
   </section>
@@ -807,6 +809,45 @@ function macroDialog(m, k) {
     <p class="muted small">${cfg.tip}</p>`);
 }
 
+// ---------- Schede di allenamento ----------
+// Testo di una scheda: una riga "Giorno A" (o B, C...) seguita dagli esercizi, una riga per esercizio.
+function parsePlan(text) {
+  const days = [];
+  let cur = null;
+  text.replace(/[  ]/g, " ").split(/\r?\n/).forEach((raw) => {
+    const line = raw.replace(/^[\s\-•*·]+/, "").trim();
+    if (!line) return;
+    const h = line.match(/^(?:giorno|day|scheda)\s*([A-Za-z0-9]{1,3})\b[\s:.-]*(.*)$/i);
+    if (h) { cur = { label: h[1].toUpperCase(), title: h[2].trim(), exercises: [] }; days.push(cur); return; }
+    if (cur) cur.exercises.push(line);
+  });
+  return days.filter((d) => d.exercises.length);
+}
+function plansDialog() {
+  const list = S.plans.map((p) => `<div class="plan">
+      <div class="plan-h"><b>${esc(p.name)}</b><button class="link small-link" data-act="plan-del" data-id="${p.id}">Elimina</button></div>
+      <div class="btns">${p.days.map((dd) => `<button class="btn small-btn" data-act="plan-day" data-id="${p.id}" data-label="${esc(dd.label)}">Giorno ${esc(dd.label)}</button>`).join("")}</div>
+      <button class="link small-link" data-act="plan-copy" data-id="${p.id}">Copia questa scheda</button>
+    </div>`).join("");
+  openDialog(`
+    <h3>Schede di allenamento</h3>
+    ${list || `<p class="muted small">Nessuna scheda. Incollane una qui sotto.</p>`}
+    <hr>
+    <div class="field"><label for="pl-name">Nome della scheda</label><input id="pl-name" type="text" placeholder="Scheda ottobre"></div>
+    <div class="field"><label for="pl-text">Scheda</label><textarea id="pl-text" rows="8" placeholder="Giorno A&#10;Squat 4x8 60 kg&#10;Panca piana 3x10 40 kg&#10;Giorno B&#10;Stacco 3x6 80 kg"></textarea></div>
+    <button class="btn primary wide" data-act="plan-save">Salva scheda</button>`);
+}
+function planDayDialog(id, label) {
+  const p = S.plans.find((x) => x.id === id);
+  const dd = p && p.days.find((x) => x.label === label);
+  if (!dd) return;
+  openDialog(`
+    <h3>Giorno ${esc(label)}: ${esc(p.name)}</h3>
+    <ul class="plan-ex">${dd.exercises.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>
+    <div class="field"><label for="pd-min">Durata in minuti</label><input id="pd-min" type="number" inputmode="numeric" min="1" value="60" autofocus></div>
+    <button class="btn primary wide" data-act="plan-log" data-id="${id}" data-label="${esc(label)}">Registra allenamento di oggi</button>`);
+}
+
 // ---------- Riepilogo allenamenti incollato ----------
 // Una riga per attività: nome, minuti, note facoltative. Esempio: Krav Maga, 75 minuti, corso serale
 function parseActivity(text) {
@@ -1342,6 +1383,32 @@ function act(a, el) {
       const w = el.dataset.w;
       const cardio = /cardio/i.test(w), hiit = /intervalli/i.test(w);
       return exerciseDialog({ name: cardio ? "Camminata in salita" : hiit ? "HIIT" : "Pesi moderato", min: cardio ? 40 : hiit ? 25 : 60, note: w });
+    }
+    case "plans-dialog": return plansDialog();
+    case "plan-save": {
+      const name = val("#pl-name").trim() || "Scheda";
+      const days = parsePlan(val("#pl-text"));
+      if (!days.length) return toast("Scrivi almeno un giorno con gli esercizi, per esempio: Giorno A");
+      S.plans.push({ id: uid(), name, days });
+      toast("Scheda salvata"); return plansDialog();
+    }
+    case "plan-del": S.plans = S.plans.filter((p) => p.id !== el.dataset.id); return plansDialog();
+    case "plan-copy": {
+      const p = S.plans.find((x) => x.id === el.dataset.id);
+      if (p) S.plans.push({ id: uid(), name: p.name + " (copia)", days: JSON.parse(JSON.stringify(p.days)) });
+      toast("Scheda copiata"); return plansDialog();
+    }
+    case "plan-day": return planDayDialog(el.dataset.id, el.dataset.label);
+    case "plan-log": {
+      const p = S.plans.find((x) => x.id === el.dataset.id);
+      const dd = p && p.days.find((x) => x.label === el.dataset.label);
+      const min = num("#pd-min");
+      if (!dd || !(min > 0)) return toast("Inserisci la durata");
+      const w = weightAt(k), met = 3.5;
+      const note = dd.exercises.slice(0, 12).join(" · ");
+      day(k, true).ex.push({ id: uid(), name: `${p.name}, giorno ${dd.label}`, met, min, kcal: (met * w * min) / 60, net: ((met - 1) * w * min) / 60, note });
+      day(k, true).rest = false;
+      closeDialog(); toast(`Giorno ${dd.label} registrato`); break;
     }
     case "activity-dialog": return activityDialog();
     case "activity-save": {
