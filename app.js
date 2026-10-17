@@ -784,7 +784,8 @@ function historyDialog() {
     <h3>Ricalcolo con i valori aggiornati</h3>
     <p class="muted small">${ch.length} voci cambiano. Le calorie complessive delle voci cambiate passano da ${r0(ch.reduce((a, x) => a + x.m.kcal, 0))} a ${r0(ch.reduce((a, x) => a + x.n.kcal, 0))}. Prima di applicare, esporta un backup dal Profilo.</p>
     ${ch.map((x, i) => `<label class="di-chk cp-row"><input type="checkbox" data-hist="${i}" checked> <span><b>${esc(x.m.name)}</b> (${fmtDate(x.k, { day: "numeric", month: "short" })})<br><span class="muted small">${r0(x.m.kcal)} kcal, ora ${r0(x.n.kcal)} kcal, grammi ${r0(x.m.g)}</span></span></label>`).join("")}
-    <button class="btn primary wide" data-act="hist-apply">Applica le voci selezionate</button>`);
+    <button class="btn primary wide" data-act="hist-apply-verified">Applica tutte le voci da fonte verificata (CREA, INRAN, Consorzio)</button>
+    <button class="btn ghost wide" data-act="hist-apply">Applica solo le voci selezionate</button>`);
   dlg().dataset.histOk = "1";
 }
 
@@ -1406,6 +1407,15 @@ function act(a, el) {
       break;
     }
     case "hist-check": return historyDialog();
+    case "hist-apply-verified": {
+      const ch = historyChanges();
+      const ok = ch.filter((x) => /CREA|INRAN|Consorzio|EnteCRA/i.test(x.cur.src || ""));
+      ok.forEach((x) => {
+        const tgt = S.days[x.k].meals.find((m) => m.id === x.id);
+        if (tgt) { tgt.kcal = x.n.kcal; tgt.p = x.n.p; tgt.c = x.n.c; tgt.f = x.n.f; }
+      });
+      closeDialog(); toast(`${ok.length} voci aggiornate con fonte verificata, ${ch.length - ok.length} lasciate invariate`); break;
+    }
     case "hist-apply": {
       const ids = JSON.parse(dlg().dataset.hist || "[]");
       const ch = historyChanges();
