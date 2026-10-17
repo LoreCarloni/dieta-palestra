@@ -821,6 +821,20 @@ function recalcChanges(k) {
 
 // ---------- Commento della giornata ----------
 const SWEET_RE = /cioccolat|kinder|nutella|biscott|merendin|gelato|patatine|pringles|snack|dolc|torta|tiramis|brioche|croissant|cornetto|galletta|nocciol|caramell|barretta|crema/i;
+// Panoramica di n giorni che finiscono a endKey: giorni tracciati, sgarri calorici e di grassi, medie.
+function overview(endKey, n) {
+  const days = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const k = addDays(endKey, -i);
+    if (!isTracked(k)) continue;
+    const t = totals(k), tg = targets(k);
+    days.push({ k, kcal: t.kcal, f: t.f, tgK: tg.kcal, tgF: tg.fat, overK: t.kcal > tg.kcal * 1.1, overF: t.f > tg.fat * 1.2 });
+  }
+  const avg = (f) => (days.length ? days.reduce((a, d) => a + f(d), 0) / days.length : null);
+  return { days, n, over: days.filter((d) => d.overK), overF: days.filter((d) => d.overF), avgK: avg((d) => d.kcal), avgF: avg((d) => d.f), tgK: avg((d) => d.tgK), tgF: avg((d) => d.tgF) };
+}
+const shortDay = (k) => fmtDate(k, { weekday: "short", day: "numeric" });
+
 function dayComment(k) {
   const d = day(k), t = totals(k), tg = targets(k);
   if (!d.meals.length) return null;
@@ -842,8 +856,18 @@ function dayComment(k) {
   const wkOk = wk.tracked >= 3;
   if (fOver > tg.fat * 0.1) lines.push({ lvl: wkOk && wk.f <= wk.pTarget * 0 + tg.fat * 1.05 ? "warn" : "bad", text: `Grassi a ${r0(t.f)} g contro ${r0(tg.fat)} g: ${r0(fOver)} g in più, circa ${r0(fOver * 9)} kcal. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
   if (wkOk) {
-    const wkF = wk.f - tg.fat, wkK = wk.kcal - tg.kcal;
-    lines.push({ lvl: wkK <= 100 && wkF <= 3 ? "good" : "warn", text: `Settimana: media ${r0(wk.kcal)} kcal contro ${r0(tg.kcal)}, grassi ${r0(wk.f)} g contro ${r0(tg.fat)}. ${wkK <= 100 && wkF <= 3 ? "Un giorno sopra non cambia il quadro: la media è in linea." : "È la media che conta: uno sgarro isolato pesa poco, ripetuto ogni giorno pesa molto."}` });
+    const ov = overview(k, 7), prev = overview(addDays(k, -7), 7);
+    const trend = ov.avgK !== null && prev.avgK !== null ? ov.avgK - prev.avgK : null;
+    const sgK = ov.over.map((d) => `${shortDay(d.k)}: ${r0(d.kcal - d.tgK)} kcal in più`).join("; ");
+    const sgF = ov.overF.map((d) => shortDay(d.k)).join(", ");
+    const parts = [];
+    parts.push(`Questa settimana hai tracciato ${ov.days.length} giorni su 7. Sgarri calorici: ${ov.over.length}${ov.over.length ? ` - ${sgK}` : ""}. Giorni con grassi sopra il limite: ${ov.overF.length}${ov.overF.length ? ` (${sgF})` : ""}.`);
+    parts.push(`Media settimanale: ${r0(ov.avgK)} kcal contro ${r0(ov.tgK)}, grassi ${r0(ov.avgF)} g contro ${r0(ov.tgF)}.`);
+    if (trend !== null) parts.push(trend > 50 ? `Rispetto alla settimana scorsa stai mangiando di più (+${r0(trend)} kcal di media).` : trend < -50 ? `Rispetto alla settimana scorsa stai mangiando meno (${r0(trend)} kcal di media): buon segno.` : "Rispetto alla settimana scorsa il livello è stabile.");
+    const m30 = overview(k, 30);
+    if (m30.days.length >= 10) parts.push(`Ultimi 30 giorni: ${m30.over.length} sgarri calorici su ${m30.days.length} giorni tracciati, media ${r0(m30.avgK)} kcal.`);
+    const ok = ov.over.length <= 1 && ov.overF.length <= 2;
+    lines.push({ lvl: ok ? "good" : "bad", text: parts.join(" ") });
   }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
