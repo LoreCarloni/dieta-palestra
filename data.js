@@ -17,7 +17,6 @@ const FOODS = [
   ["Cornetto vuoto", 410, 7, 50, 20, 50, "Colazione"],
   ["Cornetto alla crema", 390, 6.5, 48, 19, 70, "Colazione"],
   ["Croissant al pistacchio, bar (media di 7 prodotti)", 413, 6.2, 45.3, 22.3, 80, "Colazione"],
-  ["Fiocchi d'avena", 370, 13, 60, 7, 40, "Colazione"],
   ["Corn flakes", 375, 7, 84, 0.9, 30, "Colazione"],
   ["Muesli", 365, 9, 66, 6, 40, "Colazione"],
   ["Marmellata", 250, 0.5, 60, 0, 20, "Colazione"],
@@ -90,7 +89,6 @@ const FOODS = [
   ["Lenticchie secche", 291, 22.7, 51.1, 1, 60, "Legumi", "tabelle INRAN"],
   // Verdure
   ["Insalata", 15, 1.3, 2.2, 0.3, 100, "Verdure"],
-  ["Pomodori", 18, 0.9, 3.5, 0.2, 200, "Verdure"],
   ["Zucchine", 17, 1.3, 3, 0.3, 200, "Verdure"],
   ["Melanzane", 20, 1.1, 4, 0.2, 200, "Verdure"],
   ["Peperoni", 22, 1, 4.5, 0.3, 200, "Verdure"],
@@ -114,8 +112,6 @@ const FOODS = [
   ["Anguria", 30, 0.6, 7.6, 0.2, 300, "Frutta"],
   ["Mandarino", 53, 0.8, 13, 0.3, 100, "Frutta"],
   ["Avocado", 160, 2, 9, 15, 70, "Frutta"],
-  ["Mandorle", 579, 21, 22, 50, 30, "Frutta secca"],
-  ["Noci", 654, 15, 14, 65, 30, "Frutta secca"],
   ["Nocciole", 628, 15, 17, 61, 30, "Frutta secca"],
   ["Pistacchi", 560, 20, 28, 45, 30, "Frutta secca"],
   ["Arachidi", 567, 26, 16, 49, 30, "Frutta secca"],
@@ -124,7 +120,6 @@ const FOODS = [
   ["Maionese", 680, 1, 1, 75, 15, "Condimenti"],
   ["Ketchup", 112, 1.2, 26, 0.1, 15, "Condimenti"],
   // Snack e dolci
-  ["Cioccolato fondente 70%", 600, 8, 46, 43, 20, "Snack"],
   ["Cioccolato al latte", 535, 7.6, 59, 30, 20, "Snack"],
   ["Kinder Bueno (barretta da 2 pezzi)", 572, 8.6, 49.5, 37.3, 43, "Snack"],
   ["Gelato", 200, 3.5, 25, 10, 100, "Snack"],
@@ -143,6 +138,14 @@ const FOODS = [
   ["Patate lesse con buccia", 88, 2.1, 17.9, 1.0, 200, "Verdure", "CREA 2019"],
   ["Fagiolini crudi", 24, 2.1, 2.4, 0.1, 200, "Verdure", "CREA 2019"],
   ["Mela", 44, 0.2, 10.0, 0, 150, "Frutta", "CREA 2019"],
+  ["Pollo, petto, cotto in padella, senza grassi né sale", 129, 30.2, 0, 0.9, 100, "Proteine", "CREA 2019"],
+  ["Cioccolato fondente", 531, 6.6, 49.7, 33.6, 20, "Snack", "CREA 2019"],
+  ["Noci", 589, 10.5, 5.5, 57.7, 30, "Frutta secca", "CREA 2019"],
+  ["Mandorle dolci, secche", 628, 22.0, 4.6, 55.3, 30, "Frutta secca", "CREA 2019"],
+  ["Birra chiara", 34, 0.2, 3.5, 0, 330, "Bevande", "CREA 2019"],
+  ["Fiocchi d'avena", 367, 8.0, 66.8, 7.5, 40, "Cereali", "CREA 2019"],
+  ["Minestrone, cotto", 45, 2.0, 7.8, 0.4, 250, "Verdure", "CREA 2019"],
+  ["Pomodori, maturi", 23, 1.0, 3.5, 0.2, 150, "Verdure", "CREA 2019"],
 ].map(([name, kcal, p, c, f, portion, cat, src]) => ({ name, kcal, p, c, f, portion, cat, src }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
