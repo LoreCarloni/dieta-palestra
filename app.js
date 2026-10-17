@@ -870,12 +870,12 @@ function dayComment(k) {
     lines.push({ lvl: ok ? "good" : "bad", text: parts.join(" ") });
     const sg = ov.over.length, sgFat = ov.overF.length;
     const closing = sg === 0 && sgFat <= 1
-      ? "Settimana pulita, Lorenzo. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito."
+      ? "Settimana pulita. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito."
       : sg <= 1 && sgFat <= 2
-        ? `Una settimana quasi buona, Lorenzo. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`
+        ? `Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`
         : sg >= 3
-          ? `Questa settimana hai sgarrato ${sg} volte, Lorenzo. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`
-          : `Hai sgarrato ${sg} volte, Lorenzo, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`;
+          ? `Questa settimana hai sgarrato ${sg} volte. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`
+          : `Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`;
     lines.push({ lvl: sg <= 1 ? "good" : "bad", text: closing });
   }
   const cOver = t.c - tg.carbs;
