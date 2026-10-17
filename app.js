@@ -210,7 +210,8 @@ function renderToday() {
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
     <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
-    ${mealsHtml}
+    <button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Nascondi alimenti" : `Mostra alimenti (${d.meals.length})`}</button>
+    ${view.foodsOpen ? mealsHtml : ""}
   </section>
 
   ${commentHtml(k)}
@@ -1435,6 +1436,7 @@ function act(a, el) {
       toast(`Spostato al ${fmtDate(to, { day: "numeric", month: "long" })}: ${r0(totals(to).kcal)} kcal in quel giorno, ${r0(totals(from).kcal)} kcal nel giorno di partenza`);
       break;
     }
+    case "toggle-foods": view.foodsOpen = !view.foodsOpen; break;
     case "hist-check": return historyDialog();
     case "hist-apply-verified": {
       const ch = historyChanges();
