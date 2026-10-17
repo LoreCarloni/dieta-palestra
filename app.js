@@ -623,7 +623,7 @@ function foodDialog() {
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
-const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`;
+const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
 
 // Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
 function prunedWanted() {
@@ -643,11 +643,57 @@ function trackMissing(q) {
   }, 1500);
 }
 
+// ---------- Lista personale che impara dai pasti ----------
+// Ogni alimento registrato entra nella lista personale (una sola volta per nome), così la ricerca lo ritrova anche se compare una volta sola.
+function rememberFood(f) {
+  const key = norm(f.name).trim();
+  if (!key) return;
+  const prev = S.customFoods.find((x) => norm(x.name).trim() === key);
+  const seen = (prev && prev.seen ? prev.seen : 0) + 1;
+  const keep = prev ? { ...prev } : {};
+  S.customFoods = S.customFoods.filter((x) => norm(x.name).trim() !== key).concat({ ...keep, ...f, seen, cat: "I miei alimenti" });
+}
+// Ricerca tollerante: parole in qualsiasi ordine, accenti ignorati, piccoli errori di battitura (es. Tronky per Tronchi).
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+function tokenScore(t, words) {
+  let best = 0;
+  for (const w of words) {
+    if (w === t) return 3;
+    if (w.startsWith(t)) best = Math.max(best, 2);
+    else if (t.length >= 5 && lev(t, w.slice(0, t.length + 1)) <= Math.round(t.length * 0.45)) best = Math.max(best, 1);
+  }
+  return best;
+}
+function searchFoods(q) {
+  const tokens = norm(q).split(/\s+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
+  if (!tokens.length) return [];
+  return allFoods()
+    .map((f) => {
+      const words = norm(f.name).split(/[^a-z0-9]+/).filter(Boolean);
+      const scores = tokens.map((t) => tokenScore(t, words));
+      if (scores.some((x) => x === 0)) return null;
+      return { f, score: scores.reduce((a, b) => a + b, 0) + (f.seen ? Math.min(f.seen, 10) * 0.1 : 0) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.f)
+    .slice(0, 40);
+}
+
 function renderFoodList(q) {
   const ql = q.trim();
   const recents = ql ? [] : recentFoods();
-  const tokens = norm(ql).split(/\s+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
-  const list = ql ? allFoods().filter((f) => { const n = norm(f.name); return tokens.every((t) => n.includes(t)); }).slice(0, 40) : [];
+  const list = ql ? searchFoods(ql) : [];
   if (/kcal/i.test(ql) || ql.length > 60) {
     $("#f-list").innerHTML = `<p class="small">Sembra un riepilogo di più alimenti, non il nome di un alimento.</p><button class="btn primary wide" data-act="diary-from-search">Importa come riepilogo</button>`;
     return;
@@ -1186,13 +1232,22 @@ function act(a, el) {
       return qtyDialog(f, dlg().dataset.slot);
     }
     case "food-cat": return foodCat(el.dataset.c);
-    case "pick-food": return qtyDialog(JSON.parse(el.dataset.food), "giorno");
+    case "pick-food": {
+      const f = JSON.parse(el.dataset.food);
+      if (f.perServing) {
+        day(k, true).meals.push({ id: uid(), slot: "giorno", name: f.name, g: null, kcal: f.kcal, p: f.p, c: f.c, f: f.f });
+        rememberFood({ ...f, seen: undefined });
+        toast("Aggiunto"); closeDialog(); break;
+      }
+      return qtyDialog(f, "giorno");
+    }
     case "qty": $("#q-g").value = el.dataset.g; return updateQtyPreview();
     case "save-food": {
       const f = JSON.parse(dlg().dataset.food);
       const g = num("#q-g");
       if (!(g > 0)) return toast("Inserisci la quantità");
       const ref = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion, cat: f.cat };
+      rememberFood({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion });
       day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
       closeDialog(); toast("Aggiunto"); break;
     }
@@ -1209,7 +1264,10 @@ function act(a, el) {
       const kc = num("#k-kcal");
       if (!(kc > 0)) return toast("Inserisci le calorie");
       const p = num("#k-p") || 0;
-      day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: val("#k-name").trim() || "Stima", g: null, kcal: kc, p, c: Math.max(0, (kc * 0.45) / 4), f: Math.max(0, (kc - p * 4 - kc * 0.45) / 9) });
+      const qn = val("#k-name").trim() || "Stima";
+      const qc = Math.max(0, (kc * 0.45) / 4), qf = Math.max(0, (kc - p * 4 - kc * 0.45) / 9);
+      day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: qn, g: null, kcal: kc, p, c: qc, f: qf });
+      if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
@@ -1329,6 +1387,7 @@ function act(a, el) {
       items.forEach((it, i) => {
         if (!$(`[data-di=chk][data-i="${i}"]`).checked) return;
         day(k, true).meals.push({ id: uid(), slot: "giorno", name: it.name, g: null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
+        rememberFood({ name: it.name, kcal: it.kcal, p: it.p, c: it.c, f: it.f, portion: null, perServing: true });
         n++;
       });
       closeDialog(); toast(`${n} alimenti aggiunti`); break;
