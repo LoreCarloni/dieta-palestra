@@ -838,7 +838,13 @@ function dayComment(k) {
   const diff = t.kcal - tg.kcal;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   const fOver = t.f - tg.fat;
-  if (fOver > tg.fat * 0.1) lines.push({ lvl: "bad", text: `Grassi a ${r0(t.f)} g contro ${r0(tg.fat)} g: ${r0(fOver)} g in più, circa ${r0(fOver * 9)} kcal, cioè quasi un pasto intero solo di grassi. Il grasso sulla pancia non scende con giornate così: ci vuole un deficit costante. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
+  const wk = periodStats(k, 7);
+  const wkOk = wk.tracked >= 3;
+  if (fOver > tg.fat * 0.1) lines.push({ lvl: wkOk && wk.f <= wk.pTarget * 0 + tg.fat * 1.05 ? "warn" : "bad", text: `Grassi a ${r0(t.f)} g contro ${r0(tg.fat)} g: ${r0(fOver)} g in più, circa ${r0(fOver * 9)} kcal. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
+  if (wkOk) {
+    const wkF = wk.f - tg.fat, wkK = wk.kcal - tg.kcal;
+    lines.push({ lvl: wkK <= 100 && wkF <= 3 ? "good" : "warn", text: `Settimana: media ${r0(wk.kcal)} kcal contro ${r0(tg.kcal)}, grassi ${r0(wk.f)} g contro ${r0(tg.fat)}. ${wkK <= 100 && wkF <= 3 ? "Un giorno sopra non cambia il quadro: la media è in linea." : "È la media che conta: uno sgarro isolato pesa poco, ripetuto ogni giorno pesa molto."}` });
+  }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
   if (t.p < tg.protein * 0.85) lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}. Aggiungi una fonte magra a ogni pasto.` });
