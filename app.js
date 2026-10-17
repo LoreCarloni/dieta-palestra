@@ -868,6 +868,15 @@ function dayComment(k) {
     if (m30.days.length >= 10) parts.push(`Ultimi 30 giorni: ${m30.over.length} sgarri calorici su ${m30.days.length} giorni tracciati, media ${r0(m30.avgK)} kcal.`);
     const ok = ov.over.length <= 1 && ov.overF.length <= 2;
     lines.push({ lvl: ok ? "good" : "bad", text: parts.join(" ") });
+    const sg = ov.over.length, sgFat = ov.overF.length;
+    const closing = sg === 0 && sgFat <= 1
+      ? "Settimana pulita. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito."
+      : sg <= 1 && sgFat <= 2
+        ? `Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`
+        : sg >= 3
+          ? `Questa settimana hai sgarrato ${sg} volte. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`
+          : `Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`;
+    lines.push({ lvl: sg <= 1 ? "good" : "bad", text: closing });
   }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
