@@ -145,6 +145,7 @@ function periodStats(endKey, n) {
 
 // ---------- Rendering principale ----------
 let resetScroll = false;
+let scrollToId = null;
 function render() {
   const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
@@ -152,6 +153,7 @@ function render() {
   if (!S.profile) { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
   main.innerHTML = { oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
   window.scrollTo(0, resetScroll ? 0 : keepY);
+  if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   resetScroll = false;
 }
 
@@ -172,7 +174,7 @@ function renderToday() {
     ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
     { label: "Cosa hai mangiato oggi", ok: d.meals.length > 0, act: "food" },
     { label: `Acqua ${r1(t.water / 1000)} di ${r1(t.waterTarget / 1000)} litri`, ok: t.water >= t.waterTarget, act: "water" },
-    { label: d.rest ? "Giorno di riposo" : "Allenamento o passi", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "exercise" },
+    { label: d.rest ? "Giorno di riposo" : "Passi e allenamento (sezione Attività)", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "goto-attivita" },
     { label: "Chiudi la giornata", ok: d.closed, act: "close" },
   ];
   const todo = checklist.filter((c) => !c.ok).length;
@@ -234,7 +236,7 @@ function renderToday() {
     ${d.drinks.map((x) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="drink" data-id="${x.id}"><div>${esc(x.name)}</div><div class="muted small">${r0(x.ml)} ml${x.alc ? ", alcolico" : ""}</div><button class="link small-link" data-act="edit-entry" data-kind="drink" data-id="${x.id}">Modifica</button></div><div class="row-r"><span>${r0(x.kcal)}</span><button class="x" data-act="del-drink" data-id="${x.id}" aria-label="Elimina">×</button></div></div>`).join("")}
   </section>
 
-  <section class="card">
+  <section class="card" id="sec-attivita">
     <h2>Attività</h2>
     ${d.ex.map((e) => `<div class="row"><div><div>${esc(e.name)}</div><div class="muted small">${r0(e.min)} minuti${e.note ? ", " + esc(e.note) : ""}</div></div><div class="row-r"><span>${r0(e.kcal)}</span><button class="x" data-act="del-ex" data-id="${e.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     <div class="field inline"><label for="steps">Passi del giorno</label><input id="steps" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps"></div>
@@ -1211,6 +1213,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
+    case "goto-attivita": scrollToId = "sec-attivita"; break;
     case "save-measure": {
       const m = { id: view.mEdit?.id || uid(), date: val("#m-date"), weight: num1(val("#m-weight")), waist: num1(val("#m-waist")), low: num1(val("#m-low")), thigh: num1(val("#m-thigh")), note: val("#m-note").trim() };
       if (!m.date) return toast("Inserisci la data");
