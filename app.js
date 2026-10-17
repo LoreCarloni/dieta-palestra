@@ -824,7 +824,7 @@ const SWEET_RE = /cioccolat|kinder|nutella|biscott|merendin|gelato|patatine|prin
 function dayComment(k) {
   const d = day(k), t = totals(k), tg = targets(k);
   if (!d.meals.length) return null;
-  const clean = (n) => String(n).replace(/\s*\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+  const clean = (n) => String(n).replace(/\s*\(.*$/, "").replace(/\s+/g, " ").trim();
   const merged = {};
   d.meals.forEach((m) => { const key = clean(m.name).toLowerCase(); const x = merged[key] || { name: clean(m.name), kcal: 0, p: 0, c: 0, f: 0, g: 0 }; x.kcal += m.kcal; x.p += m.p; x.c += m.c; x.f += m.f; x.g += m.g || 0; merged[key] = x; });
   const items = Object.values(merged)
@@ -1017,7 +1017,7 @@ function parseDiary(text) {
     }
     const colon = line.indexOf(":");
     let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s\-–]+$/, "").trim();
-    if (!name) name = "Alimento";
+    name = name.replace(/\s*\(.*$/, "").trim() || "Alimento";
     const rest = line.slice(k.index);
     const item = { name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, hasMacro: { p: false, c: false, f: false } };
     ["p", "c", "f"].forEach((key) => { const v = grabMacro(rest, key); if (v !== null) { item[key] = v; item.hasMacro[key] = true; } });
