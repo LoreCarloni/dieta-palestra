@@ -27,7 +27,8 @@ const FOODS = [
   ["Burro di arachidi", 590, 25, 20, 50, 15, "Colazione"],
   ["Burro", 740, 0.8, 1, 82, 10, "Colazione"],
   ["Gallette di riso", 380, 8, 80, 3, 10, "Colazione"],
-  ["Uovo intero", 128, 12.4, 0, 8.7, 60, "Proteine", "tabelle INRAN"],
+  ["Uovo intero, crudo", 128, 12.4, 0, 8.7, 60, "Proteine", "CREA 2019"],
+  ["Uovo intero, cotto (sodo o alla coque)", 128, 12.4, 0, 8.7, 60, "Proteine", "CREA 2019"],
   ["Albume", 45, 10.7, 0.8, 0.2, 100, "Proteine"],
   // Pane, cereali, primi
   ["Pane bianco (tipo 00)", 289, 8.6, 66.9, 0.4, 50, "Cereali", "tabelle INRAN"],
