@@ -1282,12 +1282,23 @@ function act(a, el) {
       return qtyDialog(f, dlg().dataset.slot);
     }
     case "food-cat": return foodCat(el.dataset.c);
+    case "ps-add": {
+      const f = JSON.parse(el.dataset.food);
+      const n = Math.max(1, Math.round(num("#ps-n") || 1));
+      const name = n > 1 ? `${f.name} x ${n}` : f.name;
+      day(k, true).meals.push({ id: uid(), slot: "giorno", name, g: null, kcal: f.kcal * n, p: f.p * n, c: f.c * n, f: f.f * n });
+      rememberFood({ ...f, seen: undefined });
+      closeDialog(); toast(`${name} aggiunto`); break;
+    }
     case "pick-food": {
       const f = JSON.parse(el.dataset.food);
       if (f.perServing) {
-        day(k, true).meals.push({ id: uid(), slot: "giorno", name: f.name, g: null, kcal: f.kcal, p: f.p, c: f.c, f: f.f });
-        rememberFood({ ...f, seen: undefined });
-        toast("Aggiunto"); closeDialog(); break;
+        openDialog(`
+          <h3>${esc(f.name)}</h3>
+          <p class="muted small">Per porzione: ${r0(f.kcal)} kcal, P ${r1(f.p)} C ${r1(f.c)} G ${r1(f.f)}</p>
+          <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="number" inputmode="numeric" min="1" step="1" value="1" autofocus></div>
+          <button class="btn primary wide" data-act="ps-add" data-food="${esc(JSON.stringify(f))}">Aggiungi</button>`);
+        break;
       }
       return qtyDialog(f, "giorno");
     }
