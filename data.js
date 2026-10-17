@@ -50,7 +50,7 @@ const FOODS = [
   ["Pesto", 470, 5, 6, 47, 20, "Condimenti"],
   ["Ragù", 140, 9, 4, 10, 80, "Condimenti"],
   // Proteine
-  ["Petto di pollo (crudo)", 100, 23.3, 0, 0.8, 150, "Proteine", "tabelle INRAN"],
+  ["Petto di pollo (crudo)", 100, 23.3, 0, 0.8, 150, "Proteine", "CREA 2019"],
   ["Fesa di tacchino (cruda)", 107, 24, 0, 1.2, 150, "Proteine", "tabelle INRAN"],
   ["Manzo magro (fesa, crudo)", 103, 21.8, 0, 1.8, 150, "Proteine", "tabelle INRAN"],
   ["Manzo filetto (crudo)", 127, 20.5, 0, 5, 150, "Proteine", "tabelle INRAN"],
@@ -70,7 +70,7 @@ const FOODS = [
   ["Fesa di tacchino affettata", 100, 20, 1, 1.5, 50, "Proteine"],
   ["Mortadella", 317, 15, 0, 28, 50, "Proteine"],
   ["Salame", 400, 25, 1, 33, 30, "Proteine"],
-  ["Mozzarella di vacca", 253, 18.7, 0.7, 19.5, 125, "Proteine", "tabelle INRAN"],
+  ["Mozzarella di vacca", 253, 18.7, 0.7, 19.5, 125, "Proteine", "CREA 2019"],
   ["Mozzarella di bufala", 288, 16.7, 0.4, 24.4, 125, "Proteine", "tabelle INRAN"],
   ["Emmental", 403, 28.5, 3.6, 30.6, 30, "Proteine", "tabelle INRAN"],
   ["Mozzarella light", 165, 19, 1, 9, 125, "Proteine"],
@@ -83,7 +83,6 @@ const FOODS = [
   ["Tofu", 120, 13, 1.5, 7, 100, "Proteine"],
   ["Ceci in scatola sgocciolati", 120, 7, 16, 2.5, 120, "Legumi"],
   ["Fagioli in scatola sgocciolati", 100, 7, 14, 0.5, 120, "Legumi"],
-  ["Lenticchie cotte", 116, 9, 20, 0.4, 150, "Legumi"],
   ["Lenticchie secche", 291, 22.7, 51.1, 1, 60, "Legumi", "tabelle INRAN"],
   // Verdure
   ["Insalata", 15, 1.3, 2.2, 0.3, 100, "Verdure"],
@@ -97,13 +96,9 @@ const FOODS = [
   ["Finocchi", 15, 1.2, 2.5, 0.2, 200, "Verdure"],
   ["Cetrioli", 15, 0.7, 3, 0.1, 150, "Verdure"],
   ["Cavolfiore", 25, 2, 4.5, 0.3, 200, "Verdure"],
-  ["Fagiolini", 25, 2, 5, 0.2, 200, "Verdure"],
   ["Funghi", 22, 3, 3, 0.3, 150, "Verdure"],
-  ["Patate", 80, 2, 17, 0.1, 200, "Verdure"],
   ["Patate fritte", 312, 3.4, 41, 15, 150, "Snack"],
   // Frutta
-  ["Mela", 52, 0.3, 14, 0.2, 150, "Frutta"],
-  ["Banana", 89, 1.1, 23, 0.3, 120, "Frutta"],
   ["Arancia", 47, 0.9, 12, 0.1, 150, "Frutta"],
   ["Kiwi", 61, 1.1, 15, 0.5, 80, "Frutta"],
   ["Pera", 57, 0.4, 15, 0.1, 150, "Frutta"],
@@ -121,7 +116,7 @@ const FOODS = [
   ["Pistacchi", 560, 20, 28, 45, 30, "Frutta secca"],
   ["Arachidi", 567, 26, 16, 49, 30, "Frutta secca"],
   // Condimenti
-  ["Olio extravergine d'oliva", 899, 0, 0, 99.9, 10, "Condimenti", "EnteCRA"],
+  ["Olio extravergine d'oliva", 899, 0, 0, 99.9, 10, "Condimenti", "CREA 2019"],
   ["Maionese", 680, 1, 1, 75, 15, "Condimenti"],
   ["Ketchup", 112, 1.2, 26, 0.1, 15, "Condimenti"],
   // Snack e dolci
@@ -137,6 +132,12 @@ const FOODS = [
   ["Sushi misto", 150, 6, 28, 2, 300, "Piatti"],
   ["Kebab", 215, 12, 20, 10, 350, "Piatti"],
   ["Panino hamburger fast food", 255, 13, 30, 9, 220, "Piatti"],
+["Pasta di semola (cotta)", 175, 6.9, 37.3, 0.6, 150, "Cereali", "CREA 2019"],
+  ["Banana", 76, 1.2, 17.4, 0.3, 120, "Frutta", "CREA 2019"],
+  ["Lenticchie cotte", 109, 6.9, 16.3, 0.4, 150, "Legumi", "CREA 2019"],
+  ["Patate lesse con buccia", 88, 2.1, 17.9, 1.0, 200, "Verdure", "CREA 2019"],
+  ["Fagiolini crudi", 24, 2.1, 2.4, 0.1, 200, "Verdure", "CREA 2019"],
+  ["Mela", 44, 0.2, 10.0, 0, 150, "Frutta", "CREA 2019"],
 ].map(([name, kcal, p, c, f, portion, cat, src]) => ({ name, kcal, p, c, f, portion, cat, src }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
