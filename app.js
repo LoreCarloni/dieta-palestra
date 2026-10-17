@@ -800,10 +800,10 @@ function historyDialog() {
     ${ch.map((x, i) => `<label class="di-chk cp-row"><input type="checkbox" data-hist="${i}" checked> <span><b>${esc(x.m.name)}</b> (${fmtDate(x.k, { day: "numeric", month: "short" })})<br><span class="muted small">${r0(x.m.kcal)} kcal, ora ${r0(x.n.kcal)} kcal, grammi ${r0(x.m.g)}</span></span></label>`).join("")}
     <button class="btn primary wide" data-act="hist-apply-verified">Applica tutte le voci da fonte verificata (CREA, INRAN, Consorzio)</button>
     <button class="btn ghost wide" data-act="hist-apply">Applica solo le voci selezionate</button>` : ""}
-    ${links.length ? `<h3>Collega le voci senza grammi</h3><p class="muted small">Per ogni voce scegli l'alimento giusto dalla lista e scrivi i grammi che hai mangiato. Lascia "non collegare" per le voci da non toccare.</p>
+    ${links.length ? `<h3>Collega le voci senza grammi</h3><p class="muted small">Ho preselezionato l'alimento più simile e stimato i grammi dalle calorie della voce: controlla e correggi, poi conferma. Scegli "non collegare" per le voci da non toccare.</p>
     ${links.map((x, i) => `<div class="link-row"><div><b>${esc(x.m.name)}</b> <span class="muted small">(${fmtDate(x.k, { day: "numeric", month: "short" })}, ${r0(x.m.kcal)} kcal)</span></div>
-      <select data-lk="${i}"><option value="">non collegare</option>${x.cands.map((f, j) => `<option value="${j}">${esc(f.name)}</option>`).join("")}</select>
-      <input type="number" inputmode="numeric" min="1" data-lg="${i}" placeholder="grammi"></div>`).join("")}
+      <select data-lk="${i}"><option value="">non collegare</option>${x.cands.map((f, j) => `<option value="${j}" ${j === 0 ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select>
+      <input type="number" inputmode="numeric" min="1" data-lg="${i}" value="${x.cands[0].kcal ? Math.round((x.m.kcal * 100) / x.cands[0].kcal) : ""}" placeholder="grammi"></div>`).join("")}
     <button class="btn primary wide" data-act="hist-link">Collega e aggiorna le voci scelte</button>` : ""}`);
 }
 
