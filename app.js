@@ -775,18 +775,36 @@ function historyChanges() {
   });
   return out;
 }
+let histLinks = [];
+function historyLinkCandidates() {
+  const out = [];
+  Object.keys(S.days).sort().forEach((k) => {
+    S.days[k].meals.forEach((m) => {
+      if (m.g || m.ref || !m.name || /^Stima$/.test(m.name)) return;
+      const cands = searchFoods(m.name).filter((f) => !f.perServing).slice(0, 5);
+      if (cands.length) out.push({ k, id: m.id, m, cands });
+    });
+  });
+  return out;
+}
 function historyDialog() {
   const ch = historyChanges();
-  dlg().dataset.hist = JSON.stringify(ch.map((x) => ({ k: x.k, id: x.id })));
-  if (!ch.length) return openDialog(`<h3>Nessuna differenza</h3><p class="muted small">Tutti gli alimenti del diario con i grammi hanno già i valori attuali.</p>`);
+  const links = historyLinkCandidates();
+  histLinks = links;
+  if (!ch.length && !links.length) return openDialog(`<h3>Nessuna differenza</h3><p class="muted small">Non ci sono voci da aggiornare o da collegare.</p>`);
   const dk = ch.reduce((a, x) => a + (x.m.kcal - x.n.kcal), 0);
+  dlg().dataset.hist = JSON.stringify(ch.map((x) => ({ k: x.k, id: x.id })));
   openDialog(`
     <h3>Ricalcolo con i valori aggiornati</h3>
-    <p class="muted small">${ch.length} voci cambiano. Le calorie complessive delle voci cambiate passano da ${r0(ch.reduce((a, x) => a + x.m.kcal, 0))} a ${r0(ch.reduce((a, x) => a + x.n.kcal, 0))}. Prima di applicare, esporta un backup dal Profilo.</p>
+    ${ch.length ? `<p class="muted small">${ch.length} voci con grammi cambiano. Prima di applicare, esporta un backup dal Profilo.</p>
     ${ch.map((x, i) => `<label class="di-chk cp-row"><input type="checkbox" data-hist="${i}" checked> <span><b>${esc(x.m.name)}</b> (${fmtDate(x.k, { day: "numeric", month: "short" })})<br><span class="muted small">${r0(x.m.kcal)} kcal, ora ${r0(x.n.kcal)} kcal, grammi ${r0(x.m.g)}</span></span></label>`).join("")}
     <button class="btn primary wide" data-act="hist-apply-verified">Applica tutte le voci da fonte verificata (CREA, INRAN, Consorzio)</button>
-    <button class="btn ghost wide" data-act="hist-apply">Applica solo le voci selezionate</button>`);
-  dlg().dataset.histOk = "1";
+    <button class="btn ghost wide" data-act="hist-apply">Applica solo le voci selezionate</button>` : ""}
+    ${links.length ? `<h3>Collega le voci senza grammi</h3><p class="muted small">Per ogni voce scegli l'alimento giusto dalla lista e scrivi i grammi che hai mangiato. Lascia "non collegare" per le voci da non toccare.</p>
+    ${links.map((x, i) => `<div class="link-row"><div><b>${esc(x.m.name)}</b> <span class="muted small">(${fmtDate(x.k, { day: "numeric", month: "short" })}, ${r0(x.m.kcal)} kcal)</span></div>
+      <select data-lk="${i}"><option value="">non collegare</option>${x.cands.map((f, j) => `<option value="${j}">${esc(f.name)}</option>`).join("")}</select>
+      <input type="number" inputmode="numeric" min="1" data-lg="${i}" placeholder="grammi"></div>`).join("")}
+    <button class="btn primary wide" data-act="hist-link">Collega e aggiorna le voci scelte</button>` : ""}`);
 }
 
 // ---------- Ricalcolo con i valori aggiornati ----------
@@ -1415,6 +1433,21 @@ function act(a, el) {
         if (tgt) { tgt.kcal = x.n.kcal; tgt.p = x.n.p; tgt.c = x.n.c; tgt.f = x.n.f; }
       });
       closeDialog(); toast(`${ok.length} voci aggiornate con fonte verificata, ${ch.length - ok.length} lasciate invariate`); break;
+    }
+    case "hist-link": {
+      let n = 0;
+      document.querySelectorAll("#dlg select[data-lk]").forEach((sel) => {
+        const i = +sel.dataset.lk, v = sel.value;
+        const g = num1(document.querySelector(`#dlg input[data-lg="${i}"]`).value);
+        if (v === "" || !(g > 0)) return;
+        const x = histLinks[i], f = x.cands[+v];
+        const tgt = S.days[x.k].meals.find((m) => m.id === x.id);
+        if (!tgt || !f) return;
+        tgt.g = g; tgt.ref = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion, cat: f.cat };
+        tgt.kcal = (f.kcal * g) / 100; tgt.p = (f.p * g) / 100; tgt.c = (f.c * g) / 100; tgt.f = (f.f * g) / 100;
+        n++;
+      });
+      closeDialog(); toast(`${n} voci collegate e aggiornate`); break;
     }
     case "hist-apply": {
       const ids = JSON.parse(dlg().dataset.hist || "[]");
