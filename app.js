@@ -585,6 +585,8 @@ function renderProfile(first) {
   </section>
   <section class="card">
     <h2>Dati e backup</h2>
+    <p class="muted small">Ricalcolo storico: confronta i pasti passati con i valori aggiornati e applica solo le voci che scegli.</p>
+    <div class="btns"><button class="btn" data-act="hist-check">Confronta giornate passate</button></div>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
     <div class="btns">
       <button class="btn" data-act="export">Esporta backup</button>
@@ -755,6 +757,35 @@ function renderCopyList(from) {
   box.innerHTML = `<p class="small">${rows.length} voci, ${r0(tot)} kcal in totale.</p>
     ${rows.map((r) => `<label class="di-chk cp-row"><input type="checkbox" data-cp="${r.kind}" data-i="${r.i}"> <span><b>${esc(r.x.name)}</b><br><span class="muted small">${r0(r.x.kcal)} kcal${r.kind === "drink" ? ", " + r0(r.x.ml) + " ml" : r.x.g ? ", " + r0(r.x.g) + " g" : ""}</span></span></label>`).join("")}
     <button class="btn primary wide" data-act="copy-run">Copia nel giorno aperto</button>`;
+}
+
+// ---------- Ricalcolo storico con anteprima ----------
+// Confronta ogni alimento con grammi del diario con la lista attuale; mostra le differenze e applica solo quelle scelte.
+function historyChanges() {
+  const out = [];
+  Object.keys(S.days).sort().forEach((k) => {
+    S.days[k].meals.forEach((m) => {
+      if (!m.g) return;
+      const name = FOOD_ALIAS[(m.ref && m.ref.name) || m.name] || (m.ref && m.ref.name) || m.name;
+      const cur = allFoods().find((f) => !f.perServing && norm(f.name) === norm(name));
+      if (!cur) return;
+      const n = { kcal: (cur.kcal * m.g) / 100, p: (cur.p * m.g) / 100, c: (cur.c * m.g) / 100, f: (cur.f * m.g) / 100 };
+      if (Math.abs(n.kcal - m.kcal) > 1 || Math.abs(n.p - m.p) > 0.3 || Math.abs(n.c - m.c) > 0.3 || Math.abs(n.f - m.f) > 0.3) out.push({ k, id: m.id, m, cur, n });
+    });
+  });
+  return out;
+}
+function historyDialog() {
+  const ch = historyChanges();
+  dlg().dataset.hist = JSON.stringify(ch.map((x) => ({ k: x.k, id: x.id })));
+  if (!ch.length) return openDialog(`<h3>Nessuna differenza</h3><p class="muted small">Tutti gli alimenti del diario con i grammi hanno già i valori attuali.</p>`);
+  const dk = ch.reduce((a, x) => a + (x.m.kcal - x.n.kcal), 0);
+  openDialog(`
+    <h3>Ricalcolo con i valori aggiornati</h3>
+    <p class="muted small">${ch.length} voci cambiano. Le calorie complessive delle voci cambiate passano da ${r0(ch.reduce((a, x) => a + x.m.kcal, 0))} a ${r0(ch.reduce((a, x) => a + x.n.kcal, 0))}. Prima di applicare, esporta un backup dal Profilo.</p>
+    ${ch.map((x, i) => `<label class="di-chk cp-row"><input type="checkbox" data-hist="${i}" checked> <span><b>${esc(x.m.name)}</b> (${fmtDate(x.k, { day: "numeric", month: "short" })})<br><span class="muted small">${r0(x.m.kcal)} kcal, ora ${r0(x.n.kcal)} kcal, grammi ${r0(x.m.g)}</span></span></label>`).join("")}
+    <button class="btn primary wide" data-act="hist-apply">Applica le voci selezionate</button>`);
+  dlg().dataset.histOk = "1";
 }
 
 // ---------- Ricalcolo con i valori aggiornati ----------
@@ -1373,6 +1404,22 @@ function act(a, el) {
       closeDialog();
       toast(`Spostato al ${fmtDate(to, { day: "numeric", month: "long" })}: ${r0(totals(to).kcal)} kcal in quel giorno, ${r0(totals(from).kcal)} kcal nel giorno di partenza`);
       break;
+    }
+    case "hist-check": return historyDialog();
+    case "hist-apply": {
+      const ids = JSON.parse(dlg().dataset.hist || "[]");
+      const ch = historyChanges();
+      let n = 0;
+      document.querySelectorAll("#dlg input[data-hist]").forEach((c) => {
+        if (!c.checked) return;
+        const x = ch[+c.dataset.hist];
+        if (!x) return;
+        const tgt = S.days[x.k].meals.find((m) => m.id === x.id);
+        if (!tgt) return;
+        tgt.kcal = x.n.kcal; tgt.p = x.n.p; tgt.c = x.n.c; tgt.f = x.n.f;
+        n++;
+      });
+      closeDialog(); toast(`${n} voci aggiornate`); break;
     }
     case "diary-dialog": return diaryDialog();
     case "diary-from-search": return diaryDialog($("#f-search").value);
