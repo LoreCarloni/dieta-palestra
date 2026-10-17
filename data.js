@@ -133,6 +133,7 @@ const FOODS = [
   ["Kebab", 215, 12, 20, 10, 350, "Piatti"],
   ["Panino hamburger fast food", 255, 13, 30, 9, 220, "Piatti"],
 ["Pasta di semola (cotta)", 175, 6.9, 37.3, 0.6, 150, "Cereali", "CREA 2019"],
+  ["Pasta integrale cotta", 182, 7.4, 36.0, 1.2, 150, "Cereali", "CREA 2019"],
   ["Banana", 76, 1.2, 17.4, 0.3, 120, "Frutta", "CREA 2019"],
   ["Lenticchie cotte", 109, 6.9, 16.3, 0.4, 150, "Legumi", "CREA 2019"],
   ["Patate lesse con buccia", 88, 2.1, 17.9, 1.0, 200, "Verdure", "CREA 2019"],
