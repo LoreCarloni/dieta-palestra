@@ -835,7 +835,7 @@ function dayComment(k) {
   const diff = t.kcal - tg.kcal;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   const fOver = t.f - tg.fat;
-  if (fOver > tg.fat * 0.1) lines.push({ lvl: "bad", text: `Troppi grassi: ${r0(t.f)} g su ${r0(tg.fat)}, ${r0(fOver)} g in più, cioè circa ${r0(fOver * 9)} kcal. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
+  if (fOver > tg.fat * 0.1) lines.push({ lvl: "bad", text: `Grassi a ${r0(t.f)} g contro ${r0(tg.fat)} g: ${r0(fOver)} g in più, circa ${r0(fOver * 9)} kcal, cioè quasi un pasto intero solo di grassi. Il grasso sulla pancia non scende con giornate così: ci vuole un deficit costante. Pesano soprattutto ${list(top("f"), "f", "g")}.` });
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
   if (t.p < tg.protein * 0.85) lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}. Aggiungi una fonte magra a ogni pasto.` });
@@ -846,7 +846,6 @@ function dayComment(k) {
   if (t.alcKcal > 0) lines.push({ lvl: "warn", text: `Alcol: ${r0(t.alcKcal)} kcal. Non sazia e rallenta l'uso dei grassi come energia.` });
   if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
   else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
-  if (t.water < t.waterTarget * 0.7) lines.push({ lvl: "warn", text: `Acqua scarsa: ${r1(t.water / 1000)} L su ${r1(t.waterTarget / 1000)} L.` });
   if (!d.closed && k === todayKey()) {
     const hour = new Date().getHours();
     const meal = hour < 11 ? "il pranzo" : hour < 17 ? "il prossimo pasto" : "la cena";
@@ -860,6 +859,12 @@ function dayComment(k) {
     }
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
+  }
+  const st7 = periodStats(todayKey(), 7);
+  if (st7.tracked >= 3) {
+    const perWeek = (st7.balance * 7) / 7700;
+    const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
+    lines.push({ lvl: perWeek > 0.05 ? "bad" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì."}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
