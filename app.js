@@ -30,6 +30,7 @@ S.measures = S.measures || [];
 S.wanted = S.wanted || [];
 S.dailyAuto = S.dailyAuto || [];
 S.plans = S.plans || [];
+S.planMin = S.planMin || {};
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
@@ -241,7 +242,7 @@ function renderToday() {
       <button class="btn" data-act="exercise">Aggiungi allenamento</button>
       <button class="btn ghost" data-act="activity-dialog">Incolla un riepilogo allenamenti</button>
       <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
-      ${S.plans.map((p) => `<div class="btns plan-quick"><span class="muted small">${esc(p.name)}:</span>${p.days.map((dd) => `<button class="btn small-btn primary" data-act="plan-day" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto ${esc(dd.label)}</button>`).join("")}</div>`).join("")}
+      ${S.plans.map((p) => `<div class="btns plan-quick"><span class="muted small">${esc(p.name)}:</span>${p.days.map((dd) => `<button class="btn small-btn primary" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto ${esc(dd.label)}</button>`).join("")}</div>`).join("")}
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
   </section>
@@ -1400,11 +1401,21 @@ function act(a, el) {
       toast("Scheda copiata"); render(); return plansDialog();
     }
     case "plan-day": return planDayDialog(el.dataset.id, el.dataset.label);
+    case "plan-quick": {
+      const p = S.plans.find((x) => x.id === el.dataset.id);
+      const dd = p && p.days.find((x) => x.label === el.dataset.label);
+      if (!dd) return;
+      const min = S.planMin[p.id] || 60, w = weightAt(k), met = 3.5;
+      day(k, true).ex.push({ id: uid(), name: `${p.name}, giorno ${dd.label}`, met, min, kcal: (met * w * min) / 60, net: ((met - 1) * w * min) / 60, note: dd.exercises.slice(0, 12).join(" · ") });
+      day(k, true).rest = false;
+      toast(`Giorno ${dd.label} registrato, ${min} minuti`); break;
+    }
     case "plan-log": {
       const p = S.plans.find((x) => x.id === el.dataset.id);
       const dd = p && p.days.find((x) => x.label === el.dataset.label);
       const min = num("#pd-min");
       if (!dd || !(min > 0)) return toast("Inserisci la durata");
+      S.planMin[p.id] = min;
       const w = weightAt(k), met = 3.5;
       const note = dd.exercises.slice(0, 12).join(" · ");
       day(k, true).ex.push({ id: uid(), name: `${p.name}, giorno ${dd.label}`, met, min, kcal: (met * w * min) / 60, net: ((met - 1) * w * min) / 60, note });
