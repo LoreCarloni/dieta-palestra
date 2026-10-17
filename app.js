@@ -241,6 +241,7 @@ function renderToday() {
       <button class="btn" data-act="exercise">Aggiungi allenamento</button>
       <button class="btn ghost" data-act="activity-dialog">Incolla un riepilogo allenamenti</button>
       <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
+      ${S.plans.map((p) => `<div class="btns plan-quick"><span class="muted small">${esc(p.name)}:</span>${p.days.map((dd) => `<button class="btn small-btn primary" data-act="plan-day" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto ${esc(dd.label)}</button>`).join("")}</div>`).join("")}
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
   </section>
@@ -1390,13 +1391,13 @@ function act(a, el) {
       const days = parsePlan(val("#pl-text"));
       if (!days.length) return toast("Scrivi almeno un giorno con gli esercizi, per esempio: Giorno A");
       S.plans.push({ id: uid(), name, days });
-      toast("Scheda salvata"); return plansDialog();
+      toast("Scheda salvata"); render(); return plansDialog();
     }
-    case "plan-del": S.plans = S.plans.filter((p) => p.id !== el.dataset.id); return plansDialog();
+    case "plan-del": S.plans = S.plans.filter((p) => p.id !== el.dataset.id); render(); return plansDialog();
     case "plan-copy": {
       const p = S.plans.find((x) => x.id === el.dataset.id);
       if (p) S.plans.push({ id: uid(), name: p.name + " (copia)", days: JSON.parse(JSON.stringify(p.days)) });
-      toast("Scheda copiata"); return plansDialog();
+      toast("Scheda copiata"); render(); return plansDialog();
     }
     case "plan-day": return planDayDialog(el.dataset.id, el.dataset.label);
     case "plan-log": {
