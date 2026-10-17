@@ -146,6 +146,7 @@ const FOODS = [
   ["Fiocchi d'avena", 367, 8.0, 66.8, 7.5, 40, "Cereali", "CREA 2019"],
   ["Minestrone, cotto", 45, 2.0, 7.8, 0.4, 250, "Verdure", "CREA 2019"],
   ["Pomodori, maturi", 23, 1.0, 3.5, 0.2, 150, "Verdure", "CREA 2019"],
+  ["Lasagna al ragù con besciamella e mozzarella (ricetta, stima)", 196, 11.7, 13.4, 10.8, 300, "Piatti", "CREA 2019 (ricetta sperimentale)"],
 ].map(([name, kcal, p, c, f, portion, cat, src]) => ({ name, kcal, p, c, f, portion, cat, src }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
