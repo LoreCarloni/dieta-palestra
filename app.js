@@ -542,6 +542,7 @@ function renderProfile(first) {
   <form class="card" id="profile-form">
     <h2>I tuoi dati</h2>
     <div class="grid2">
+      <div class="field"><label>Come vuoi essere chiamato (facoltativo)</label><input name="name" type="text" maxlength="20" value="${esc(p.name || "")}" placeholder="Il tuo nome"></div>
       <div class="field"><label>Sesso</label><select name="sex">${opt("m", p.sex, "Uomo")}${opt("f", p.sex, "Donna")}</select></div>
       <div class="field"><label>Età</label><input name="age" type="number" inputmode="numeric" min="14" max="99" required value="${p.age}"></div>
       <div class="field"><label>Altezza (cm)</label><input name="height" type="number" inputmode="numeric" min="120" max="230" required value="${p.height}"></div>
@@ -869,13 +870,15 @@ function dayComment(k) {
     const ok = ov.over.length <= 1 && ov.overF.length <= 2;
     lines.push({ lvl: ok ? "good" : "bad", text: parts.join(" ") });
     const sg = ov.over.length, sgFat = ov.overF.length;
+    const who = S.profile && S.profile.name ? S.profile.name : "";
+    const greet = (t) => (who ? `${who}, ${t.charAt(0).toLowerCase()}${t.slice(1)}` : t);
     const closing = sg === 0 && sgFat <= 1
-      ? "Settimana pulita. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito."
+      ? greet("Settimana pulita. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito.")
       : sg <= 1 && sgFat <= 2
-        ? `Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`
+        ? greet(`Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`)
         : sg >= 3
-          ? `Questa settimana hai sgarrato ${sg} volte. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`
-          : `Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`;
+          ? greet(`Questa settimana hai sgarrato ${sg} volte. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`)
+          : greet(`Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`);
     lines.push({ lvl: sg <= 1 ? "good" : "bad", text: closing });
   }
   const cOver = t.c - tg.carbs;
@@ -1721,7 +1724,7 @@ document.addEventListener("submit", (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
   const n = (x) => parseFloat(fd.get(x));
-  S.profile = { sex: fd.get("sex"), age: n("age"), height: n("height"), weight: n("weight"), goalWeight: n("goalWeight"), rate: n("rate"), activity: n("activity"), trainDays: n("trainDays"), level: fd.get("level") };
+  S.profile = { name: String(fd.get("name") || "").trim(), sex: fd.get("sex"), age: n("age"), height: n("height"), weight: n("weight"), goalWeight: n("goalWeight"), rate: n("rate"), activity: n("activity"), trainDays: n("trainDays"), level: fd.get("level") };
   save();
   toast("Profilo salvato");
   view.tab = "oggi"; view.date = todayKey(); resetScroll = true;
