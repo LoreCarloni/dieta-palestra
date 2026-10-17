@@ -173,7 +173,6 @@ function renderToday() {
   const checklist = [
     ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
     { label: "Cosa hai mangiato oggi", ok: d.meals.length > 0, act: "food" },
-    { label: `Acqua ${r1(t.water / 1000)} di ${r1(t.waterTarget / 1000)} litri`, ok: t.water >= t.waterTarget, act: "water" },
     { label: d.rest ? "Giorno di riposo" : "Passi e allenamento (sezione Attività)", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "goto-attivita" },
     { label: "Chiudi la giornata", ok: d.closed, act: "close" },
   ];
@@ -229,8 +228,6 @@ function renderToday() {
       <div class="water-n"><b>${r1(t.water / 1000)} L</b><span class="muted small"> di ${r1(t.waterTarget / 1000)} L</span></div>
       ${bar(t.water, t.waterTarget, "w")}
       <div class="btns">
-        <button class="btn" data-act="add-water" data-ml="250">Bicchiere 250 ml</button>
-        <button class="btn" data-act="add-water" data-ml="500">Bottiglietta 500 ml</button>
         <button class="btn ghost" data-act="drink">Altra bevanda</button>
       </div>
     </div>
@@ -242,8 +239,7 @@ function renderToday() {
     ${d.ex.map((e) => `<div class="row"><div><div>${esc(e.name)}</div><div class="muted small">${r0(e.min)} minuti${e.note ? ", " + esc(e.note) : ""}</div></div><div class="row-r"><span>${r0(e.kcal)}</span><button class="x" data-act="del-ex" data-id="${e.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     <div class="field inline"><label for="steps">Passi del giorno</label><input id="steps" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps"></div>
     <div class="btns">
-      <button class="btn" data-act="exercise">Aggiungi allenamento</button>
-      <button class="btn ghost" data-act="activity-dialog">Incolla un riepilogo allenamenti</button>
+      <button class="btn primary" data-act="activity-dialog">Scrivi o incolla le attività</button>
       <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
       ${S.plans.map((p) => `<div class="btns plan-quick"><span class="muted small">${esc(p.name)}:</span>${p.days.map((dd) => `<button class="btn small-btn primary" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto ${esc(dd.label)}</button>`).join("")}</div>`).join("")}
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
@@ -959,16 +955,18 @@ function parseActivity(text) {
     const m = line.match(/(\d+(?:[.,]\d+)?)\s*(?:minuti|minuto|min\b|m\b|')/i) || line.match(/[,;|]\s*(\d+(?:[.,]\d+)?)\s*(?:$|[,;|])/);
     if (!m) return errors.push(`riga ${i + 1}: ${line.slice(0, 40)}`);
     const min = num1(m[1]);
-    const name = line.slice(0, m.index).replace(/[,;|:\s-]+$/, "").trim() || "Attività";
+    const name = line.slice(0, m.index).replace(/[,;|:\s-]+$/, "").replace(/\s+(di|per|da|circa)$/i, "").trim() || "Attività";
     const rest = line.slice(m.index + m[0].length).replace(/^[,;|\s-]+/, "").trim();
-    const hit = EXERCISES.find((e) => norm(e.name).includes(norm(name)) || norm(name).includes(norm(e.name)));
+    const ALIAS = { corsetta: "Corsa leggera", corsa: "Corsa leggera", camminata: "Camminata veloce", bici: "Bicicletta moderata", bicicletta: "Bicicletta moderata", palestra: "Pesi moderato", pesi: "Pesi moderato", nuoto: "Nuoto moderato", yoga: "Yoga", krav: "Krav Maga" };
+    const key = norm(name).split(/\s+/)[0];
+    const hit = EXERCISES.find((e) => norm(e.name).includes(norm(name)) || norm(name).includes(norm(e.name)) || (ALIAS[key] && e.name.startsWith(ALIAS[key])));
     out.push({ name: hit ? hit.name : name, met: hit ? hit.met : 5, min, note: rest, generic: !hit });
   });
   return { out, errors };
 }
 function activityDialog() {
   openDialog(`
-    <h3>Incolla un riepilogo allenamenti</h3>
+    <h3>Scrivi o incolla le attività</h3>
     <p class="muted small">Una riga per attività con i minuti, per esempio: Krav Maga, 75 minuti, corso serale. Le attività non in elenco usano una stima generica.</p>
     <div class="field"><textarea id="act-text" rows="7" placeholder="Incolla qui" autofocus></textarea></div>
     <button class="btn primary wide" data-act="activity-save">Aggiungi</button>`);
