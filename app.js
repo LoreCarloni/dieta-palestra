@@ -448,7 +448,9 @@ function reportText(n) {
 
 // ---------- Coach ----------
 function coachAdvice() {
-  const st = periodStats(addDays(todayKey(), isTracked(todayKey()) && day(todayKey()).closed ? 0 : -1), 7);
+  const stEnd = addDays(todayKey(), isTracked(todayKey()) && day(todayKey()).closed ? 0 : -1);
+  const st = periodStats(stEnd, 7);
+  const sgSt = overview(stEnd, 7).over.length;
   const st14 = periodStats(todayKey(), 14);
   const p = S.profile;
   const tg = targets(todayKey());
@@ -459,6 +461,7 @@ function coachAdvice() {
   if (st.tracked >= 3) {
     if (st.kcal > st.target + 150) add("bad", "Sei sopra l'obiettivo", `Media ${r0(st.kcal)} kcal contro un obiettivo di ${r0(st.target)}. Sono circa ${r0(st.kcal - st.target)} kcal in più al giorno. Controlla condimenti, snack fuori pasto e bevande.`);
     else if (st.kcal < st.bmr * 0.95) add("warn", "Stai mangiando troppo poco", `Media ${r0(st.kcal)} kcal, sotto il tuo metabolismo basale (${r0(st.bmr)}). Rischi di perdere muscolo, avere più fame e rallentare. Meglio un deficit moderato e sostenibile.`);
+    else if (sgSt) add("warn", "Calorie in linea, ma con sgarri", `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}, però nei 7 giorni hai ${sgSt} ${sgSt === 1 ? "sgarro" : "sgarri"}. La media nasconde i giorni fuori obiettivo: il prossimo passo è azzerarli.`);
     else add("good", "Calorie in linea", `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}. Continua così.`);
 
     if (st.p < st.pTarget * 0.85) add("bad", "Proteine basse", `Media ${r0(st.p)} g contro ${r0(st.pTarget)} g. Le proteine proteggono il muscolo e saziano. Aggiungi una fonte a ogni pasto: yogurt greco o skyr a colazione, carne bianca, pesce, uova, legumi o fiocchi di latte a pranzo e cena.`);
