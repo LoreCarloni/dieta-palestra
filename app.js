@@ -915,11 +915,11 @@ function dayComment(k) {
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
   }
-  const st7 = periodStats(todayKey(), 7);
+  const st7 = periodStats(k, 7);
   if (st7.tracked >= 3) {
     const perWeek = (st7.balance * 7) / 7700;
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
-    const sg7 = overview(todayKey(), 7).over.length;
+    const sg7 = overview(k, 7).over.length;
     const pace = perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : sg7 >= 2 ? "Con questo ritmo la vita può scendere, ma con due o più sgarri la stima non è un via libera: conta soprattutto che gli sgarri calino." : sg7 === 1 ? "Con questo ritmo la vita può scendere, ma lo sgarro di questa settimana pesa sulla stima: non è ancora un ritmo da confermare." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì.";
     lines.push({ lvl: perWeek > 0.05 ? "bad" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}, e la stima dipende dagli sgarri della settimana. ${pace}` });
   }
