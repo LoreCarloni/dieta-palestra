@@ -1053,7 +1053,7 @@ function parseDiary(text) {
   const lines = [];
   clean.split(NEWLINES).forEach((raw) => {
     // più frasi sulla stessa riga: separale dopo il punto
-    raw.split(/(?<=[.!])\s+(?=[A-ZÀ-Ý])/).forEach((x) => lines.push(x));
+    raw.replace(/([.!])\s+(?=[A-ZÀ-Ý])/g, "$1\n").split("\n").forEach((x) => lines.push(x));
   });
   lines.forEach((raw) => {
     let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
