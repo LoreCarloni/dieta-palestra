@@ -282,6 +282,15 @@ function deltaText(list, f, unit) {
   return `${diff < 0 ? "meno" : "più"} ${fmtN(Math.abs(diff))} ${unit} rispetto all'ultima volta`;
 }
 
+function lowWaistComment(list) {
+  const pts = lastWith("low", list);
+  if (pts.length < 2) return "";
+  const d = pts[pts.length - 1].low - pts[pts.length - 2].low;
+  if (Math.abs(d) < 0.5) return `<p class="small">Vita bassa stabile rispetto alla misura precedente.</p>`;
+  return d > 0
+    ? `<p class="small bad">Vita bassa aumentata di ${fmtN(d)} cm rispetto alla misura precedente. Controlla cosa è cambiato nella dieta questa settimana.</p>`
+    : `<p class="small good">Vita bassa diminuita di ${fmtN(-d)} cm rispetto alla misura precedente. Continua così.</p>`;
+}
 function lineChart(list, f, label) {
   const pts = lastWith(f, list);
   if (pts.length < 2) return `<p class="muted small">${label}: servono almeno due misurazioni per vedere l'andamento.</p>`;
@@ -324,6 +333,7 @@ function renderMeasures() {
     <p class="small">Per la pancia contano più la vita all'ombelico e come ti svegli la mattina del peso: il peso può restare uguale mentre la pancia scende.</p>
     ${lineChart(list, "waist", "Vita ombelico, misura principale")}
     ${lineChart(list, "low", "Vita bassa")}
+    ${lowWaistComment(list)}
     ${lineChart(list, "weight", "Peso")}
     ${lineChart(list, "thigh", "Coscia")}
   </section>
