@@ -179,7 +179,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${d.meals.map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -209,8 +209,8 @@ function renderToday() {
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
     <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
-    <button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Nascondi alimenti" : `Mostra alimenti (${d.meals.length})`}</button>
-    ${view.foodsOpen ? mealsHtml : ""}
+    ${mealsHtml}
+    ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
   </section>
 
   ${commentHtml(k)}
@@ -909,7 +909,9 @@ function dayComment(k) {
   if (st7.tracked >= 3) {
     const perWeek = (st7.balance * 7) / 7700;
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
-    lines.push({ lvl: perWeek > 0.05 ? "bad" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì."}` });
+    const sg7 = overview(todayKey(), 7).over.length;
+    const pace = perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : sg7 >= 2 ? "Con questo ritmo la vita può scendere, ma con due o più sgarri la stima non è un via libera: conta soprattutto che gli sgarri calino." : sg7 === 1 ? "Con questo ritmo la vita può scendere, ma lo sgarro di questa settimana pesa sulla stima: non è ancora un ritmo da confermare." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì.";
+    lines.push({ lvl: perWeek > 0.05 ? "bad" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}, e la stima dipende dagli sgarri della settimana. ${pace}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
