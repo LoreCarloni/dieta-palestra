@@ -207,10 +207,16 @@ function renderToday() {
 
   <section class="card">
     <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
-    <div class="btns food-actions"><button class="btn primary" data-act="food">Aggiungi alimento</button><button class="btn" data-act="diary-dialog">Incolla un riepilogo</button>${hasYesterday(k) ? `<button class="btn ghost" data-act="copy-yesterday">Come ieri</button>` : ""}<button class="btn ghost" data-act="copy-from-date">Copia da data</button></div>
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
     ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
+    ${view.foodMenu ? `<div class="food-menu">
+      <button class="menu-item" data-act="food">Aggiungi alimento</button>
+      <button class="menu-item" data-act="diary-dialog">Incolla un riepilogo</button>
+      ${hasYesterday(k) ? `<button class="menu-item" data-act="copy-yesterday">Come ieri</button>` : ""}
+      <button class="menu-item" data-act="copy-from-date">Copia da data</button>
+    </div>` : ""}
+    <div class="food-foot"><button class="icon-plus" data-act="food-menu" aria-label="Aggiungi">+</button></div>
   </section>
 
   ${commentHtml(k)}
@@ -1327,7 +1333,9 @@ function act(a, el) {
   const k = view.date;
   const val = (id) => $(id).value;
   const num = (id) => parseFloat($(id).value);
+  if (a !== "food-menu") view.foodMenu = false;
   switch (a) {
+    case "food-menu": view.foodMenu = !view.foodMenu; break;
     case "prev-day": view.date = addDays(k, -1); resetScroll = true; break;
     case "next-day": if (k < todayKey()) view.date = addDays(k, 1); resetScroll = true; break;
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; resetScroll = true; break;

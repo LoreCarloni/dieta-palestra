@@ -197,7 +197,11 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 
 .upd-bar { position: fixed; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top)); z-index: 20; border: 0; background: var(--accent); color: var(--card); font-weight: 600; padding: 12px; border-radius: 12px; cursor: pointer; }
 
-.food-actions { margin: 0 0 8px; }
+.food-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
+.icon-plus { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--card); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+.food-menu { display: flex; flex-direction: column; margin: 8px 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.menu-item { border: 0; background: transparent; text-align: left; padding: 12px 10px; font-size: 1rem; color: var(--text); border-radius: 8px; cursor: pointer; }
+.menu-item:active { background: var(--line); }
 
 .goal-line { text-align: center; font-size: 0.95rem; margin-bottom: 2px; }
 
