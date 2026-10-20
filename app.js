@@ -642,7 +642,10 @@ function foodDialog() {
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
-const foodItem = (f) => `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
+const foodItem = (f) => {
+  const item = `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
+  return S.customFoods.some((x) => x.name === f.name) ? `<div class="item-row">${item}<button class="x" data-act="del-custom" data-name="${esc(f.name)}" aria-label="Elimina">×</button></div>` : item;
+};
 
 // Alimenti cercati e non trovati: finiscono nel report, così posso aggiungerli alla lista con valori da fonti affidabili.
 function prunedWanted() {
@@ -1598,6 +1601,14 @@ function act(a, el) {
       break;
     }
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
+    case "del-custom": {
+      const name = el.dataset.name;
+      if (!confirm(`Eliminare "${name}" dalla memoria? Non si recupera.`)) break;
+      S.customFoods = S.customFoods.filter((x) => x.name !== name);
+      const q = document.getElementById("f-search");
+      if (q) renderFoodList(q.value);
+      break;
+    }
     case "add-water": {
       const ml = +el.dataset.ml;
       day(k, true).drinks.push({ id: uid(), name: "Acqua", ml, kcal: 0, c: 0, hydr: true, alc: false });

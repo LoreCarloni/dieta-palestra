@@ -202,6 +202,8 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 .food-menu { display: flex; flex-direction: column; margin: 8px 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .menu-item { border: 0; background: transparent; text-align: left; padding: 12px 10px; font-size: 1rem; color: var(--text); border-radius: 8px; cursor: pointer; }
 .menu-item:active { background: var(--line); }
+.item-row { display: flex; align-items: center; }
+.item-row .item { flex: 1; }
 
 .goal-line { text-align: center; font-size: 0.95rem; margin-bottom: 2px; }
 
