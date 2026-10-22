@@ -1,7 +1,7 @@
 // Database alimenti: valori per 100 g (kcal, proteine, carboidrati, grassi) e porzione tipica in grammi.
 // Valori medi indicativi (tabelle CREA ed etichette comuni).
 const FOODS = [
-  ["Cotolette di pollo al forno o in friggitrice ad aria", 190, 27, 7, 5, 100, "Secondi", "valori dichiarati dall'utente"],
+  ["Cotolette di pollo al forno o in friggitrice ad aria", 190, 27, 7, 5, 100, "Secondi", "valori dichiarati dall'utente", 100],
   // Colazione e latticini
   ["Latte parzialmente scremato", 46, 3.5, 5, 1.5, 200, "Colazione", "tabelle INRAN"],
   ["Latte intero", 64, 3.3, 4.9, 3.6, 200, "Colazione"],
@@ -149,7 +149,7 @@ const FOODS = [
   ["Pomodori, maturi", 23, 1.0, 3.5, 0.2, 150, "Verdure", "CREA 2019"],
   ["Lasagna al ragù con besciamella e mozzarella (ricetta, stima)", 196, 11.7, 13.4, 10.8, 300, "Piatti", "CREA 2019 (ricetta sperimentale)"],
   ["Kinder Tronky (nocciola)", 548, 7.8, 54.9, 32.5, 18, "Snack", "Supermarket.mt, scheda prodotto (non CREA)"],
-].map(([name, kcal, p, c, f, portion, cat, src]) => ({ name, kcal, p, c, f, portion, cat, src }));
+].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
 const DRINKS = [

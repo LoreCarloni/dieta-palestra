@@ -1222,7 +1222,8 @@ function qtyDialog(f, slot) {
   openDialog(`
     <h3>${esc(f.name)}</h3>
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
-    <div class="field"><label>Quantità in grammi</label><input id="q-g" type="number" inputmode="decimal" min="1" step="1" value="${f.portion || 100}" autofocus></div>
+    ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="number" inputmode="numeric" min="1" step="1" value="1" autofocus></div>` : ""}
+    <div class="field"><label>Quantità in grammi</label><input id="q-g" type="number" inputmode="decimal" min="1" step="1" value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}></div>
     <div class="chips">${[0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
     <div id="q-prev" class="preview"></div>
     <button class="btn primary wide" data-act="save-food">Aggiungi</button>`);
@@ -1731,7 +1732,8 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
-  if (e.target.id === "q-g") updateQtyPreview();
+  if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((parseFloat(e.target.value) || 0) * f.piece); }
+  if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
 });
 document.addEventListener("change", (e) => {
