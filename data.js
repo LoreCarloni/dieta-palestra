@@ -1,6 +1,7 @@
 // Database alimenti: valori per 100 g (kcal, proteine, carboidrati, grassi) e porzione tipica in grammi.
 // Valori medi indicativi (tabelle CREA ed etichette comuni).
 const FOODS = [
+  ["Cotolette di pollo al forno o in friggitrice ad aria", 190, 27, 7, 5, 100, "Secondi", "valori dichiarati dall'utente"],
   // Colazione e latticini
   ["Latte parzialmente scremato", 46, 3.5, 5, 1.5, 200, "Colazione", "tabelle INRAN"],
   ["Latte intero", 64, 3.3, 4.9, 3.6, 200, "Colazione"],
