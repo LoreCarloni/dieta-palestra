@@ -874,6 +874,8 @@ function dayComment(k) {
   const lines = [];
   const diff = t.kcal - tg.kcal;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
+  if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
+  else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
   const fOver = t.f - tg.fat;
   const wk = periodStats(k, 7);
   const wkOk = wk.tracked >= 3;
