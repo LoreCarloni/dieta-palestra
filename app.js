@@ -916,8 +916,7 @@ function dayComment(k) {
   if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
   else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
   if (!d.closed && k === todayKey()) {
-    const hour = new Date().getHours();
-    const meal = hour < 11 ? "il pranzo" : hour < 17 ? "il prossimo pasto" : "la cena";
+    const meal = "la cena";
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
