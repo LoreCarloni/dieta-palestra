@@ -179,7 +179,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -876,6 +876,8 @@ function dayComment(k) {
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
   else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
+  const bySlot = (s) => d.meals.filter((m) => m.slot === s).reduce((a, m) => a + m.kcal, 0);
+  if (Object.keys(SLOT_NAMES).some((s) => bySlot(s) > 0)) lines.push({ lvl: "tip", text: `Ripartizione: colazione ${r0(bySlot("colazione"))} kcal, pranzo ${r0(bySlot("pranzo"))} kcal, cena ${r0(bySlot("cena"))} kcal.` });
   const fOver = t.f - tg.fat;
   const wk = periodStats(k, 7);
   const wkOk = wk.tracked >= 3;
@@ -1052,6 +1054,14 @@ function activityDialog() {
 // ---------- Riepilogo incollato: suddivisione in pasti ----------
 // Ogni riga con "kcal" diventa un alimento. Le intestazioni Colazione, Pranzo, Cena (anche davanti alla riga) assegnano il pasto.
 const SLOT_WORDS = [/^colazione\b/i, /^spuntino( mattina)?\b/i, /^pranzo\b/i, /^merenda\b/i, /^cena\b/i];
+const SLOT_NAMES = { colazione: "Colazione", pranzo: "Pranzo", cena: "Cena" };
+// Dove di solito mangi questi cibi: serve quando non hai scelto un pasto.
+const SLOT_RULES = [
+  ["colazione", /yogurt|avena|latte|muesli|corn flakes|fiocchi|biscott|marmellata|miele|whey|proteine|albume/i],
+  ["pranzo", /pasta|riso|spaghetti|penne|gnocchi|farro|orzo|couscous|lasagn/i],
+  ["cena", /carne|manzo|vitello|pollo|tacchino|pesce|salmone|tonno|verdur|insalata|zucchin|zucca|pane|cotolett|salsiccia|frittata|tomino/i],
+];
+const slotFor = (slot, name) => (slot && slot !== "giorno" ? slot : (SLOT_RULES.find(([, re]) => re.test(name)) || ["giorno"])[0]);
 
 const MACRO_WORDS = { p: "proteine|proteina|prot", c: "carboidrati|carboidrato|carbo|carb|zuccheri", f: "grassi|grasso|lipidi|lipide" };
 function grabMacro(line, key) {
@@ -1388,7 +1398,7 @@ function act(a, el) {
       if (!(g > 0)) return toast("Inserisci la quantità");
       const ref = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion, cat: f.cat };
       rememberFood({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion });
-      day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
+      day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, f.name), name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
       closeDialog(); toast("Aggiunto"); break;
     }
     case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
@@ -1406,7 +1416,7 @@ function act(a, el) {
       const p = num("#k-p") || 0;
       const qn = val("#k-name").trim() || "Stima";
       const qc = Math.max(0, (kc * 0.45) / 4), qf = Math.max(0, (kc - p * 4 - kc * 0.45) / 9);
-      day(k, true).meals.push({ id: uid(), slot: dlg().dataset.slot, name: qn, g: null, kcal: kc, p, c: qc, f: qf });
+      day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, qn), name: qn, g: null, kcal: kc, p, c: qc, f: qf });
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
