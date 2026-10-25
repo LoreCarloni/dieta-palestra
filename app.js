@@ -876,6 +876,12 @@ function dayComment(k) {
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
   else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
+  const weighed = d.meals.filter((m) => m.g && m.kcal > 0);
+  if (diff > 0 && weighed.length) {
+    const big = weighed.reduce((a, m) => (m.kcal > a.kcal ? m : a));
+    const cut = Math.min(big.g * 0.5, Math.ceil(diff / (big.kcal / big.g) / 10) * 10);
+    lines.push({ lvl: "tip", text: `Per restare nel target riduci ${shortName(big.name).toLowerCase()} di circa ${r0(cut)} g.` });
+  }
   const bySlot = (s) => d.meals.filter((m) => m.slot === s).reduce((a, m) => a + m.kcal, 0);
   if (Object.keys(SLOT_NAMES).some((s) => bySlot(s) > 0)) lines.push({ lvl: "tip", text: `Ripartizione: colazione ${r0(bySlot("colazione"))} kcal, pranzo ${r0(bySlot("pranzo"))} kcal, cena ${r0(bySlot("cena"))} kcal.` });
   const fOver = t.f - tg.fat;
