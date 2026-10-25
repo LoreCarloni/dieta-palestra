@@ -1,6 +1,7 @@
 // Database alimenti: valori per 100 g (kcal, proteine, carboidrati disponibili, grassi) e porzione tipica in grammi.
 // Fonte principale: Tabelle di composizione degli alimenti CREA, aggiornamento 2019 (alimentinutrizione.it). Le voci personali restano in fondo con la loro fonte.
 const FOODS = [
+  ["Spaghetti Rummo n.3 (secchi)", 356, 14.5, 69.5, 1.6, 80, "Cereali", "rivenditori (Knuspr, Ratton Pantry, FatSecret), da verificare sull'etichetta"],
   ["Farro perlato, crudo", 353.0, 14.6, 69.3, 2.4, 80.0, "Cereali", "CREA 000020"],
   ["Farro perlato, cotto, bollito", 178.0, 6.2, 37.3, 1.0, 185.0, "Cereali", "CREA 000025"],
   ["Frumento duro", 332.0, 13.0, 62.5, 2.9, 80.0, "Cereali", "CREA 000030"],
