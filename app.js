@@ -162,6 +162,15 @@ function bar(value, target, cls = "") {
   return `<div class="bar ${cls} ${over ? "over" : ""}"><span style="width:${pct(value, target)}%"></span></div>`;
 }
 
+// Barra dell'obiettivo: il tratto oltre il target è di un altro colore e mostra quanto si è sforato.
+function kcalBar(v, target) {
+  const scale = Math.max(v, target) || 1;
+  const base = (Math.min(v, target) / scale) * 100;
+  const extra = (Math.max(0, v - target) / scale) * 100;
+  const perc = target > 0 ? Math.round((v / target) * 100) : 0;
+  return `<div class="bar-over" role="img" aria-label="${perc} per cento dell'obiettivo"><span class="base" style="width:${base}%"></span><span class="extra" style="width:${extra}%"></span></div><div class="muted small">${perc}% dell'obiettivo</div>`;
+}
+
 function renderToday() {
   const k = view.date;
   const d = day(k);
@@ -196,6 +205,7 @@ function renderToday() {
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
     <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
+    ${kcalBar(t.kcal, tg.kcal)}
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
       <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>

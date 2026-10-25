@@ -72,6 +72,9 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
 .bar.f span { background: var(--f); }
 .bar.w span { background: var(--w); }
 .bar.over span { background: var(--bad); }
+.bar-over { display: flex; height: 12px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 6px 0 2px; }
+.bar-over .base { height: 100%; background: var(--accent); transition: width 0.3s; }
+.bar-over .extra { height: 100%; background: var(--bad); background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgba(255, 255, 255, 0.35) 4px 8px); transition: width 0.3s; }
 .macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .macros > div { display: flex; flex-direction: column; font-size: 0.85rem; }
 .macros b { font-size: 0.85rem; }
