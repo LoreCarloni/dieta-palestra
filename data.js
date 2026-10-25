@@ -9,7 +9,6 @@ const FOODS = [
   ["Latte scremato", 36, 3.6, 5.3, 0.2, 200, "Colazione", "tabelle INRAN"],
   ["Bevanda di soia", 39, 3, 2.5, 1.8, 200, "Colazione"],
   ["Yogurt greco 0%", 57, 10, 3.6, 0.2, 170, "Colazione"],
-  ["Yogurt greco intero", 97, 9, 4, 5, 170, "Colazione"],
   ["Yogurt bianco intero", 66, 3.8, 4.3, 3.9, 125, "Colazione", "tabelle INRAN"],
   ["Yogurt alla frutta", 90, 3.3, 14, 2.5, 125, "Colazione"],
   ["Skyr", 63, 11, 4, 0.2, 150, "Colazione"],
