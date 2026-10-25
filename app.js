@@ -966,7 +966,7 @@ function commentHtml(k) {
   const recovery = c.lines.filter(isRecovery);
   const others = c.lines.filter((l) => !isRecovery(l));
   const [head, ...rest] = others;
-  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><b>Come recuperare</b>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Piano di recupero</div><p class="recovery-sub">Uno sgarro si recupera in una settimana. Da domani sei di nuovo in gara.</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
