@@ -923,7 +923,7 @@ function dayComment(k) {
   if (t.alcKcal > 0) lines.push({ lvl: "warn", text: `Alcol: ${r0(t.alcKcal)} kcal. Non sazia e rallenta l'uso dei grassi come energia.` });
   if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
   else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
-  if (!d.closed && k === todayKey()) {
+  if (!d.closed && k === todayKey() && !d.meals.some((m) => m.slot === "cena")) {
     const meal = "la cena";
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
@@ -949,7 +949,7 @@ function dayComment(k) {
   if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
   if (t.exMin === 0) tips.push("fai almeno 8000 passi");
-  if (diff > 0) tips.push(`recupera domani restando intorno a ${r0(tg.kcal)} kcal, senza saltare i pasti e senza compensare con la fame`);
+  if (diff > 0) tips.unshift(`togli domani circa ${Math.round(diff / 4 / 10) * 10} g di carboidrati, per esempio pane, pasta o dolci, oppure circa ${Math.round(diff / 9 / 5) * 5} g di grassi, e non saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Per domani: ${tips.join("; ")}.` : "Per domani: continua così." });
   return { verdict, lines };
@@ -958,8 +958,11 @@ function commentHtml(k) {
   const c = dayComment(k);
   if (!c) return "";
   const advice = (l) => `<div class="advice ${l.lvl === "tip" ? "" : l.lvl}"><p>${esc(l.text)}</p></div>`;
-  const [head, ...rest] = c.lines;
-  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  const isRecovery = (l) => l.text.startsWith("Per domani:");
+  const recovery = c.lines.filter(isRecovery);
+  const others = c.lines.filter((l) => !isRecovery(l));
+  const [head, ...rest] = others;
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><b>Come recuperare</b>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
@@ -1067,7 +1070,7 @@ const SLOT_NAMES = { colazione: "Colazione", pranzo: "Pranzo", cena: "Cena" };
 const SLOT_RULES = [
   ["colazione", /yogurt|avena|latte|muesli|corn flakes|fiocchi|biscott|marmellata|miele|whey|proteine|albume/i],
   ["pranzo", /pasta|riso|spaghetti|penne|gnocchi|farro|orzo|couscous|lasagn/i],
-  ["cena", /carne|manzo|vitello|pollo|tacchino|pesce|salmone|tonno|verdur|insalata|zucchin|zucca|pane|cotolett|salsiccia|frittata|tomino/i],
+  ["cena", /carne|manzo|vitello|pollo|tacchino|pesce|salmone|tonno|verdur|insalata|zucchin|zucca|pane|cotolett|salsiccia|frittata|tomino|pizza/i],
 ];
 const slotFor = (slot, name) => (slot && slot !== "giorno" ? slot : (SLOT_RULES.find(([, re]) => re.test(name)) || ["giorno"])[0]);
 
