@@ -967,7 +967,7 @@ function commentHtml(k) {
   const recovery = c.lines.filter(isRecovery);
   const others = c.lines.filter((l) => !isRecovery(l));
   const [head, ...rest] = others;
-  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Piano di recupero</div><p class="recovery-sub">${c.cut ? `Impegno da domani: ${c.cut} g di carboidrati in meno ogni giorno per questa settimana. A fine settimana sei di nuovo in linea.` : "Da domani resti sul target e la settimana torna in linea."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Impegno da domani: ${c.cut} g di carboidrati in meno ogni giorno per questa settimana. A fine settimana sei di nuovo in linea.` : "Da domani resti sul target e la settimana torna in linea."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
