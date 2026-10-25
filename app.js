@@ -828,7 +828,7 @@ function historyDialog() {
 }
 
 // ---------- Ricalcolo con i valori aggiornati ----------
-const FOOD_ALIAS = { "Pane bianco": "Pane bianco (tipo 00)", "Mozzarella": "Mozzarella di vacca", "Parmigiano": "Parmigiano Reggiano", "Manzo magro (crudo)": "Manzo magro (fesa, crudo)", "Petto di tacchino (crudo)": "Fesa di tacchino (cruda)", "Lonza di maiale (cruda)": "Lonza di maiale (lombo leggero, crudo)" };
+const FOOD_ALIAS = { "Pane bianco": "Pane bianco", "Mozzarella": "Mozzarella di vacca", "Parmigiano": "Parmigiano Reggiano", "Manzo magro (crudo)": "Bovino adulto o vitellone, fesa, crudo", "Petto di tacchino (crudo)": "Tacchino, fesa, crudo", "Lonza di maiale (cruda)": "Maiale, lombo, crudo" };
 function recalcChanges(k) {
   const out = [];
   day(k).meals.forEach((m) => {
