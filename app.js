@@ -1253,8 +1253,8 @@ function qtyDialog(f, slot) {
   openDialog(`
     <h3>${esc(f.name)}</h3>
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
-    ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="number" inputmode="numeric" min="1" step="1" value="1" autofocus></div>` : ""}
-    <div class="field"><label>Quantità in grammi</label><input id="q-g" type="number" inputmode="decimal" min="1" step="1" value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}></div>
+    ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
+    <div class="field"><label>Quantità in grammi</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}></div>
     <div class="chips">${[0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
     <div id="q-prev" class="preview"></div>
     <button class="btn primary wide" data-act="save-food">Aggiungi</button>`);
@@ -1264,7 +1264,7 @@ function qtyDialog(f, slot) {
 }
 function updateQtyPreview() {
   const f = JSON.parse(dlg().dataset.food);
-  const g = parseFloat($("#q-g").value) || 0;
+  const g = num1($("#q-g").value) || 0;
   $("#q-prev").innerHTML = `<b>${r0((f.kcal * g) / 100)} kcal</b> <span class="muted small">P ${r1((f.p * g) / 100)} C ${r1((f.c * g) / 100)} G ${r1((f.f * g) / 100)}</span>`;
 }
 
@@ -1391,7 +1391,7 @@ function act(a, el) {
     case "food-cat": return foodCat(el.dataset.c);
     case "ps-add": {
       const f = JSON.parse(el.dataset.food);
-      const n = Math.max(1, Math.round(num("#ps-n") || 1));
+      const n = num1(val("#ps-n")) || 1;
       const name = n > 1 ? `${f.name} x ${n}` : f.name;
       day(k, true).meals.push({ id: uid(), slot: "giorno", name, g: null, kcal: f.kcal * n, p: f.p * n, c: f.c * n, f: f.f * n });
       rememberFood({ ...f, seen: undefined });
@@ -1403,7 +1403,7 @@ function act(a, el) {
         openDialog(`
           <h3>${esc(f.name)}</h3>
           <p class="muted small">Per porzione: ${r0(f.kcal)} kcal, P ${r1(f.p)} C ${r1(f.c)} G ${r1(f.f)}</p>
-          <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="number" inputmode="numeric" min="1" step="1" value="1" autofocus></div>
+          <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="text" inputmode="decimal" value="1" autofocus></div>
           <button class="btn primary wide" data-act="ps-add" data-food="${esc(JSON.stringify(f))}">Aggiungi</button>`);
         break;
       }
@@ -1412,7 +1412,7 @@ function act(a, el) {
     case "qty": $("#q-g").value = el.dataset.g; return updateQtyPreview();
     case "save-food": {
       const f = JSON.parse(dlg().dataset.food);
-      const g = num("#q-g");
+      const g = num1(val("#q-g"));
       if (!(g > 0)) return toast("Inserisci la quantità");
       const ref = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion, cat: f.cat };
       rememberFood({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion });
@@ -1766,7 +1766,7 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
-  if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((parseFloat(e.target.value) || 0) * f.piece); }
+  if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
 });
