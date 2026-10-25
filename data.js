@@ -864,6 +864,7 @@ const FOODS = [
   ["Salame", 400, 25, 1, 33, 30, "Proteine"],
   ["Mozzarella light", 165, 19, 1, 9, 125, "Proteine"],
   ["Parmigiano Reggiano", 402, 32.4, 0, 29.7, 10, "Proteine", "Consorzio del Parmigiano Reggiano"],
+  ["Caciottina fresca (stima per il tomino)", 263, 17.3, 0.5, 21.3, 100, "Proteine", "CREA 2019 (stima)"],
   ["Fiocchi di latte", 98, 12, 3, 4.3, 150, "Proteine"],
   ["Formaggio stagionato", 400, 27, 0, 32, 50, "Proteine"],
   ["Proteine whey in polvere", 380, 78, 6, 5, 30, "Proteine"],
@@ -908,6 +909,8 @@ const FOODS = [
   ["Sushi misto", 150, 6, 28, 2, 300, "Piatti"],
   ["Kebab", 215, 12, 20, 10, 350, "Piatti"],
   ["Panino hamburger fast food", 255, 13, 30, 9, 220, "Piatti"],
+  ["Lasagna al ragù con besciamella e mozzarella (ricetta, stima)", 196, 11.7, 13.4, 10.8, 300, "Piatti", "CREA 2019 (ricetta sperimentale)"],
+  ["Kinder Tronky (nocciola)", 548, 7.8, 54.9, 32.5, 18, "Snack", "Supermarket.mt, scheda prodotto (non CREA)"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
