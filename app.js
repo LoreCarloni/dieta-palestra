@@ -1254,7 +1254,7 @@ function qtyDialog(f, slot) {
   openDialog(`
     <h3>${esc(f.name)}</h3>
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
-    <p class="muted small">Valori indicativi${f.src ? `, fonte: ${esc(f.src)}` : ""}. Per un dato preciso verifica l'etichetta del pacco.</p>
+    <p class="muted small">Valori indicativi${f.src ? `, fonte: ${esc(f.src)}` : ""}. Per un dato preciso fotografa la tabella nutrizionale ufficiale sulla confezione.</p>
     ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
     <div class="field"><label>Quantità in grammi</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}></div>
     <div class="chips">${[0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
