@@ -949,7 +949,11 @@ function dayComment(k) {
   if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
   if (t.exMin === 0) tips.push("fai almeno 8000 passi");
-  if (diff > 0) tips.unshift(`togli domani circa ${Math.round(diff / 4 / 10) * 10} g di carboidrati, per esempio pane, pasta o dolci, oppure circa ${Math.round(diff / 9 / 5) * 5} g di grassi, e non saltare i pasti`);
+  const extraDay = wkOk ? wk.kcal - tg.kcal : diff;
+  if (extraDay > 20) {
+    const cutG = Math.min(Math.round((tg.carbs * 0.2) / 5) * 5, Math.round(extraDay / 4 / 5) * 5);
+    tips.unshift(`spalma il recupero sui prossimi 7 giorni: riduci i carboidrati di circa ${cutG} g al giorno, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
+  }
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Per domani: ${tips.join("; ")}.` : "Per domani: continua così." });
   return { verdict, lines };
