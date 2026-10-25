@@ -179,7 +179,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -1104,7 +1104,9 @@ function parseDiary(text) {
     let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s\-–]+$/, "").trim();
     name = name.replace(/\s*\(.*$/, "").trim() || "Alimento";
     const rest = line.slice(k.index);
-    const item = { name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, hasMacro: { p: false, c: false, f: false } };
+    const item = { name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, g: null, hasMacro: { p: false, c: false, f: false } };
+    const gm = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
+    if (gm) item.g = num1(gm[1]);
     ["p", "c", "f"].forEach((key) => { const v = grabMacro(rest, key); if (v !== null) { item[key] = v; item.hasMacro[key] = true; } });
     items.push(item);
   });
@@ -1583,7 +1585,10 @@ function act(a, el) {
       let n = 0;
       items.forEach((it, i) => {
         if (!$(`[data-di=chk][data-i="${i}"]`).checked) return;
-        day(k, true).meals.push({ id: uid(), slot: "giorno", name: it.name, g: null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
+        // peso stimato dalle calorie scritte e dal database, modificabile in seguito con i grammi giusti
+        const hit = it.g ? null : searchFoods(it.name).find((x) => !x.perServing);
+        const estG = hit && hit.kcal > 0 && it.kcal > 0 ? Math.round(it.kcal / (hit.kcal / 100)) : null;
+        day(k, true).meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || estG, gEst: !it.g && estG !== null, kcal: it.kcal, p: it.p, c: it.c, f: it.f });
         rememberFood({ name: it.name, kcal: it.kcal, p: it.p, c: it.c, f: it.f, portion: null, perServing: true });
         n++;
       });
