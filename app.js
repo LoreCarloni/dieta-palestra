@@ -950,13 +950,14 @@ function dayComment(k) {
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
   if (t.exMin === 0) tips.push("fai almeno 8000 passi");
   const extraDay = wkOk ? wk.kcal - tg.kcal : diff;
+  let cutG = 0;
   if (extraDay > 20) {
-    const cutG = Math.min(Math.round((tg.carbs * 0.2) / 5) * 5, Math.round(extraDay / 4 / 5) * 5);
+    cutG = Math.min(Math.round((tg.carbs * 0.2) / 5) * 5, Math.round(extraDay / 4 / 5) * 5);
     tips.unshift(`spalma il recupero sui prossimi 7 giorni: riduci i carboidrati di circa ${cutG} g al giorno, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   }
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Per domani: ${tips.join("; ")}.` : "Per domani: continua così." });
-  return { verdict, lines };
+  return { verdict, lines, cut: cutG };
 }
 function commentHtml(k) {
   const c = dayComment(k);
@@ -966,7 +967,7 @@ function commentHtml(k) {
   const recovery = c.lines.filter(isRecovery);
   const others = c.lines.filter((l) => !isRecovery(l));
   const [head, ...rest] = others;
-  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Piano di recupero</div><p class="recovery-sub">Uno sgarro si recupera in una settimana. Da domani sei di nuovo in gara.</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Piano di recupero</div><p class="recovery-sub">${c.cut ? `Impegno da domani: ${c.cut} g di carboidrati in meno ogni giorno per questa settimana. A fine settimana sei di nuovo in linea.` : "Da domani resti sul target e la settimana torna in linea."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
