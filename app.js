@@ -1094,6 +1094,16 @@ function parseDiary(text) {
     }
     if (!line || /^(totale|giornata|in totale|ho stimato|stima per|riepilogo|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
     const k = line.match(/(\d+(?:[.,]\d+)?)\s*(?:kcal|calorie|cal)\b/i);
+    // solo grammi (o una porzione): calorie e macro li calcola l'app dal database
+    const nameOnly = line.split(/[,:(]/)[0].replace(/\b(circa|una|un|uno|mezza|mezzo|porzione|piatto|di|da)\b/gi, "").replace(/\d+(?:[.,]\d+)?\s*%?|%/g, "").trim();
+    const dbHit = !k && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? searchFoods(nameOnly).find((x) => !x.perServing) : null;
+    const gramLine = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
+    const dbG = dbHit ? (gramLine ? num1(gramLine[1]) : /porzione/i.test(line) ? dbHit.portion : null) : null;
+    if (dbHit && dbG) {
+      const r = dbG / 100;
+      items.push({ name: dbHit.name, kcal: dbHit.kcal * r, p: dbHit.p * r, c: dbHit.c * r, f: dbHit.f * r, g: dbG, hasMacro: { p: true, c: true, f: true } });
+      return;
+    }
     if (!k) {
       // riga di sola descrizione dei macro: appartiene all'alimento precedente
       const last = items[items.length - 1];
@@ -1577,7 +1587,7 @@ function act(a, el) {
     case "diary-from-search": return diaryDialog($("#f-search").value);
     case "diary-parse": {
       const items = parseDiary(val("#di-text"));
-      if (!items.length) return toast("Non trovo righe con le calorie, scrivi ad esempio: Pasta: 300 kcal");
+      if (!items.length) return toast("Non riconosco alimenti: scrivi il nome con i grammi, per esempio Pasta, 80 g");
       return diaryPreview(items);
     }
     case "diary-save": {
