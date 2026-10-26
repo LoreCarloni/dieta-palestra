@@ -954,7 +954,13 @@ function dayComment(k) {
   }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
-  if (t.p < tg.protein * 0.85) lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}. Aggiungi una fonte magra a ogni pasto.` });
+  if (t.p < tg.protein * 0.85) {
+    // mancano grammi di proteine: suggerisco due alimenti magri del database, con la quantità che li copre
+    const gap = tg.protein - t.p;
+    const lean = allFoods().filter((f) => !f.perServing && f.p >= 18 && f.kcal > 0 && f.kcal <= 250).sort((a, b) => b.p / b.kcal - a.p / a.kcal).slice(0, 2);
+    const hints = lean.map((f) => `${shortName(f.name).toLowerCase()} circa ${Math.min(250, Math.round(gap / (f.p / 100) / 10) * 10)} g`).join(", oppure ");
+    lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}, mancano circa ${r0(gap)} g. Per arrivarci con cibo vero: ${hints || "aggiungi una fonte magra a ogni pasto"}.` });
+  }
   else lines.push({ lvl: "good", text: `Proteine a posto: ${r0(t.p)} g su ${r0(tg.protein)}.` });
   const sweet = items.filter((x) => SWEET_RE.test(x.name));
   const sweetKcal = sweet.reduce((a, x) => a + x.kcal, 0);
