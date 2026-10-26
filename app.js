@@ -963,21 +963,21 @@ function dayComment(k) {
   let cutG = 0;
   if (extraDay > 20) {
     cutG = Math.min(Math.round((tg.carbs * 0.2) / 5) * 5, Math.round(extraDay / 4 / 5) * 5);
-    tips.unshift(`spalma il recupero sui prossimi 7 giorni: riduci i carboidrati di circa ${cutG} g al giorno, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
+    tips.unshift(`${k === todayKey() ? "da oggi" : "da quel giorno"}, per 7 giorni incluso quello dello sgarro: riduci i carboidrati di circa ${cutG} g al giorno, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   }
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
-  lines.push({ lvl: "tip", text: tips.length ? `Per domani: ${tips.join("; ")}.` : "Per domani: continua così." });
-  return { verdict, lines, cut: cutG };
+  lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
+  return { verdict, lines, cut: cutG, start: k === todayKey() ? "da oggi" : "da quel giorno" };
 }
 function commentHtml(k) {
   const c = dayComment(k);
   if (!c) return "";
   const advice = (l) => `<div class="advice ${l.lvl === "tip" ? "" : l.lvl}"><p>${esc(l.text)}</p></div>`;
-  const isRecovery = (l) => l.text.startsWith("Per domani:");
+  const isRecovery = (l) => l.text.startsWith("Recupero:");
   const recovery = c.lines.filter(isRecovery);
   const others = c.lines.filter((l) => !isRecovery(l));
   const [head, ...rest] = others;
-  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Impegno da domani: ${c.cut} g di carboidrati in meno ogni giorno per questa settimana.` : "Da domani resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Impegno ${c.start}: ${c.cut} g di carboidrati in meno ogni giorno per 7 giorni, oggi incluso.` : "Resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
