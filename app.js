@@ -948,7 +948,7 @@ function dayComment(k) {
       : sg <= 1 && sgFat <= 2
         ? greet(`Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`)
         : sg >= 3
-          ? greet(`Questa settimana hai sgarrato ${sg} volte. Con questo ritmo la pancia resta dov'è: non è questione di palestra, è questione di rispettare la dieta, e la palestra da sola non la sposta.`)
+          ? greet(`Questa settimana hai sgarrato ${sg} volte. Il punto è rispettare la dieta: la palestra da sola non basta.`)
           : greet(`Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`);
     lines.push({ lvl: sg <= 1 ? "good" : "bad", text: closing });
   }
