@@ -83,7 +83,7 @@ function targets(k) {
   const bmr = 10 * w + 6.25 * p.height - 5 * p.age + (p.sex === "m" ? 5 : -161);
   const tdee = bmr * p.activity;
   const deficit = (p.rate * 7700) / 7;
-  const floor = p.sex === "m" ? 1500 : 1200;
+  const floor = p.minKcal || 0;
   const kcal = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
   const refW = Math.min(w, (p.goalWeight || w) + 10);
   const protein = Math.round(1.8 * refW);
