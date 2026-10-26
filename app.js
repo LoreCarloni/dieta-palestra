@@ -206,6 +206,7 @@ function renderToday() {
     </div>
     <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
     ${kcalBar(t.kcal, tg.kcal)}
+    ${tg.kcal < tg.bmr ? `<p class="warn-line small">Il target di oggi è sotto il tuo metabolismo basale (${r0(tg.bmr)} kcal). Un calo così va concordato con un medico o un dietista, soprattutto se ti alleni.</p>` : ""}
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
       <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
