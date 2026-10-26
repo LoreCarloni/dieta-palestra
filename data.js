@@ -104,7 +104,7 @@ const FOODS = [
   // Frutta
   ["Arancia", 37, 0.7, 7.8, 0.2, 150, "Frutta", "CREA 2019: Arance, fresche"],
   ["Kiwi", 48, 1.2, 9, 0.6, 80, "Frutta", "CREA 2019: Kiwi, freschi"],
-  ["Pera", 57, 0.4, 15, 0.1, 150, "Frutta"],
+  ["Pera", 52, 0.3, 10.2, 0.5, 150, "Frutta", "CREA 2019: Pere, fresche, William"],
   ["Fragole", 30, 0.9, 5.3, 0.4, 150, "Frutta", "CREA 2019: Fragole, fresche"],
   ["Uva", 64, 0.5, 15.6, 0.1, 150, "Frutta", "CREA 2019: Uva, fresca"],
   ["Ananas", 42, 0.5, 10, 0, 150, "Frutta", "CREA 2019: Ananas, fresco"],
