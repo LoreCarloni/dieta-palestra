@@ -77,7 +77,7 @@ function weightAt(k) {
 }
 
 // ---------- Calcoli ----------
-function targets(k) {
+function baseTargets(k) {
   const p = S.profile;
   const w = weightAt(k);
   const bmr = 10 * w + 6.25 * p.height - 5 * p.age + (p.sex === "m" ? 5 : -161);
@@ -91,6 +91,33 @@ function targets(k) {
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const water = Math.round((w * 35) / 50) * 50;
   return { w, bmr, tdee, deficit, kcal, protein, fat, carbs, water };
+}
+
+// Recupero dopo gli sgarri: nei 7 giorni dal primo sgarro il target scende di una quota fissa, ricalcolata ogni giorno.
+function planFor(k) {
+  const intake = (j) => day(j).meals.reduce((a, m) => a + m.kcal, 0) + day(j).drinks.reduce((a, x) => a + x.kcal, 0);
+  const keys = [];
+  for (let i = 6; i >= 0; i--) keys.push(addDays(k, -i));
+  const sgarri = keys.filter(isTracked).filter((j) => intake(j) > baseTargets(j).kcal * 1.1);
+  if (!sgarri.length) return null;
+  const startKey = sgarri[0];
+  const since = Math.round((parseKey(k) - parseKey(startKey)) / 86400000);
+  if (since > 6) return null;
+  const extra = sgarri.reduce((a, j) => a + (intake(j) - baseTargets(j).kcal), 0);
+  const daysLeft = 7 - since;
+  const capKcal = Math.round((baseTargets(k).carbs * 0.2 * 4) / 10) * 10;
+  const cutKcal = Math.min(capKcal, Math.round(extra / daysLeft / 10) * 10);
+  if (cutKcal <= 0) return null;
+  return { startKey, dayNo: since + 1, daysLeft, cutKcal };
+}
+function targets(k) {
+  const b = baseTargets(k);
+  const plan = planFor(k);
+  if (!plan) return b;
+  const kcal = Math.max(0, b.kcal - plan.cutKcal);
+  const fat = Math.round((kcal * 0.28) / 9);
+  const carbs = Math.max(0, Math.round((kcal - b.protein * 4 - fat * 9) / 4));
+  return { ...b, kcal, fat, carbs, plan };
 }
 
 function totals(k) {
@@ -204,7 +231,7 @@ function renderToday() {
       <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
-    <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
+    <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b>${tg.plan ? ` <span class="muted small">(recupero: meno ${tg.plan.cutKcal} kcal per ${tg.plan.daysLeft} giorni)</span>` : ""}</div>
     ${kcalBar(t.kcal, tg.kcal)}
     ${tg.kcal < tg.bmr ? `<p class="warn-line small">Il target di oggi è sotto il tuo metabolismo basale (${r0(tg.bmr)} kcal). Un calo così va concordato con un medico o un dietista, soprattutto se ti alleni.</p>` : ""}
     ${bar(t.kcal, tg.kcal)}
@@ -861,7 +888,7 @@ function overview(endKey, n) {
   for (let i = n - 1; i >= 0; i--) {
     const k = addDays(endKey, -i);
     if (!isTracked(k)) continue;
-    const t = totals(k), tg = targets(k);
+    const t = totals(k), tg = baseTargets(k);
     days.push({ k, kcal: t.kcal, f: t.f, tgK: tg.kcal, tgF: tg.fat, overK: t.kcal > tg.kcal * 1.1, overF: t.f > tg.fat * 1.2 });
   }
   const avg = (f) => (days.length ? days.reduce((a, d) => a + f(d), 0) / days.length : null);
@@ -961,16 +988,10 @@ function dayComment(k) {
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
   if (t.steps < 8000) tips.push(`${k === todayKey() ? "da oggi" : "da quel giorno"} fai una camminata di 30 minuti al giorno per 7 giorni, oggi incluso: camminare è la base della forma e aiuta a tonificare le gambe`);
   // Il recupero parte dal primo sgarro dei 7 giorni fino a oggi e si spalma sui giorni che restano nella finestra.
-  const sgarri = overview(k, 7).over;
-  const startKey = sgarri.length ? sgarri.map((d) => d.k).sort()[0] : null;
-  let cutG = 0, dayNo = 0, daysLeft = 0;
-  if (startKey) {
-    const since = Math.round((parseKey(k) - parseKey(startKey)) / 86400000);
-    dayNo = since + 1;
-    daysLeft = Math.max(1, 7 - since);
-    const extra = sgarri.filter((d) => d.k >= startKey).reduce((a, d) => a + (d.kcal - d.tgK), 0);
-    cutG = Math.min(Math.round((tg.carbs * 0.2) / 5) * 5, Math.round(extra / daysLeft / 4 / 5) * 5);
-  }
+  const plan = tg.plan;
+  const startKey = plan ? plan.startKey : null;
+  const cutG = plan ? Math.round(plan.cutKcal / 4 / 5) * 5 : 0;
+  const dayNo = plan ? plan.dayNo : 0, daysLeft = plan ? plan.daysLeft : 0;
   if (k === todayKey() && startKey && diff > tg.kcal * 0.1) tips.unshift("attenzione: oggi sgarri di nuovo, quindi il recupero si allunga di un giorno");
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di 7: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
