@@ -958,7 +958,7 @@ function dayComment(k) {
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
   if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
-  if (t.steps < 8000) tips.push("da domani fai una camminata di 30 minuti al giorno per tutta la settimana: camminare è la base della forma e aiuta a tonificare le gambe");
+  if (t.steps < 8000) tips.push(`${k === todayKey() ? "da oggi" : "da quel giorno"} fai una camminata di 30 minuti al giorno per 7 giorni, oggi incluso: camminare è la base della forma e aiuta a tonificare le gambe`);
   const extraDay = wkOk ? wk.kcal - tg.kcal : diff;
   let cutG = 0;
   if (extraDay > 20) {
