@@ -982,6 +982,13 @@ function dayComment(k) {
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
   }
+  const remCarb = tg.carbs - t.c;
+  if (!d.closed && k === todayKey() && remCarb > 25) {
+    // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
+    const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
+    const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
+    lines.push({ lvl: "tip", text: `Carboidrati ancora disponibili: circa ${r0(remCarb)} g. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
+  }
   const st7 = periodStats(k, 7);
   if (st7.tracked >= 3) {
     const perWeek = (st7.balance * 7) / 7700;
