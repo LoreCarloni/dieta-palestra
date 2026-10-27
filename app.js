@@ -1036,9 +1036,10 @@ function commentHtml(k) {
   // Prima il consiglio per la cena, poi il resto, il riepilogo della settimana in fondo.
   const isWeekly = (l) => /settimana|Ritmo degli|30 giorni/i.test(l.text);
   const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Oggi ti restano/i.test(l.text);
-  const others = [...c.lines.filter((l) => !isRecovery(l) && isDinner(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && !isWeekly(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && isWeekly(l))];
-  const [head, ...rest] = others;
-  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Recupero dallo sgarro di ${esc(c.from)}, giorno ${c.dayNo} di 7: ${c.cut} g di carboidrati in meno ogni giorno per i prossimi ${c.daysLeft} giorni, oggi incluso.` : "Resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  // il consiglio per pranzo e cena e l'indicazione sui carboidrati stanno sempre in vista
+  const top = c.lines.filter((l) => !isRecovery(l) && isDinner(l));
+  const rest = [...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && !isWeekly(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && isWeekly(l))];
+  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${top.map(advice).join("")}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Recupero dallo sgarro di ${esc(c.from)}, giorno ${c.dayNo} di 7: ${c.cut} g di carboidrati in meno ogni giorno per i prossimi ${c.daysLeft} giorni, oggi incluso.` : "Resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
