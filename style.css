@@ -229,3 +229,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 
 .plan-line { border: 1px solid var(--accent); border-radius: 12px; padding: 8px 10px; margin: 6px 0 8px; font-size: 0.9rem; display: grid; gap: 4px; }
 .plan-line b { color: var(--accent); }
+
+.info-dot { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent); font-size: 0.7rem; font-weight: 700; margin-left: 3px; vertical-align: middle; }
+.tap-hint { margin: 2px 0 8px; text-align: center; }

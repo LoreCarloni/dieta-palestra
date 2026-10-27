@@ -237,10 +237,11 @@ function renderToday() {
     ${tg.kcal < tg.bmr ? `<p class="warn-line small">Il target di oggi è sotto il tuo metabolismo basale (${r0(tg.bmr)} kcal). Un calo così va concordato con un medico o un dietista, soprattutto se ti alleni.</p>` : ""}
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
-      <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine</span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
+      <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine <span class="info-dot" aria-hidden="true">i</span></span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
       <button class="macro-btn" data-act="macro" data-m="c"><span class="muted small">Carboidrati</span><b>${r0(t.c)} di ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</button>
       <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
     </div>
+    <div class="muted small tap-hint">Tocca Proteine o un'altra voce per vedere da dove arrivano i numeri.</div>
     <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
 
