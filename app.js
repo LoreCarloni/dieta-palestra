@@ -1531,7 +1531,21 @@ function act(a, el) {
       if (same) { MEAS_FIELDS.forEach(([f]) => { if (m[f] === null) m[f] = same[f]; }); m.note = m.note || same.note; S.measures = S.measures.filter((x) => x.id !== same.id); }
       S.measures = S.measures.filter((x) => x.id !== m.id).concat(m);
       if (m.weight !== null) day(m.date, true).weight = m.weight;
-      view.mEdit = null; toast("Misurazione salvata"); break;
+      const prevLow = sortedMeasures().filter((x) => x.date < m.date && x.low !== null && x.low !== undefined).slice(-1)[0];
+      const drop = m.low !== null && prevLow ? prevLow.low - m.low : 0;
+      view.mEdit = null;
+      if (drop >= 0.5) {
+        // premio per il calo della vita bassa, con il contesto della settimana
+        const st = periodStats(m.date, 7), tgw = targets(m.date);
+        openDialog(`
+          <h3>Ottimo, la vita bassa è scesa di ${fmtN(drop)} cm!</h3>
+          <p>Rispetto alla misura precedente la pancia sta cedendo: è il segnale che la dieta sta funzionando.</p>
+          <p class="small">Negli ultimi 7 giorni hai mangiato in media ${r0(st.kcal)} kcal contro un obiettivo di ${r0(tgw.kcal)}, con ${r0(st.p)} g di proteine al giorno. Il deficit fa il lavoro, e le proteine proteggono il muscolo.</p>
+          <p class="small">Attenzione: un centimetro può dipendere anche dall'acqua e dal momento della misura. Mantieni la regolarità, e quando la settimana è in linea puoi tornare a un'alimentazione più normale, anche con la pasta a pranzo se la vuoi.</p>
+          <button class="btn primary wide" data-act="dlg-close">Continua così</button>`);
+        break;
+      }
+      toast("Misurazione salvata"); break;
     }
     case "edit-measure": resetScroll = true; view.mEdit = S.measures.find((x) => x.id === el.dataset.id); break;
     case "cancel-measure": view.mEdit = null; break;
