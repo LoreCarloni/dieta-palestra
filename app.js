@@ -680,7 +680,7 @@ function foodDialog() {
     <input id="f-slot" type="hidden" value="giorno">
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
-    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
+    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn" data-act="label-scan">Leggi etichetta</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
@@ -1449,6 +1449,53 @@ function toast(msg) {
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 2000);
 }
 
+// ---------- Lettura della tabella nutrizionale con la fotocamera ----------
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+    sc.onload = () => resolve(window.Tesseract);
+    sc.onerror = () => reject(new Error("script non caricato"));
+    document.head.appendChild(sc);
+  });
+}
+// Trova energia, proteine, carboidrati e grassi per 100 g nel testo dell'etichetta.
+function parseLabel(text) {
+  const t = text.replace(/\s+/g, " ");
+  const num = (m) => (m ? parseFloat(m[1].replace(",", ".")) : null);
+  const energy = t.match(/energia[^\d]{0,40}\d+\s*\/\s*(\d+)/i) || t.match(/(\d+[.,]?\d*)\s*kcal/i);
+  return {
+    kcal: num(energy),
+    p: num(t.match(/prote\S*[^\d]{0,30}(\d+[.,]?\d*)/i)),
+    c: num(t.match(/carboidrati[^\d]{0,30}(\d+[.,]?\d*)/i)),
+    f: num(t.match(/grassi[^\d]{0,30}(\d+[.,]?\d*)/i)),
+  };
+}
+function labelScan() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.setAttribute("capture", "environment");
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    toast("Leggo l'etichetta...");
+    try {
+      const T = await loadTesseract();
+      const r = await T.recognize(file, "eng");
+      const v = parseLabel(r.data.text);
+      customFoodDialog();
+      const set = (id, x) => { if (x !== null && !isNaN(x)) $("#" + id).value = x; };
+      set("c-kcal", v.kcal); set("c-p", v.p); set("c-c", v.c); set("c-f", v.f);
+      toast("Controlla i valori letti prima di salvare");
+    } catch (e) {
+      toast("Non riesco a leggere l'etichetta: prova con più luce o inserisci i valori a mano");
+    }
+  };
+  input.click();
+}
+
 // ---------- Azioni ----------
 function act(a, el) {
   const k = view.date;
@@ -1463,6 +1510,7 @@ function act(a, el) {
     case "period": view.period = +el.dataset.n; resetScroll = true; break;
     case "food": return foodDialog();
     case "scan-barcode": dlg().dataset.slot = "giorno"; return barcodeDialog();
+    case "label-scan": return labelScan();
     case "bc-lookup": stopScan(); return lookupBarcode($("#bc-manual").value);
     case "bc-confirm": {
       const f = JSON.parse(dlg().dataset.pending);
