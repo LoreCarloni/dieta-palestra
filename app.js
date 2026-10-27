@@ -1025,7 +1025,7 @@ function macroDialog(m, k) {
   const d = day(k), t = totals(k), tg = targets(k);
   const cfg = {
     kcal: { label: "Calorie", unit: "kcal", val: t.kcal, target: tg.kcal, key: "kcal", drinks: "kcal", tip: "Per ridurle agisci sulle voci in cima: porzioni più piccole, condimenti misurati, meno bevande zuccherate o alcoliche." },
-    p: { label: "Proteine", unit: "g", val: t.p, target: tg.protein, key: "p", tip: "Le proteine proteggono il muscolo e saziano: se mancano, aggiungi yogurt greco, uova, pesce, carne bianca o legumi." },
+    p: { label: "Proteine", unit: "g", val: t.p, target: tg.protein, key: "p", tip: "Le proteine proteggono il muscolo e saziano, e per chi si allena sono la priorità. Il target è 1,8 g per chilo del peso di riferimento. Parti da loro: per esempio 250 g di pollo o tacchino e 150 g di yogurt greco a sera, poi carboidrati e grassi riempiono le calorie rimaste. Se mancano, aggiungi uova, pesce o legumi." },
     c: { label: "Carboidrati", unit: "g", val: t.c, target: tg.carbs, key: "c", drinks: "c", tip: "Per ridurli, riduci pane, pasta, dolci e bevande zuccherate, e non mettere due fonti di carboidrati nello stesso pasto." },
     f: { label: "Grassi", unit: "g", val: t.f, target: tg.fat, key: "f", tip: "Un grammo di grasso vale 9 kcal. Misura l'olio, un cucchiaio vale circa 90 kcal. Occhio a formaggi, frutta secca, cioccolato, fritti e salumi." },
   }[m];
