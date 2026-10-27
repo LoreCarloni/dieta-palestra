@@ -123,6 +123,7 @@ const FOODS = [
   // Snack e dolci
   ["Cioccolato al latte", 552, 7.3, 50.5, 36.3, 20, "Snack", "CREA 2019: Cioccolato, al latte"],
   ["Kinder Bueno (barretta da 2 pezzi)", 572, 8.6, 49.5, 37.3, 43, "Snack"],
+  ["Kinder Bueno White", 571, 8.5, 53, 35.9, 19.5, "Snack", "etichetta del produttore"],
   ["Gelato", 200, 3.5, 25, 10, 100, "Snack"],
   ["Patatine in busta", 512, 5.4, 58, 29.6, 25, "Snack", "CREA 2019: Patatine, fritte, confezionate in busta"],
   ["Pringles Paprika", 515, 6.7, 55, 29, 30, "Snack", "Altroconsumo, test dicembre 2025"],
