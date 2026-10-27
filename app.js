@@ -986,7 +986,7 @@ function dayComment(k) {
     if (rem < 250) parts.push(`${rem <= 0 ? "Hai già finito il budget della giornata" : `Ti restano solo ${r0(rem)} kcal`}: per ${meal} resta leggero, verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti. Non compensare saltando i pasti di domani.`);
     else {
       const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
-      parts.push(`Ti restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(remC * 0.6, 63))} con verdura, senza secondo. A cena` : `Per ${meal}`}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
+      parts.push(`Ti restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. A cena` : `Per ${meal}`}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
     }
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
@@ -995,7 +995,7 @@ function dayComment(k) {
   if (!d.closed && k === todayKey() && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
-      lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(remCarb * 0.6, 63))}. A cena al massimo una fetta di pane da 30 g.` });
+      lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
     } else {
       const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
       const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
