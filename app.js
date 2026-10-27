@@ -679,7 +679,7 @@ function foodDialog() {
     <input id="f-slot" type="hidden" value="giorno">
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
-    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><button class="btn" data-act="label-scan">Leggi etichetta</button><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
+    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><label class="btn label-file">Leggi etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
@@ -1471,30 +1471,20 @@ function parseLabel(text) {
     f: num(t.match(/grassi[^\d]{0,30}(\d+[.,]?\d*)/i)),
   };
 }
-function labelScan() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.style.display = "none";
-  document.body.appendChild(input);
-  input.onchange = async () => {
-    const file = input.files[0];
-    if (!file) return;
-    toast("Leggo l'etichetta...");
-    try {
-      const T = await loadTesseract();
-      const r = await T.recognize(file, "eng");
-      const v = parseLabel(r.data.text);
-      customFoodDialog();
-      const set = (id, x) => { if (x !== null && !isNaN(x)) $("#" + id).value = x; };
-      set("c-kcal", v.kcal); set("c-p", v.p); set("c-c", v.c); set("c-f", v.f);
-      toast("Controlla i valori letti prima di salvare");
-    } catch (e) {
-      toast("Non riesco a leggere l'etichetta: prova con più luce o inserisci i valori a mano");
-    }
-  };
-  input.click();
-  setTimeout(() => input.remove(), 60000);
+async function readLabel(file) {
+  if (!file) return;
+  toast("Leggo l'etichetta...");
+  try {
+    const T = await loadTesseract();
+    const r = await T.recognize(file, "eng");
+    const v = parseLabel(r.data.text);
+    customFoodDialog();
+    const set = (id, x) => { if (x !== null && !isNaN(x)) $("#" + id).value = x; };
+    set("c-kcal", v.kcal); set("c-p", v.p); set("c-c", v.c); set("c-f", v.f);
+    toast("Controlla i valori letti prima di salvare");
+  } catch (e) {
+    toast("Non riesco a leggere l'etichetta: prova con più luce o inserisci i valori a mano");
+  }
 }
 
 // ---------- Azioni ----------
@@ -1511,7 +1501,6 @@ function act(a, el) {
     case "period": view.period = +el.dataset.n; resetScroll = true; break;
     case "food": return foodDialog();
     case "scan-barcode": dlg().dataset.slot = "giorno"; return barcodeDialog();
-    case "label-scan": return labelScan();
     case "bc-lookup": stopScan(); return lookupBarcode($("#bc-manual").value);
     case "bc-confirm": {
       const f = JSON.parse(dlg().dataset.pending);
@@ -1920,6 +1909,7 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   const t = e.target;
+  if (t.id === "label-file") { readLabel(t.files[0]); t.value = ""; return; }
   if (t.id === "cp-date") return renderCopyList(t.value);
   const c = t.dataset.change;
   if (c === "steps") { day(view.date, true).steps = Math.max(0, parseInt(t.value) || 0); save(); render(); }

@@ -235,3 +235,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 
 .plan-card { border-color: var(--accent); }
 .plan-card h2 { color: var(--accent); }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.label-file { position: relative; cursor: pointer; }
