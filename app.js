@@ -979,7 +979,7 @@ function dayComment(k) {
     const n = Math.max(1, Math.round(c / 15));
     return `${n} fett${n > 1 ? "e" : "a"} di pane da 30 g`;
   };
-  if (!d.closed && k === todayKey() && !d.meals.some((m) => m.slot === "cena")) {
+  if (!d.closed && k === todayKey() && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
     const meal = pranzoLibero ? "pranzo e cena" : "la cena";
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
