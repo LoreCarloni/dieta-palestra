@@ -987,7 +987,7 @@ function dayComment(k) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
     const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
-    lines.push({ lvl: "tip", text: `Carboidrati ancora disponibili: circa ${r0(remCarb)} g. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
+    lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
   }
   const st7 = periodStats(k, 7);
   if (st7.tracked >= 3) {
@@ -1021,7 +1021,7 @@ function commentHtml(k) {
   const recovery = c.lines.filter(isRecovery);
   // Prima il consiglio per la cena, poi il resto, il riepilogo della settimana in fondo.
   const isWeekly = (l) => /settimana|Ritmo degli|30 giorni/i.test(l.text);
-  const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Carboidrati ancora/i.test(l.text);
+  const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Oggi ti restano/i.test(l.text);
   const others = [...c.lines.filter((l) => !isRecovery(l) && isDinner(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && !isWeekly(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && isWeekly(l))];
   const [head, ...rest] = others;
   return `<section class="card"><h2>Commento della giornata <span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head ? advice(head) : ""}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Recupero dallo sgarro di ${esc(c.from)}, giorno ${c.dayNo} di 7: ${c.cut} g di carboidrati in meno ogni giorno per i prossimi ${c.daysLeft} giorni, oggi incluso.` : "Resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
