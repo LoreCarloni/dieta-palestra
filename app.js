@@ -248,17 +248,16 @@ function renderToday() {
   </section>
 
   <section class="card">
-    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span></h2>
-    ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
-    ${mealsHtml}
-    ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
+    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span><button class="icon-plus" data-act="food-menu" aria-label="Aggiungi">+</button></h2>
     ${view.foodMenu ? `<div class="food-menu">
       <button class="menu-item" data-act="food">Aggiungi alimento</button>
       <button class="menu-item" data-act="diary-dialog">Incolla un riepilogo</button>
       ${hasYesterday(k) ? `<button class="menu-item" data-act="copy-yesterday">Come ieri</button>` : ""}
       <button class="menu-item" data-act="copy-from-date">Copia da data</button>
     </div>` : ""}
-    <div class="food-foot"><button class="icon-plus" data-act="food-menu" aria-label="Aggiungi">+</button></div>
+    ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
+    ${mealsHtml}
+    ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
   </section>
 
   ${commentHtml(k)}
