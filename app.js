@@ -295,8 +295,8 @@ function renderToday() {
   </section>
 
   <section class="card">
-    <h2>Peso e note</h2>
-    <div class="field inline"><label for="weight">Peso (kg)</label><input id="weight" type="number" inputmode="decimal" step="0.1" min="30" max="300" value="${d.weight ?? ""}" placeholder="${r1(weightAt(k))}" data-change="weight"></div>
+    <h2>Peso, misure e note</h2>
+    <button class="btn wide" data-act="measure-today">${d.weight ? `Peso ${r1(d.weight)} kg: modifica peso e misure` : "Inserisci peso e misure di oggi"}</button>
     <div class="field"><label for="note">Note (fame, sonno, stress, ciclo, sgarri)</label><textarea id="note" rows="2" data-change="note">${esc(d.note)}</textarea></div>
     <button class="btn ${d.closed ? "ghost" : "primary"} wide" data-act="close">${d.closed ? "Riapri la giornata" : "Ho inserito tutto: chiudi la giornata"}</button>
   </section>`;
@@ -355,7 +355,7 @@ function lineChart(list, f, label) {
 
 function renderMeasures() {
   const list = sortedMeasures();
-  const e = view.mEdit || { date: todayKey(), weight: null, waist: null, low: null, thigh: null, note: "" };
+  const e = view.mEdit || { date: view.mDate || todayKey(), weight: view.mDate ? day(view.mDate).weight ?? null : null, waist: null, low: null, thigh: null, note: "" };
   const inp = (f, l) => `<div class="field"><label for="m-${f}">${l}</label><input id="m-${f}" type="text" inputmode="decimal" value="${e[f] ?? ""}" placeholder="${fmtN(lastWith(f, list).slice(-1)[0]?.[f] ?? null) === "n.d." ? "" : fmtN(lastWith(f, list).slice(-1)[0][f])}"></div>`;
   const wLast = lastWith("waist", list), wFirst = wLast[0], wEnd = wLast[wLast.length - 1];
   const due = measureDue(todayKey());
@@ -1521,8 +1521,10 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
+    case "measure-today": view.tab = "misure"; view.mEdit = null; view.mDate = k; resetScroll = true; break;
     case "goto-attivita": scrollToId = "sec-attivita"; break;
     case "save-measure": {
+      view.mDate = null;
       const m = { id: view.mEdit?.id || uid(), date: val("#m-date"), weight: num1(val("#m-weight")), waist: num1(val("#m-waist")), low: num1(val("#m-low")), thigh: num1(val("#m-thigh")), note: val("#m-note").trim() };
       if (!m.date) return toast("Inserisci la data");
       if (MEAS_FIELDS.every(([f]) => m[f] === null)) return toast("Inserisci almeno un valore");
