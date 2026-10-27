@@ -86,7 +86,7 @@ function baseTargets(k) {
   const floor = p.minKcal || 0;
   const kcal = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
   const refW = Math.min(w, (p.goalWeight || w) + 10);
-  const protein = Math.round(1.8 * refW);
+  const protein = Math.round(2.0 * refW);
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const water = Math.round((w * 35) / 50) * 50;
@@ -113,11 +113,13 @@ function planFor(k) {
 function targets(k) {
   const b = baseTargets(k);
   const plan = planFor(k);
-  if (!plan) return b;
-  const kcal = Math.max(0, b.kcal - plan.cutKcal);
+  // In deficit le proteine restano a 2 g per chilo; nei giorni di recupero salgono a 2,2 g per chilo, per proteggere il muscolo.
+  const refW = Math.min(b.w, (S.profile.goalWeight || b.w) + 10);
+  const protein = Math.round((plan ? 2.2 : 2.0) * refW);
+  const kcal = plan ? Math.max(0, b.kcal - plan.cutKcal) : b.kcal;
   const fat = Math.round((kcal * 0.28) / 9);
-  const carbs = Math.max(0, Math.round((kcal - b.protein * 4 - fat * 9) / 4));
-  return { ...b, kcal, fat, carbs, plan };
+  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  return { ...b, kcal, protein, fat, carbs, plan };
 }
 
 function totals(k) {
@@ -1040,7 +1042,7 @@ function macroDialog(m, k) {
   const d = day(k), t = totals(k), tg = targets(k);
   const cfg = {
     kcal: { label: "Calorie", unit: "kcal", val: t.kcal, target: tg.kcal, key: "kcal", drinks: "kcal", tip: "Per ridurle agisci sulle voci in cima: porzioni più piccole, condimenti misurati, meno bevande zuccherate o alcoliche." },
-    p: { label: "Proteine", unit: "g", val: t.p, target: tg.protein, key: "p", tip: "Le proteine proteggono il muscolo e saziano, e per chi si allena sono la priorità. Il target è 1,8 g per chilo del peso di riferimento. Parti da loro: per esempio 250 g di pollo o tacchino e 150 g di yogurt greco a sera, poi carboidrati e grassi riempiono le calorie rimaste. Se mancano, aggiungi uova, pesce o legumi." },
+    p: { label: "Proteine", unit: "g", val: t.p, target: tg.protein, key: "p", tip: "Le proteine proteggono il muscolo e saziano, e per chi si allena sono la priorità. In deficit il target è 2 g per chilo del peso di riferimento, e 2,2 g nei giorni di recupero: il muscolo resta mentre cala il grasso (la ricerca indica da circa 1,6 g per chilo in su, con prove più forti per il deficit). Parti da loro: per esempio 250 g di pollo o tacchino e 150 g di yogurt greco a sera, poi carboidrati e grassi riempiono le calorie rimaste. Se mancano, aggiungi uova, pesce o legumi." },
     c: { label: "Carboidrati", unit: "g", val: t.c, target: tg.carbs, key: "c", drinks: "c", tip: "Per ridurli, riduci pane, pasta, dolci e bevande zuccherate, e non mettere due fonti di carboidrati nello stesso pasto." },
     f: { label: "Grassi", unit: "g", val: t.f, target: tg.fat, key: "f", tip: "Un grammo di grasso vale 9 kcal. Misura l'olio, un cucchiaio vale circa 90 kcal. Occhio a formaggi, frutta secca, cioccolato, fritti e salumi." },
   }[m];
