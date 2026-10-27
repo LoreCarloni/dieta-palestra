@@ -969,8 +969,9 @@ function dayComment(k) {
   if (t.alcKcal > 0) lines.push({ lvl: "warn", text: `Alcol: ${r0(t.alcKcal)} kcal. Non sazia e rallenta l'uso dei grassi come energia.` });
   if (t.exMin === 0 && t.steps < 5000) lines.push({ lvl: "warn", text: "Nessun movimento registrato: il consumo è solo quello di base." });
   else lines.push({ lvl: "good", text: `Movimento: ${r0(t.exMin)} minuti di allenamento e ${t.steps} passi.` });
+  const pranzoLibero = !d.meals.some((m) => m.slot === "pranzo");
   if (!d.closed && k === todayKey() && !d.meals.some((m) => m.slot === "cena")) {
-    const meal = "la cena";
+    const meal = pranzoLibero ? "pranzo e cena" : "la cena";
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
@@ -985,9 +986,10 @@ function dayComment(k) {
   const remCarb = tg.carbs - t.c;
   if (!d.closed && k === todayKey() && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
-    const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
-    const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
-    lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
+    const slotCarb = pranzoLibero ? remCarb / 2 : remCarb;
+    const pastaG = Math.round(slotCarb / 0.79 / 5) * 5;
+    const legumiG = Math.min(250, Math.round(slotCarb / 0.163 / 5) * 5);
+    lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati${pranzoLibero ? `, circa ${r0(slotCarb)} g a pranzo e altrettanti a cena` : ""}. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
   }
   const st7 = periodStats(k, 7);
   if (st7.tracked >= 3) {
