@@ -1034,7 +1034,7 @@ function dayComment(k) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
     const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
-    if (pick) newFood = { name: pick.name, p: Math.round(pick.p), kcal: Math.round(pick.kcal) };
+    if (pick) newFood = { name: pick.name, gap: Math.round(tg.protein - t.p), n: Math.ceil((tg.protein - t.p) / (pick.p / 100) / 100), perPortion: Math.round(pick.p) };
   }
   // tutto il percorso dall'inizio dell'uso dell'app
   let journey = null;
@@ -1065,7 +1065,7 @@ function commentHtml(k) {
   const action = c.cut
     ? `<p class="action">Da oggi: ${c.cut} g di carboidrati in meno al giorno fino al ${esc(c.until)}, circa ${c.cut * 4} kcal.</p>`
     : `<p class="action">Da oggi: resta sul target, senza eccezioni.</p>`;
-  const fresh = c.newFood ? `<p class="action">Prova: ${esc(c.newFood.name)}, 100 g danno circa ${c.newFood.p} g di proteine per ${c.newFood.kcal} kcal.</p>` : "";
+  const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine: ${esc(c.newFood.name)}, ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g (${c.newFood.perPortion} g di proteine a bicchiere).</p>` : "";
   return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
