@@ -105,7 +105,7 @@ function planFor(k) {
   const startKey = sgarri[0];
   const lastKey = sgarri[sgarri.length - 1];
   const extra = sgarri.reduce((a, j) => a + (intake(j) - baseTargets(j).kcal), 0);
-  const capKcal = Math.max(10, Math.round((baseTargets(k).carbs * 0.2 * 4) / 10) * 10);
+  const capKcal = Math.max(10, Math.round((baseTargets(k).carbs * 0.3 * 4) / 10) * 10);
   // giorni necessari a recuperare il totale con il tetto giornaliero, e almeno sei giorni dopo l'ultimo sgarro
   const needed = Math.max(7, Math.ceil(extra / capKcal));
   const endKey = diffDays(startKey, addDays(lastKey, 6)) + 1 > needed ? addDays(lastKey, 6) : addDays(startKey, needed - 1);
