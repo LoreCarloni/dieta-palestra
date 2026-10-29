@@ -1044,7 +1044,7 @@ function dayComment(k) {
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
-  return { verdict, lines, journey, cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? shortDay(plan.endKey) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
+  return { verdict, lines, journey, cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
 }
 function commentHtml(k) {
   const c = dayComment(k);
