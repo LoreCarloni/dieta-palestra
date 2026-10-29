@@ -1045,7 +1045,9 @@ function commentHtml(k) {
   const isWeekly = (l) => /settimana|Ritmo degli|30 giorni/i.test(l.text);
   const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Oggi ti restano|^Oggi:|^Settimana:|^Ritmo degli|^Recupero non chiuso/i.test(l.text);
   // il consiglio per pranzo e cena e l'indicazione sui carboidrati stanno sempre in vista
-  const top = c.lines.filter((l) => !isRecovery(l) && isDinner(l));
+  // prima gli avvisi sul percorso, poi cosa fare oggi
+  const isWarning = (l) => /^Oggi:|^Settimana:|^Recupero non chiuso|^Ritmo degli/i.test(l.text);
+  const top = [...c.lines.filter((l) => !isRecovery(l) && isWarning(l)), ...c.lines.filter((l) => !isRecovery(l) && !isWarning(l) && isDinner(l))];
   const rest = [...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && !isWeekly(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && isWeekly(l))];
   return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${top.map(advice).join("")}${recovery.length ? `<div class="recovery"><div class="recovery-title">Recupero necessario!</div><p class="recovery-sub">${c.cut ? `Fino a ${esc(c.until)}${c.daysLeft === 1 ? ", cioè oggi, ultimo giorno:" : `, cioè per i prossimi ${c.daysLeft} giorni oggi incluso:`} ${c.cut} g di carboidrati in meno ogni giorno (circa ${c.cut * 4} kcal). Il recupero è partito da ${esc(c.from)}, giorno ${c.dayNo} di ${c.of}.` : "Resti sul target, senza eccezioni."}</p>${recovery.map(advice).join("")}</div>` : ""}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
