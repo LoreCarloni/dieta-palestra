@@ -1009,7 +1009,7 @@ function dayComment(k) {
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
     const sg7 = overview(k, 7).over.length;
     const pace = perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : sg7 >= 2 ? `Con ${sg7} sgarri nei 7 giorni la vita non scende in modo affidabile: la stima dipende da quanto calano gli sgarri, e finché continuano non puoi contarci.` : sg7 === 1 ? "Con questo ritmo la vita può scendere, ma lo sgarro di questa settimana pesa sulla stima: non è ancora un ritmo da confermare." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì.";
-    lines.push({ lvl: perWeek > 0.05 ? "bad" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}, e la stima dipende dagli sgarri della settimana. ${pace}` });
+    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}, e la stima dipende dagli sgarri della settimana. ${pace}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
