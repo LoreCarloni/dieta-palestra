@@ -1067,9 +1067,9 @@ function commentHtml(k) {
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Stai andando male dall'inizio: ${j.over} sgarri su ${j.days} giorni (${j.pct}%).${c.cut ? " La pancia non scende finché non recuperi." : ""}</p>` : "";
   const until = c.cut ? ` Il limite vale fino ${/^(8|11) /.test(c.until) ? "all'" : "al "}${esc(c.until)}.` : "";
-  const usable = Math.max(0, c.remCarb - 20), bread = Math.round(usable / 0.595 / 5) * 5, pasta = Math.round(usable / 0.79 / 5) * 5;
+  const reserve = c.cut ? 0 : 20, usable = Math.max(0, c.remCarb - reserve), bread = Math.round(usable / 0.595 / 5) * 5, pasta = Math.round(usable / 0.79 / 5) * 5;
   const action = c.isToday
-    ? (c.remCarb > 30 ? `<p class="action">Per tutto il resto di oggi, pranzo e cena insieme, puoi mangiare in totale pane ${bread} g oppure pasta ${pasta} g a secco. Altri 20 g di carboidrati li tieni per un dolce.${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
+    ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">Per tutto il resto di oggi, pranzo e cena insieme, puoi mangiare in totale pane ${bread} g oppure pasta ${pasta} g a secco. ${c.cut ? "Oggi niente dolce e niente sgarri: il recupero è in corso." : "Altri 20 g di carboidrati li tieni per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
     : (c.cut ? `<p class="action">Quel giorno il piano chiedeva ${Math.round(c.cut / 0.595 / 5) * 5} g di pane in meno.</p>` : "");
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
   return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
