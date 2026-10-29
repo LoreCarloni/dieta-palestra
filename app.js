@@ -915,6 +915,7 @@ function dayComment(k) {
   const lines = [];
   const diff = t.kcal - tg.kcal;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
+  if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Non è una giornata in linea, e il recupero non la copre tutta.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
   else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
   const weighed = d.meals.filter((m) => m.g && m.kcal > 0);
@@ -1034,7 +1035,7 @@ function commentHtml(k) {
   const recovery = c.lines.filter(isRecovery);
   // Prima il consiglio per la cena, poi il resto, il riepilogo della settimana in fondo.
   const isWeekly = (l) => /settimana|Ritmo degli|30 giorni/i.test(l.text);
-  const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Oggi ti restano/i.test(l.text);
+  const isDinner = (l) => /per la cena|Ti restano|Hai già finito|Oggi ti restano|^Oggi:/i.test(l.text);
   // il consiglio per pranzo e cena e l'indicazione sui carboidrati stanno sempre in vista
   const top = c.lines.filter((l) => !isRecovery(l) && isDinner(l));
   const rest = [...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && !isWeekly(l)), ...c.lines.filter((l) => !isRecovery(l) && !isDinner(l) && isWeekly(l))];
