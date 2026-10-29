@@ -1056,7 +1056,7 @@ function dayComment(k) {
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
-  return { verdict, lines, journey, newFood, cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
+  return { verdict, lines, journey, newFood, remCarb: tg.carbs - t.c, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
 }
 function commentHtml(k) {
   const c = dayComment(k);
@@ -1066,9 +1066,11 @@ function commentHtml(k) {
   const rest = c.lines.filter((l) => !dinner.includes(l));
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Stai andando male dall'inizio: ${j.over} sgarri su ${j.days} giorni (${j.pct}%).${c.cut ? " La pancia non scende finché non recuperi." : ""}</p>` : "";
-  const action = c.cut
-    ? `<p class="action">Da oggi: ${Math.round(c.cut / 0.595 / 5) * 5} g di pane in meno al giorno (${c.cut} g di carboidrati, circa ${c.cut * 4} kcal) fino ${/^(8|11) /.test(c.until) ? "all'" : "al "}${esc(c.until)}.</p>`
-    : `<p class="action">Da oggi: resta sul target, senza eccezioni.</p>`;
+  const until = c.cut ? ` Il limite vale fino ${/^(8|11) /.test(c.until) ? "all'" : "al "}${esc(c.until)}.` : "";
+  const bread = Math.max(0, Math.round(c.remCarb / 0.595 / 5) * 5), pasta = Math.max(0, Math.round(c.remCarb / 0.79 / 5) * 5);
+  const action = c.isToday
+    ? (c.remCarb > 10 ? `<p class="action">Oggi puoi mangiare ancora pane ${bread} g oppure pasta ${pasta} g a secco.${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
+    : (c.cut ? `<p class="action">Quel giorno il piano chiedeva ${Math.round(c.cut / 0.595 / 5) * 5} g di pane in meno.</p>` : "");
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
   return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
