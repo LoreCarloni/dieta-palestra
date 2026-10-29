@@ -1027,7 +1027,7 @@ function dayComment(k) {
   const cutG = plan ? Math.round(plan.cutKcal / 4 / 5) * 5 : 0;
   const dayNo = plan ? plan.dayNo : 0, daysLeft = plan ? plan.daysLeft : 0;
   if (k === todayKey() && startKey && diff > tg.kcal * 0.1) tips.unshift("attenzione: oggi sgarri di nuovo, quindi il recupero si allunga di un giorno");
-  if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. Per recuperarli servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Non è un episodio isolato: sono sgarri continui, e ogni giorno in più sopra il target allunga il percorso.` });
+  if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. La pancia non scende finché non li recuperi: servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Ogni sgarro in più allunga il percorso di altri giorni.` });
   const sgarriWeek = overview(k, 7).over.length;
   if (sgarriWeek >= 2) lines.push({ lvl: "bad", text: `Settimana: ${sgarriWeek} sgarri nei 7 giorni. Il recupero del primo non era ancora finito quando ne hai fatto un altro, e per questo il percorso si allunga.` });
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
