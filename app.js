@@ -1073,7 +1073,7 @@ function commentHtml(k) {
   if (!c.lunchOpen) meals = `Cena: pane ${r5(U / 0.595)} g.`;
   else if (U >= 65) {
     // pranzo con pasta, cena con pane: la pasta non scende sotto una porzione cucinabile
-    const pasta = Math.min(80, r5((U - 18) / 0.79));
+    const pasta = Math.min(80, r5((U - 18 - 2) / 0.79));
     meals = `Pranzo: pasta ${pasta} g a secco. Cena: pane ${Math.max(30, r5((U - pasta * 0.79) / 0.595))} g.`;
   } else meals = `Pranzo: pane ${r5((U * 0.6) / 0.595)} g. Cena: pane ${r5((U * 0.4) / 0.595)} g.`;
   const action = c.isToday
