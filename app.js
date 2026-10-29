@@ -1028,6 +1028,14 @@ function dayComment(k) {
   const dayNo = plan ? plan.dayNo : 0, daysLeft = plan ? plan.daysLeft : 0;
   if (k === todayKey() && startKey && diff > tg.kcal * 0.1) tips.unshift("attenzione: oggi sgarri di nuovo, quindi il recupero si allunga di un giorno");
   if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. La pancia non scende finché non li recuperi: servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Ogni sgarro in più allunga il percorso di altri giorni.` });
+  // alimento proteico che non compare nei pasti recenti: lo proponiamo quando mancano proteine
+  let newFood = null;
+  if (t.p < tg.protein * 0.85) {
+    const recent = new Set();
+    Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
+    const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
+    if (pick) newFood = { name: pick.name, p: Math.round(pick.p), kcal: Math.round(pick.kcal) };
+  }
   // tutto il percorso dall'inizio dell'uso dell'app
   let journey = null;
   const firstDay = Object.keys(S.days).filter((j) => S.days[j].meals.length).sort()[0];
@@ -1044,7 +1052,7 @@ function dayComment(k) {
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
-  return { verdict, lines, journey, cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
+  return { verdict, lines, journey, newFood, cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
 }
 function commentHtml(k) {
   const c = dayComment(k);
@@ -1057,7 +1065,8 @@ function commentHtml(k) {
   const action = c.cut
     ? `<p class="action">Da oggi: ${c.cut} g di carboidrati in meno al giorno fino al ${esc(c.until)}, circa ${c.cut * 4} kcal.</p>`
     : `<p class="action">Da oggi: resta sul target, senza eccezioni.</p>`;
-  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  const fresh = c.newFood ? `<p class="action">Prova: ${esc(c.newFood.name)}, 100 g danno circa ${c.newFood.p} g di proteine per ${c.newFood.kcal} kcal.</p>` : "";
+  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
