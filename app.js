@@ -31,6 +31,13 @@ S.wanted = S.wanted || [];
 S.dailyAuto = S.dailyAuto || [];
 S.plans = S.plans || [];
 S.planMin = S.planMin || {};
+// Quantità fisse della giornata, modificabili dalla scheda Oggi.
+S.myPlan = S.myPlan || [
+  { name: "Yogurt greco", qty: "2 vasetti da 150 g" },
+  { name: "Proteine in polvere", qty: "30 g in tutto, 15 g per yogurt" },
+  { name: "Albume", qty: "2 bicchieri da 100 g" },
+  { name: "Pollo", qty: "300 g crudi a sera" },
+];
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
@@ -264,6 +271,8 @@ function renderToday() {
     ${mealsHtml}
     ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
   </section>
+
+  ${myPlanCard()}
 
   ${commentHtml(k)}
 
@@ -661,6 +670,9 @@ function renderProfile(first) {
 
 // ---------- Finestre di inserimento ----------
 const dlg = () => $("#dlg");
+function myPlanCard() {
+  return `<section class="card"><h2>Il mio piano <button class="link" data-act="plan-edit">Modifica</button></h2>${S.myPlan.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
+}
 function openDialog(html) {
   const d = dlg();
   $("#dlg-body").innerHTML = html;
@@ -1601,6 +1613,11 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
+    case "plan-edit": {
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<button class="btn primary wide" data-act="plan-save">Salva</button>`);
+      return;
+    }
+    case "plan-save": { S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; }); closeDialog(); break; }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
     case "measure-today": view.tab = "misure"; view.mEdit = null; view.mDate = k; resetScroll = true; break;
     case "goto-attivita": scrollToId = "sec-attivita"; break;
