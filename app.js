@@ -41,6 +41,19 @@ S.myPlan = S.myPlan || [
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
+// Correzione una tantum: le cotolette registrate senza uovo, parmigiano e pangrattato
+// (circa 226 kcal per 300 g di porzione). Il fattore segue i grammi della voce.
+{
+  let fixed = 0;
+  Object.values(S.days).forEach((d) => (d.meals || []).forEach((m) => {
+    if (!m.breadFix && /cotolett/i.test(m.name) && m.g >= 50) {
+      const f = m.g / 300;
+      m.kcal += 226 * f; m.p += 13.5 * f; m.c += 21.4 * f; m.f += 8.5 * f;
+      m.breadFix = true; fixed++;
+    }
+  }));
+  if (fixed) save();
+}
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
