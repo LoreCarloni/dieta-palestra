@@ -48,7 +48,7 @@ function renderFumo() {
   const done = FUMO_TRAGUARDI.filter((m) => st.hours >= m.h);
   const next = FUMO_TRAGUARDI.find((m) => st.hours < m.h);
   const today = new Date().toDateString();
-  const cravingsToday = (f.cravings || []).filter((t) => new Date(t).toDateString() === today).length;
+  const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
     <section class="card">
@@ -65,7 +65,7 @@ function renderFumo() {
       <p class="muted small">La stima della vita recuperata conta 11 minuti per sigaretta evitata ed è solo indicativa.</p>
     </section>
     <button class="btn primary wide" data-act="fumo-craving">Ho voglia di fumare</button>
-    <p class="muted small">Voglie registrate oggi: ${cravingsToday}. Superate in totale: ${(f.cravings || []).length}.</p>
+    <p class="muted small">Voglie superate oggi: ${resistedToday}. In totale: ${(f.resisted || []).length} superate su ${(f.cravings || []).length} registrate.</p>
     <section class="card">
       <h3>Prossimo traguardo</h3>
       ${next ? `<p><strong>${esc(next.t)}</strong>: ${esc(next.d)}</p>${bar(pctNext, 100)}<div class="muted small">${pctNext}% del tempo</div>` : "<p>Hai superato tutti i traguardi in elenco. Continua così.</p>"}
@@ -143,7 +143,11 @@ function fumoCravingDialog() {
 function fumoAct(a) {
   switch (a) {
     case "fumo-craving": fumoCravingDialog(); return true;
-    case "fumo-done": clearInterval(fumoTimer); closeDialog(); toast("Ottimo, voglia superata"); return true;
+    case "fumo-done":
+      clearInterval(fumoTimer); closeDialog();
+      S.fumo.resisted = S.fumo.resisted || [];
+      S.fumo.resisted.push(new Date().toISOString());
+      save(); render(); toast("Ottimo, voglia superata"); return true;
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
     case "fumo-relapse":
