@@ -1699,6 +1699,12 @@ function act(a, el) {
       const it = entryList(from, kind).find((x) => x.id === id);
       if (!it) { closeDialog(); return; }
       const name = val("#ed-name").trim();
+      const o = dlg().dataset.orig ? JSON.parse(dlg().dataset.orig) : null;
+      const newQty = $("#ed-qty") ? num1(val("#ed-qty")) : null;
+      if (o && o.qty > 0 && newQty > 0 && newQty !== o.qty) {
+        const r = newQty / o.qty;
+        $("#ed-kcal").value = r1(o.kcal * r); $("#ed-p").value = r1(o.p * r); $("#ed-c").value = r1(o.c * r); $("#ed-f").value = r1(o.f * r);
+      }
       const kcal = num1(val("#ed-kcal"));
       if (!name || kcal === null || kcal < 0) return toast("Nome e calorie sono obbligatori");
       const read = (sel) => { const el2 = $(sel); return el2 ? Math.max(0, num1(el2.value) ?? 0) : 0; };
@@ -1995,6 +2001,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
 });
 document.addEventListener("change", (e) => {
+  if (e.target.id === "ed-qty") scaleEdit(e.target.value);
   const t = e.target;
   if (t.id === "label-file") { readLabel(t.files[0]); t.value = ""; return; }
   if (t.id === "cp-date") return renderCopyList(t.value);
