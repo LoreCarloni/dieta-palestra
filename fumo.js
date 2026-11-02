@@ -101,6 +101,8 @@ function renderFumoSetup(editing) {
           <input type="number" name="packPrice" min="0.5" max="30" step="0.1" value="${f.packPrice}" required></label>
         <label>Sigarette per pacchetto
           <input type="number" name="packSize" min="1" max="50" step="1" value="${f.packSize}" required></label>
+        <label>Durata del conto alla rovescia per le voglie
+          <select name="timer">${[10, 15, 20].map((m) => `<option value="${m}" ${(f.timer || 10) === m ? "selected" : ""}>${m} minuti</option>`).join("")}</select></label>
         <label>Il tuo motivo per smettere
           <textarea name="reason" rows="2" maxlength="200">${esc(f.reason || "")}</textarea></label>
         <button class="btn primary wide" type="submit">Salva</button>
@@ -143,11 +145,13 @@ function fumoCravingDialog() {
   const tec = fumoTecnicaDiOggi();
   S.fumo.lastTech = tec.id;
   save();
-  const end = fumoNow() + 10 * 60 * 1000;
+  const mins = S.fumo.timer || 10;
+  const total = mins * 60 * 1000;
+  const end = fumoNow() + total;
   openDialog(`
-    <h3>Resisti 10 minuti</h3>
+    <h3>Resisti ${mins} minuti</h3>
     <p class="muted small">Una voglia dura di solito pochi minuti e poi cala.</p>
-    <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center">10:00</div>
+    <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center">${mins}:00</div>
     <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
     <p><strong>Tecnica di oggi: ${esc(tec.n)}.</strong> ${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
@@ -159,7 +163,7 @@ function fumoCravingDialog() {
     const left = Math.max(0, end - fumoNow());
     c.textContent = `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, "0")}`;
     // ciclo di 12 secondi: inspira 4, trattieni 2, espira 6
-    const s = Math.floor((10 * 60 * 1000 - left) / 1000) % 12;
+    const s = Math.floor((total - left) / 1000) % 12;
     $("#fumo-breath").textContent = s < 4 ? "Inspira dal naso" : s < 6 ? "Trattieni" : "Espira lentamente";
     if (left === 0) { clearInterval(fumoTimer); c.textContent = "Fatto"; }
   };
@@ -221,6 +225,7 @@ document.addEventListener("submit", (e) => {
     packPrice: parseFloat(fd.get("packPrice")),
     packSize: parseFloat(fd.get("packSize")),
     reason: String(fd.get("reason") || "").trim(),
+    timer: parseInt(fd.get("timer")) || 10,
     cravings: prev.cravings || [],
   };
   view.fumoEdit = false;
