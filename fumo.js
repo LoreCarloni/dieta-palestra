@@ -62,6 +62,7 @@ function renderFumo() {
     <section class="card">
       <div class="stats">
         <div class="stat"><div class="muted small">Sigarette evitate</div><div class="stat-v">${r0(st.avoided)}</div></div>
+        <div class="stat"><div class="muted small">Sigarette fumate in totale</div><div class="stat-v">${f.smoked || 0}</div></div>
         <div class="stat"><div class="muted small">Soldi risparmiati</div><div class="stat-v">${fumoEuro(st.saved)}</div></div>
         <div class="stat"><div class="muted small">Vita recuperata (stima)</div><div class="stat-v">${st.minutes >= 1440 ? r1(st.minutes / 1440) + " giorni" : st.minutes >= 60 ? r1(st.minutes / 60) + " ore" : r0(st.minutes) + " min"}</div></div>
       </div>
@@ -215,12 +216,22 @@ function fumoAct(a, el) {
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
     case "fumo-relapse":
-      if (confirm("Registrare che hai fumato e ripartire da adesso?")) {
-        S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
-        S.fumo.start = new Date().toISOString();
-        save(); resetScroll = true; render(); toast("Si riparte, un giorno alla volta");
-      }
+      openDialog(`
+        <h3>Quante sigarette hai fumato?</h3>
+        <p class="muted small">Il conto riparte da adesso, ma le sigarette restano registrate nel totale.</p>
+        <input id="fumo-n" type="number" min="1" max="100" step="1" value="1" autofocus>
+        <button class="btn primary wide" data-act="fumo-relapse-confirm">Registra e ripartire</button>
+        <button class="btn ghost wide" data-act="dlg-close">Annulla</button>`);
       return true;
+    case "fumo-relapse-confirm": {
+      const n = Math.max(1, parseInt($("#fumo-n").value) || 1);
+      S.fumo.smoked = (S.fumo.smoked || 0) + n;
+      S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
+      S.fumo.start = new Date().toISOString();
+      S.fumo.lastTech = null;
+      closeDialog(); save(); resetScroll = true; render(); toast("Si riparte, un giorno alla volta");
+      return true;
+    }
   }
   return false;
 }
