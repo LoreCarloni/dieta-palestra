@@ -688,7 +688,7 @@ function renderProfile(first) {
 // ---------- Finestre di inserimento ----------
 const dlg = () => $("#dlg");
 function myPlanCard() {
-  return `<section class="card"><h2>Il mio piano <button class="link" data-act="plan-edit">Modifica</button></h2>${S.myPlan.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
+  return `<section class="card"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${S.myPlan.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1630,11 +1630,16 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "plan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<button class="btn primary wide" data-act="plan-save">Salva</button>`);
+    case "myplan-edit": {
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nuova voce (per esempio Pasta a pranzo)</label><input id="plan-new-name" type="text"></div><div class="field"><label for="plan-new-qty">Quantità</label><input id="plan-new-qty" type="text" placeholder="per esempio 40 g a secco"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
-    case "plan-save": { S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; }); closeDialog(); break; }
+    case "myplan-save": {
+      S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
+      const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
+      if (nn) S.myPlan.push({ name: nn, qty: nq || "" });
+      closeDialog(); break;
+    }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
     case "measure-today": view.tab = "misure"; view.mEdit = null; view.mDate = k; resetScroll = true; break;
     case "goto-attivita": scrollToId = "sec-attivita"; break;
