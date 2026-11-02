@@ -39,6 +39,12 @@ S.myPlan = S.myPlan || [
   { name: "Pollo", qty: "300 g crudi a sera" },
 ];
 if (!S.myPlan.some((x) => x.name === "Target kcal (medico)")) S.myPlan.push({ name: "Target kcal (medico)", qty: "1250 kcal" });
+// piano aggiornato: 10 g di polvere per ogni yogurt e ogni albume
+S.myPlan.forEach((x) => {
+  if (/yogurt/i.test(x.name)) x.qty = "2 vasetti da 150 g, con 10 g di polvere ciascuno";
+  if (/albume/i.test(x.name)) x.qty = "3 bicchieri da 100 g, con 10 g di polvere ciascuno";
+  if (/polvere/i.test(x.name)) x.qty = "10 g per yogurt e per albume";
+});
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
