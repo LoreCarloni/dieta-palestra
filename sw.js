@@ -1,4 +1,4 @@
-const CACHE = "dieta-palestra-v4";
+const CACHE = "dieta-palestra-v5";
 const FILES = ["./", "index.html", "style.css", "data.js", "app.js", "fumo.js", "manifest.webmanifest", "icon.svg", "icon-180.png", "icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => {
