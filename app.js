@@ -105,10 +105,7 @@ function baseTargets(k) {
   const tdee = bmr * p.activity;
   const deficit = (p.rate * 7700) / 7;
   const floor = p.minKcal || 0;
-  const kcalCalc = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
-  // target concordato con il medico, se impostato nella scheda Il mio piano
-  const medKcal = parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10);
-  const kcal = medKcal > 0 ? medKcal : kcalCalc;
+  const kcal = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
   const refW = Math.min(w, (p.goalWeight || w) + 10);
   const protein = Math.round(2.0 * refW);
   const fat = Math.round((kcal * 0.28) / 9);
@@ -139,16 +136,20 @@ function planFor(k) {
   if (cutKcal <= 0) return null;
   return { startKey, endKey, span, dayNo: diffDays(startKey, k) + 1, daysLeft: diffDays(k, endKey) + 1, cutKcal, count: sgarri.length };
 }
+// target concordato con il medico, usato solo durante il recupero
+const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
 function targets(k) {
   const b = baseTargets(k);
   const plan = planFor(k);
   // In deficit le proteine restano a 2 g per chilo; nei giorni di recupero salgono a 2,2 g per chilo, per proteggere il muscolo.
   const refW = Math.min(b.w, (S.profile.goalWeight || b.w) + 10);
   const protein = Math.round((plan ? 2.2 : 2.0) * refW);
-  const kcal = plan ? Math.max(0, b.kcal - plan.cutKcal) : b.kcal;
+  const med = medicalKcal();
+  const kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
+  const planOut = plan ? { ...plan, cutKcal: b.kcal - kcal } : null;
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  return { ...b, kcal, protein, fat, carbs, plan };
+  return { ...b, kcal, protein, fat, carbs, plan: planOut };
 }
 
 function totals(k) {
