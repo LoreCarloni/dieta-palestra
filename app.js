@@ -1631,13 +1631,13 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Aggiungi</label><input id="plan-new-name" type="text"></div><div class="field"><label for="plan-new-qty">Quantità</label><input id="plan-new-qty" type="text" placeholder="per esempio Pasta"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
       S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
       const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
-      if (nn) S.myPlan.push({ name: nn, qty: nq || "" });
+      if (nn) S.myPlan.push({ name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
       closeDialog(); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
