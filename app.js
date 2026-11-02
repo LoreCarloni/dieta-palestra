@@ -217,7 +217,7 @@ function render() {
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
   if (!S.profile && view.tab !== "fumo") { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
-  main.innerHTML = { fumo: renderFumo, oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  main.innerHTML = { fumo: () => renderFumo(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
   window.scrollTo(0, resetScroll ? 0 : keepY);
   if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   resetScroll = false;
