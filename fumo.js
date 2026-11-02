@@ -46,6 +46,10 @@ function renderFumo() {
   if (view.fumoEdit) return renderFumoSetup(true);
   const f = S.fumo, st = fumoStats();
   const tecOggi = fumoTecnicaDiOggi();
+  const perDay = f.smokedDays || {};
+  const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
+  const smokedToday = perDay[todayKey()] || 0;
+  const weekRows = dayKeys.map((k) => `<div class="row"><div>${esc(fmtDate(k, { weekday: "short", day: "numeric", month: "short" }))}</div><div class="row-r">${perDay[k] || 0}</div></div>`).join("");
   const tecStats = f.tech || {};
   const tecRows = FUMO_TECNICHE.filter((t) => tecStats[t.id]).map((t) => `<p class="small"><strong>${esc(t.n)}</strong>: utile ${tecStats[t.id].helped} volte su ${tecStats[t.id].tries}</p>`).join("");
   const done = FUMO_TRAGUARDI.filter((m) => st.hours >= m.h);
@@ -62,6 +66,7 @@ function renderFumo() {
     <section class="card">
       <div class="stats">
         <div class="stat"><div class="muted small">Sigarette evitate</div><div class="stat-v">${r0(st.avoided)}</div></div>
+        <div class="stat"><div class="muted small">Sigarette fumate oggi</div><div class="stat-v">${smokedToday}</div></div>
         <div class="stat"><div class="muted small">Sigarette fumate in totale</div><div class="stat-v">${f.smoked || 0}</div></div>
         <div class="stat"><div class="muted small">Soldi risparmiati</div><div class="stat-v">${fumoEuro(st.saved)}</div></div>
         <div class="stat"><div class="muted small">Vita recuperata (stima)</div><div class="stat-v">${st.minutes >= 1440 ? r1(st.minutes / 1440) + " giorni" : st.minutes >= 60 ? r1(st.minutes / 60) + " ore" : r0(st.minutes) + " min"}</div></div>
@@ -75,6 +80,7 @@ function renderFumo() {
       ${next ? `<p><strong>${esc(next.t)}</strong>: ${esc(next.d)}</p>${bar(pctNext, 100)}<div class="muted small">${pctNext}% del tempo</div>` : "<p>Hai superato tutti i traguardi in elenco. Continua così.</p>"}
     </section>
     ${done.length ? `<section class="card"><h3>Traguardi raggiunti</h3>${done.map((m) => `<p class="small"><strong>${esc(m.t)}</strong>: ${esc(m.d)}</p>`).join("")}<p class="muted small">Indicazioni generali di salute pubblica: i tempi variano da persona a persona.</p></section>` : ""}
+    <section class="card"><h3>Sigarette fumate per giorno</h3>${weekRows}</section>
     <section class="card"><h3>Tecnica di oggi</h3><p><strong>${esc(tecOggi.n)}</strong>: ${esc(tecOggi.t)}</p>${tecRows}</section>
     ${f.reason ? `<section class="card"><h3>Il tuo motivo</h3><p>${esc(f.reason)}</p></section>` : ""}
     <section class="card">
@@ -226,6 +232,8 @@ function fumoAct(a, el) {
     case "fumo-relapse-confirm": {
       const n = Math.max(1, parseInt($("#fumo-n").value) || 1);
       S.fumo.smoked = (S.fumo.smoked || 0) + n;
+      S.fumo.smokedDays = S.fumo.smokedDays || {};
+      S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + n;
       S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
       S.fumo.start = new Date().toISOString();
       S.fumo.lastTech = null;
