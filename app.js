@@ -688,7 +688,7 @@ function renderProfile(first) {
 // ---------- Finestre di inserimento ----------
 const dlg = () => $("#dlg");
 // ordine dei pasti: colazione, pranzo, altro, cena; il target medico resta in fondo
-const planRank = (x) => (x.name === "Target kcal (medico)" ? 9 : { colazione: 0, pranzo: 1, giorno: 2, cena: 3 }[slotFor("giorno", x.name)]);
+const planRank = (x) => (x.name === "Target kcal (medico)" ? 9 : /yogurt|albume|polvere|whey/i.test(x.name) ? 0 : { colazione: 0, pranzo: 1, giorno: 2, cena: 3 }[slotFor("giorno", x.name)]);
 function myPlanCard() {
   const rows = [...S.myPlan].sort((a, b) => planRank(a) - planRank(b));
   return `<section class="card"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${rows.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
