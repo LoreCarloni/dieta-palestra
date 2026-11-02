@@ -67,7 +67,7 @@ function renderFumo() {
       </div>
       <p class="muted small">La stima della vita recuperata conta 11 minuti per sigaretta evitata ed è solo indicativa.</p>
     </section>
-    <button class="btn primary wide" data-act="fumo-craving">Ho voglia di fumare</button>
+    <button class="btn primary wide" data-act="fumo-craving">${f.active && f.active.end > fumoNow() ? "Riprendi il conto alla rovescia" : "Ho voglia di fumare"}</button>
     <p class="muted small">Voglie superate oggi: ${resistedToday}. In totale: ${(f.resisted || []).length} superate su ${(f.cravings || []).length} registrate.</p>
     <section class="card">
       <h3>Prossimo traguardo</h3>
@@ -140,14 +140,26 @@ function fumoTecnicaDiOggi() {
 // Dialogo per le voglie: tecnica del giorno e conto alla rovescia di 10 minuti.
 let fumoTimer = null;
 function fumoCravingDialog() {
+  // Se il conto alla rovescia è ancora in corso (chiuso per sbaglio o per usare un'altra app), riprende da dove era.
+  const act = S.fumo.active;
+  if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoTecnicaById(act.tech), act.mins);
+  const tec = fumoTecnicaDiOggi();
+  const mins = S.fumo.timer || 10;
+  const end = fumoNow() + mins * 60 * 1000;
   S.fumo.cravings = S.fumo.cravings || [];
   S.fumo.cravings.push(new Date().toISOString());
-  const tec = fumoTecnicaDiOggi();
   S.fumo.lastTech = tec.id;
+  S.fumo.active = { end, tech: tec.id, mins };
   save();
-  const mins = S.fumo.timer || 10;
+  fumoShowCraving(end, tec, mins);
+}
+
+function fumoTecnicaById(id) {
+  return FUMO_TECNICHE.find((t) => t.id === id) || FUMO_TECNICHE[0];
+}
+
+function fumoShowCraving(end, tec, mins) {
   const total = mins * 60 * 1000;
-  const end = fumoNow() + total;
   openDialog(`
     <h3>Resisti ${mins} minuti</h3>
     <p class="muted small">Una voglia dura di solito pochi minuti e poi cala.</p>
@@ -177,6 +189,7 @@ function fumoAct(a, el) {
     case "fumo-craving": fumoCravingDialog(); return true;
     case "fumo-done":
       clearInterval(fumoTimer);
+      S.fumo.active = null;
       S.fumo.resisted = S.fumo.resisted || [];
       S.fumo.resisted.push(new Date().toISOString());
       save();
