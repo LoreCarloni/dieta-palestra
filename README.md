@@ -26,3 +26,14 @@ I calcoli usano la formula di Mifflin St Jeor; il deficit è di 7700 kcal per kg
 ```
 npx http-server -p 8080
 ```
+
+## Aggiornare l'app sul telefono
+
+Se la versione sull'iPhone non si aggiorna, la procedura più rapida è questa:
+
+1. Nell'app, da Profilo, tocca "Esporta backup" e salva il file.
+2. Tieni premuta l'icona sulla schermata Home e scegli "Rimuovi app".
+3. Apri il sito in Safari, tocca Condividi e scegli "Aggiungi a schermata Home".
+4. Apri la nuova icona, vai in Profilo e tocca "Importa backup" con il file salvato.
+
+La rimozione dell'icona cancella la copia vecchia; il backup mantiene i dati.
