@@ -701,7 +701,7 @@ const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 function myPlanCard() {
   const rows = [...S.myPlan].sort((a, b) => planRank(a) - planRank(b));
-  return `<section class="card"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${rows.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
+  return `<section class="card plan-rows"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${rows.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
 }
 function openDialog(html) {
   const d = dlg();

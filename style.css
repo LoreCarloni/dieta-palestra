@@ -245,3 +245,9 @@ html, body, button, a, input, label, .btn { touch-action: manipulation; }
 /* il testo va a capo dentro i riquadri, niente zoom */
 body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: anywhere; word-break: break-word; }
 dialog, .card { overflow-x: hidden; max-width: 100%; }
+
+/* Il mio piano: nome e quantità restano sulla stessa riga, il testo va a capo */
+.plan-rows .row { align-items: flex-start; }
+.plan-rows .row > div:first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.plan-rows .row-r { flex: 0 1 45%; min-width: 0; white-space: normal; text-align: right; overflow-wrap: anywhere; }
+.plan-rows h2 { flex-wrap: wrap; }
