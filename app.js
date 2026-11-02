@@ -689,7 +689,7 @@ function renderProfile(first) {
 const dlg = () => $("#dlg");
 // ordine dei pasti: colazione, pranzo, altro, cena; il target medico resta in fondo
 // ordine fisso: yogurt, proteine in polvere, albume (colazione), pasta (pranzo), pollo (cena), poi il resto, target in fondo
-const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /albume/i, /pasta|riso|pane/i, /pollo|tacchino|carne|pesce/i];
+const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 function myPlanCard() {
   const rows = [...S.myPlan].sort((a, b) => planRank(a) - planRank(b));
