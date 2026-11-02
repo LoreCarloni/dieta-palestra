@@ -687,8 +687,11 @@ function renderProfile(first) {
 
 // ---------- Finestre di inserimento ----------
 const dlg = () => $("#dlg");
+// ordine dei pasti: colazione, pranzo, altro, cena; il target medico resta in fondo
+const planRank = (x) => (x.name === "Target kcal (medico)" ? 9 : { colazione: 0, pranzo: 1, giorno: 2, cena: 3 }[slotFor("giorno", x.name)]);
 function myPlanCard() {
-  return `<section class="card"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${S.myPlan.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
+  const rows = [...S.myPlan].sort((a, b) => planRank(a) - planRank(b));
+  return `<section class="card"><h2>Il mio piano <button class="link" data-act="myplan-edit">Modifica</button></h2>${rows.map((x) => `<div class="row"><div>${esc(x.name)}</div><div class="row-r">${esc(x.qty)}</div></div>`).join("")}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1631,11 +1634,11 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
-      S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
+      S.myPlan.forEach((x, i) => { x.name = val(`#plan-n-${i}`).trim() || x.name; x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
       const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
       if (nn) S.myPlan.splice(1, 0, { name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
       closeDialog(); break;
