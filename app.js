@@ -38,6 +38,7 @@ S.myPlan = S.myPlan || [
   { name: "Albume", qty: "2 bicchieri da 100 g" },
   { name: "Pollo", qty: "300 g crudi a sera" },
 ];
+if (!S.myPlan.some((x) => x.name === "Target kcal (medico)")) S.myPlan.push({ name: "Target kcal (medico)", qty: "1250 kcal" });
 Object.values(S.habits || {}).forEach((h) => { if (h && h.auto) h.items.forEach((m) => { if (!S.dailyAuto.some((x) => x.name === m.name)) { const { auto, id, slot, ...rest } = m; S.dailyAuto.push(rest); } }); });
 S.habits = {};
 if (S.measureDay === undefined) S.measureDay = 1;
@@ -104,7 +105,10 @@ function baseTargets(k) {
   const tdee = bmr * p.activity;
   const deficit = (p.rate * 7700) / 7;
   const floor = p.minKcal || 0;
-  const kcal = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
+  const kcalCalc = Math.max(Math.round((tdee - deficit) / 10) * 10, floor);
+  // target concordato con il medico, se impostato nella scheda Il mio piano
+  const medKcal = parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10);
+  const kcal = medKcal > 0 ? medKcal : kcalCalc;
   const refW = Math.min(w, (p.goalWeight || w) + 10);
   const protein = Math.round(2.0 * refW);
   const fat = Math.round((kcal * 0.28) / 9);
