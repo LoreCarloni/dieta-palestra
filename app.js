@@ -1637,7 +1637,7 @@ function act(a, el) {
     case "myplan-save": {
       S.myPlan.forEach((x, i) => { x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
       const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
-      if (nn) S.myPlan.push({ name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
+      if (nn) S.myPlan.splice(1, 0, { name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
       closeDialog(); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
