@@ -1631,7 +1631,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nuova voce (per esempio Pasta a pranzo)</label><input id="plan-new-name" type="text"></div><div class="field"><label for="plan-new-qty">Quantità</label><input id="plan-new-qty" type="text" placeholder="per esempio 40 g a secco"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-q-${i}">${esc(x.name)}</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Aggiungi</label><input id="plan-new-name" type="text"></div><div class="field"><label for="plan-new-qty">Quantità</label><input id="plan-new-qty" type="text" placeholder="per esempio Pasta"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
