@@ -241,3 +241,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 
 /* niente zoom con il doppio tocco */
 html, body, button, a, input, label, .btn { touch-action: manipulation; }
+
+/* il testo va a capo dentro i riquadri, niente zoom */
+body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: anywhere; word-break: break-word; }
+dialog, .card { overflow-x: hidden; max-width: 100%; }
