@@ -238,3 +238,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .label-file { position: relative; cursor: pointer; }
+
+/* niente zoom con il doppio tocco */
+html, body, button, a, input, label, .btn { touch-action: manipulation; }
