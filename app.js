@@ -2047,20 +2047,16 @@ async function checkUpdate() {
   const now = await codeStamp();
   if (!now) return;
   if (seenStamp === null) { seenStamp = now; return; }
-  if (now !== seenStamp && !$("#upd")) {
-    const bar = document.createElement("button");
-    bar.id = "upd"; bar.className = "upd-bar";
-    bar.textContent = "Nuova versione disponibile, tocca per aggiornare";
-    bar.onclick = async () => {
-      try {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
-        const ks = await caches.keys();
-        await Promise.all(ks.map((k) => caches.delete(k)));
-      } catch {}
-      location.reload();
-    };
-    document.body.appendChild(bar);
+  if (now !== seenStamp) {
+    // nuova versione: pulisce la copia vecchia e ricarica da sola, senza toccare i dati salvati
+    seenStamp = now;
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+      const ks = await caches.keys();
+      await Promise.all(ks.map((k) => caches.delete(k)));
+    } catch {}
+    location.reload();
   }
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
