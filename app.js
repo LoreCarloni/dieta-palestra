@@ -208,8 +208,8 @@ function render() {
   const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
-  if (!S.profile) { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
-  main.innerHTML = { oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  if (!S.profile && view.tab !== "fumo") { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
+  main.innerHTML = { fumo: renderFumo, oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
   window.scrollTo(0, resetScroll ? 0 : keepY);
   if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   resetScroll = false;
@@ -1963,7 +1963,7 @@ function act(a, el) {
       if (confirm("Cancellare tutti i dati? Operazione irreversibile.") && confirm("Sei sicuro?")) { S = defaultState(); save(); }
       break;
     case "dlg-close": return closeDialog();
-    default: return;
+    default: if (typeof fumoAct === "function" && fumoAct(a, el)) return; return;
   }
   save();
   render();
