@@ -252,6 +252,7 @@ function fumoAct(a, el) {
       openDialog(`
         <h3>Hai resistito ${m} ${m === 1 ? "minuto" : "minuti"} e ${sec} ${sec === 1 ? "secondo" : "secondi"}</h3>
         <p class="muted small">Il conto del tempo senza fumare riparte da adesso. Puoi ricominciare quando vuoi.</p>
+        <p>${esc(fumoPensieroDiOggi().t)}</p>
         <button class="btn primary wide" data-act="dlg-close">Ok</button>`);
       render();
       return true;
