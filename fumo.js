@@ -138,6 +138,7 @@ const FUMO_PENSIERI = [
   { id: "minuto", t: "Questo minuto passa anche se fumi. Prova a vedere quanti ne passano senza." },
   { id: "gusto", t: "Il gusto del cibo torna più in fretta di quanto immagini: ti accorgerai del pane che sa di pane." },
   { id: "non_sentirsi_bene", t: "Non devi sentirti bene per smettere: basta non accendere." },
+  { id: "stelline", t: "Accendere una sigaretta è come accendere una stellina di Natale: brilla un attimo, poi resta solo fumo e cenere." },
   { id: "ironia_promessa", t: "La sigaretta ti ha promesso relax e ti ha venduto una dipendenza. Un pessimo affare, anche per lei." },
   { id: "ironia_polmoni", t: "I tuoi polmoni hanno finito lo spazio, ma ti ringraziano comunque per averci pensato." },
   { id: "ironia_incendio", t: "Fumare per rilassarsi è come spegnere un incendio con la benzina. Funziona, più o meno, ma che fatica." },
