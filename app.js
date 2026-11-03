@@ -975,6 +975,8 @@ function dayComment(k) {
   if (verdict.lvl === "good" && t.f > tg.fat * 1.25) { verdict.lvl = "warn"; verdict.text = "Calorie in linea ma grassi troppo alti"; }
   const lines = [];
   const diff = t.kcal - tg.kcal;
+  // se la cena prevista supera il resto della giornata, niente consigli su pranzo e cena
+  const overPlanned = !!S.plannedDinner && k === todayKey() && parseDiary(S.plannedDinner).length > 0 && tg.kcal - t.kcal - parseDiary(S.plannedDinner).reduce((a, x) => a + x.kcal, 0) <= 0;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Non è una giornata in linea, e il recupero non la copre tutta.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
@@ -1018,7 +1020,7 @@ function dayComment(k) {
   }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
-  if (t.p < tg.protein * 0.85) {
+  if (t.p < tg.protein * 0.85 && !overPlanned) {
     // mancano grammi di proteine: suggerisco due alimenti magri del database, con la quantità che li copre
     const gap = tg.protein - t.p;
     const lean = allFoods().filter((f) => !f.perServing && f.p >= 18 && f.kcal > 0 && f.kcal <= 250).sort((a, b) => b.p / b.kcal - a.p / a.kcal).slice(0, 2);
@@ -1040,7 +1042,7 @@ function dayComment(k) {
     const n = Math.max(1, Math.round(c / 15));
     return `${n} fett${n > 1 ? "e" : "a"} di pane da 30 g`;
   };
-  if (!d.closed && k === todayKey() && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
+  if (!d.closed && k === todayKey() && !overPlanned && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
     const meal = pranzoLibero ? "pranzo e cena" : "la cena";
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
@@ -1054,7 +1056,7 @@ function dayComment(k) {
     lines.push({ lvl: "tip", text: parts.join(" ") });
   }
   const remCarb = tg.carbs - t.c;
-  if (!d.closed && k === todayKey() && remCarb > 25) {
+  if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
       lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
@@ -1086,7 +1088,7 @@ function dayComment(k) {
   if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. La pancia non scende finché non li recuperi: servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Ogni sgarro in più allunga il percorso di altri giorni.` });
   // alimento proteico che non compare nei pasti recenti: lo proponiamo quando mancano proteine
   let newFood = null;
-  if (t.p < tg.protein * 0.85) {
+  if (t.p < tg.protein * 0.85 && !overPlanned) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
     const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
@@ -1113,6 +1115,7 @@ function dayComment(k) {
     const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0);
     if (pd.length) {
       const leftK = Math.round(tg.kcal - t.kcal - dk), leftP = Math.round(tg.protein - t.p - dp);
+      if (leftK <= 0) lines.push({ lvl: "bad", text: "Con la cena prevista non c'è spazio per il pranzo: niente pasta né pane, al massimo verdura e albume." });
       lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Cena prevista: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
     }
   }
@@ -1121,7 +1124,7 @@ function dayComment(k) {
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
-  return { verdict, lines, journey, newFood, remCarb: tg.carbs - t.c, lunchOpen: pranzoLibero, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
+  return { verdict, lines, journey, newFood, overPlanned, remCarb: tg.carbs - t.c, lunchOpen: pranzoLibero, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
 }
 function commentHtml(k) {
   const c = dayComment(k);
@@ -1141,7 +1144,7 @@ function commentHtml(k) {
     const pasta = Math.min(80, r5((U - 18 - 2) / 0.79));
     meals = `Pranzo: pasta ${pasta} g a secco. Cena: pane ${Math.max(30, r5((U - pasta * 0.79) / 0.595))} g.`;
   } else meals = `Pranzo: pane ${r5((U * 0.6) / 0.595)} g. Cena: pane ${r5((U * 0.4) / 0.595)} g.`;
-  const action = c.isToday
+  const action = c.isToday && !c.overPlanned
     ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">${meals} ${c.cut ? "Niente dolce e niente sgarri." : "Tieni 20 g di carboidrati per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
     : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
