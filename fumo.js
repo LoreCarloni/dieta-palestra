@@ -45,13 +45,11 @@ function renderFumo() {
   if (!S.fumo) return renderFumoSetup();
   if (view.fumoEdit) return renderFumoSetup(true);
   const f = S.fumo, st = fumoStats();
-  const tecOggi = fumoTecnicaDiOggi();
+  const tecOggi = fumoPensieroDiOggi();
   const perDay = f.smokedDays || {};
   const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
   const smokedToday = perDay[todayKey()] || 0;
   const weekRows = dayKeys.map((k) => `<div class="row"><div>${esc(fmtDate(k, { weekday: "short", day: "numeric", month: "short" }))}</div><div class="row-r">${perDay[k] || 0}</div></div>`).join("");
-  const tecStats = f.tech || {};
-  const tecRows = FUMO_TECNICHE.filter((t) => tecStats[t.id]).map((t) => `<p class="small"><strong>${esc(t.n)}</strong>: utile ${tecStats[t.id].helped} volte su ${tecStats[t.id].tries}</p>`).join("");
   const done = FUMO_TRAGUARDI.filter((m) => st.hours >= m.h);
   const next = FUMO_TRAGUARDI.find((m) => st.hours < m.h);
   const today = new Date().toDateString();
@@ -84,7 +82,8 @@ function renderFumo() {
     </section>
     ${done.length ? `<section class="card"><h3>Traguardi raggiunti</h3>${done.map((m) => `<p class="small"><strong>${esc(m.t)}</strong>: ${esc(m.d)}</p>`).join("")}<p class="muted small">Indicazioni generali di salute pubblica: i tempi variano da persona a persona.</p></section>` : ""}
     <section class="card"><h3>Sigarette fumate per giorno</h3>${weekRows}</section>
-    <section class="card"><h3>Tecnica di oggi</h3><p><strong>${esc(tecOggi.n)}</strong>: ${esc(tecOggi.t)}</p>${tecRows}</section>
+    <section class="card"><h3>Pensiero di oggi</h3><p><strong>${esc(tecOggi.n)}</strong>: ${esc(tecOggi.t)}</p></section>
+    <section class="card"><h3>Traguardi di riduzione</h3>${fumoRiduzioni().map((m) => `<p class="small"><strong>${m.ok ? "Raggiunto" : "Da raggiungere"}:</strong> ${esc(m.t)}</p>`).join("")}<p class="muted small">Il confronto è tra un giorno e il precedente, sulle sigarette registrate con "Ho fumato".</p></section>
     ${f.reason ? `<section class="card"><h3>Il tuo motivo</h3><p>${esc(f.reason)}</p></section>` : ""}
     <section class="card">
       <h3>Impostazioni</h3>
@@ -120,61 +119,67 @@ function renderFumoSetup(editing) {
     </section>`;
 }
 
-// Tecniche per le voglie. Ogni giorno l'app propone una tecnica diversa finché non ne ha provate tutte.
-// Poi tiene quelle che hanno aiutato almeno la metà delle volte e scarta le altre.
-const FUMO_TECNICHE = [
-  { id: "respiro", n: "Respirazione lenta", t: "Inspira dal naso per quattro secondi, trattieni due, espira per sei." },
-  { id: "acqua", n: "Bicchiere d'acqua", t: "Bevi un bicchiere d'acqua lentamente, sorseggiando." },
-  { id: "cammino", n: "Due minuti di cammino", t: "Cammina per due minuti, anche in casa." },
-  { id: "stanza", n: "Cambia stanza", t: "Spostati in un'altra stanza e tieni le mani occupate." },
-  { id: "gomma", n: "Mastica qualcosa", t: "Mastica una gomma senza zucchero o una carota." },
-  { id: "denti", n: "Lavati i denti", t: "Lavati i denti o sciacquati la bocca: il sapore della sigaretta si attenua." },
-  { id: "persona", n: "Scrivi a qualcuno", t: "Manda un messaggio a una persona che sostiene la tua scelta." },
-  { id: "motivo", n: "Rileggi il motivo", t: "Leggi ad alta voce il tuo motivo per smettere." },
+// Pensieri per le voglie: uno diverso ogni giorno. Non sono tecniche da eseguire, ma un modo diverso di guardare la sigaretta.
+const FUMO_PENSIERI = [
+  { id: "sollievo", n: "Il sollievo non è un piacere", t: "Quello che senti come sollievo è il bisogno creato dalla nicotina. Accendendola non guadagni niente: torni solo alla condizione di prima." },
+  { id: "scelta", n: "È una scelta, non una necessità", t: "Non devi decidere di non fumare per sempre. Basta non accendere questa sigaretta adesso." },
+  { id: "passa", n: "La voglia passa", t: "Una voglia dura pochi minuti, anche se sembra infinita. Ogni volta che passa senza fumare, dimostri a te stesso che puoi farlo." },
+  { id: "privazione", n: "Non stai perdendo niente", t: "Sembra una privazione, ma stai liberandoti di una dipendenza che ogni giorno occupa la tua mente." },
+  { id: "forza", n: "Non serve forza di volontà", t: "Chi smette non resiste con la forza: smette di credere che la sigaretta sia necessaria, e questo cambia tutto." },
 ];
 
-function fumoTecnicaDiOggi() {
-  const stats = (S.fumo && S.fumo.tech) || {};
-  const get = (id) => stats[id] || { tries: 0, helped: 0 };
-  const score = (id) => (get(id).helped + 1) / (get(id).tries + 2);
+function fumoPensieroDiOggi() {
   const dayIdx = Math.floor(fumoNow() / 86400000);
-  const untried = FUMO_TECNICHE.filter((t) => !stats[t.id]);
-  if (untried.length) return untried[dayIdx % untried.length];
-  const good = FUMO_TECNICHE.filter((t) => score(t.id) >= 0.5);
-  if (good.length) return good[dayIdx % good.length];
-  // Nessuna ha funzionato abbastanza: prova quella usata meno.
-  return [...FUMO_TECNICHE].sort((a, b) => get(a.id).tries - get(b.id).tries)[0];
+  return FUMO_PENSIERI[dayIdx % FUMO_PENSIERI.length];
 }
 
-// Dialogo per le voglie: tecnica del giorno e conto alla rovescia di 10 minuti.
+function fumoPensieroById(id) {
+  return FUMO_PENSIERI.find((t) => t.id === id) || FUMO_PENSIERI[0];
+}
+
+// Traguardi legati alla riduzione: ogni giorno si confronta con il precedente, a partire dal giorno di inizio.
+function fumoRiduzioni() {
+  const perDay = (S.fumo && S.fumo.smokedDays) || {};
+  const count = (k) => perDay[k] || 0;
+  const startKey = keyOf(new Date(S.fumo.start));
+  const days = Array.from({ length: 30 }, (_, i) => addDays(todayKey(), i - 29)).filter((k) => k >= startKey);
+  let run = 0, bestRun = 0, zeroRun = 0, bestZero = 0;
+  for (let i = 0; i < days.length; i++) {
+    if (i > 0 && count(days[i]) < count(days[i - 1])) run++; else if (i > 0) run = 0;
+    bestRun = Math.max(bestRun, run);
+    zeroRun = count(days[i]) === 0 ? zeroRun + 1 : 0;
+    bestZero = Math.max(bestZero, zeroRun);
+  }
+  return [
+    { ok: bestRun >= 1, t: "Un giorno con meno sigarette del giorno prima" },
+    { ok: bestRun >= 3, t: "Tre giorni di fila con meno sigarette del giorno prima" },
+    { ok: bestRun >= 7, t: "Sette giorni di fila con meno sigarette del giorno prima" },
+    { ok: bestZero >= 7, t: "Una settimana senza sigarette registrate" },
+  ];
+}
+
+// Dialogo per le voglie: pensiero del giorno e conto alla rovescia.
 let fumoTimer = null;
 function fumoCravingDialog() {
-  // Se il conto alla rovescia è ancora in corso (chiuso per sbaglio o per usare un'altra app), riprende da dove era.
   const act = S.fumo.active;
-  if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoTecnicaById(act.tech), act.mins);
-  const tec = fumoTecnicaDiOggi();
+  if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoPensieroById(act.tech), act.mins);
+  const tec = fumoPensieroDiOggi();
   const mins = S.fumo.timer || 10;
   const end = fumoNow() + mins * 60 * 1000;
   S.fumo.cravings = S.fumo.cravings || [];
   S.fumo.cravings.push(new Date().toISOString());
-  S.fumo.lastTech = tec.id;
   S.fumo.active = { end, tech: tec.id, mins };
   save();
   fumoShowCraving(end, tec, mins);
-}
-
-function fumoTecnicaById(id) {
-  return FUMO_TECNICHE.find((t) => t.id === id) || FUMO_TECNICHE[0];
 }
 
 function fumoShowCraving(end, tec, mins) {
   const total = mins * 60 * 1000;
   openDialog(`
     <h3>Resisti ${mins} minuti</h3>
-    <p class="muted small">Una voglia dura di solito pochi minuti e poi cala.</p>
     <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center">${mins}:00</div>
     <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
-    <p><strong>Tecnica di oggi: ${esc(tec.n)}.</strong> ${esc(tec.t)}</p>
+    <p><strong>${esc(tec.n)}.</strong> ${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>`);
   clearInterval(fumoTimer);
@@ -201,26 +206,8 @@ function fumoAct(a, el) {
       S.fumo.active = null;
       S.fumo.resisted = S.fumo.resisted || [];
       S.fumo.resisted.push(new Date().toISOString());
-      save();
-      openDialog(`
-        <h3>Ti ha aiutato la tecnica?</h3>
-        <p class="muted small">Serve a scegliere le tecniche dei prossimi giorni.</p>
-        <button class="btn primary wide" data-act="fumo-helped" data-v="1">Sì</button>
-        <button class="btn ghost wide" data-act="fumo-helped" data-v="0">No</button>`);
+      closeDialog(); save(); render(); toast("Ottimo, voglia superata");
       return true;
-    case "fumo-helped": {
-      const id = S.fumo.lastTech;
-      if (id) {
-        S.fumo.tech = S.fumo.tech || {};
-        const x = S.fumo.tech[id] || { tries: 0, helped: 0 };
-        x.tries++;
-        if (el && el.dataset.v === "1") x.helped++;
-        S.fumo.tech[id] = x;
-      }
-      S.fumo.lastTech = null;
-      closeDialog(); save(); render(); toast("Registrato");
-      return true;
-    }
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
     case "fumo-relapse":
@@ -238,7 +225,6 @@ function fumoAct(a, el) {
       S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + n;
       S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
       S.fumo.start = new Date().toISOString();
-      S.fumo.lastTech = null;
       closeDialog(); save(); resetScroll = true; render(); toast("Si riparte, un giorno alla volta");
       return true;
     }
