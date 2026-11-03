@@ -60,6 +60,7 @@ function renderFumo() {
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
       <button class="btn danger" data-act="fumo-about" style="${FUMO_ROUND}">Sto per fumare</button>
     </div>
+    <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     <section class="card">
       <div class="muted small">Senza fumare da</div>
       <div class="stat-v" style="font-size:1.6rem">${esc(fumoDuration(st.ms))}</div>
@@ -83,7 +84,6 @@ function renderFumo() {
     </section>
     ${done.length ? `<section class="card"><h3>Traguardi raggiunti</h3>${done.map((m) => `<p class="small"><strong>${esc(m.t)}</strong>: ${esc(m.d)}</p>`).join("")}<p class="muted small">Indicazioni generali di salute pubblica: i tempi variano da persona a persona.</p></section>` : ""}
     <section class="card"><h3>Sigarette fumate per giorno</h3>${weekRows}</section>
-    <section class="card"><p>${esc(tecOggi.t)}</p></section>
     <section class="card"><h3>Traguardi di riduzione</h3>${fumoRiduzioni().map((m) => `<p class="small"><strong>${m.ok ? "Raggiunto" : "Da raggiungere"}:</strong> ${esc(m.t)}</p>`).join("")}<p class="muted small">Il confronto è tra un giorno e il precedente, sulle sigarette registrate con "Ho fumato".</p></section>
     ${f.reason ? `<section class="card"><h3>Il tuo motivo</h3><p>${esc(f.reason)}</p></section>` : ""}
     <section class="card">
