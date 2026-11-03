@@ -56,9 +56,9 @@ function renderFumo() {
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
-    <div class="btns">
-      <button class="btn primary" data-act="fumo-craving">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
-      <button class="btn danger" data-act="fumo-relapse">Ho fumato</button>
+    <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
+      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
+      <button class="btn danger" data-act="fumo-about" style="${FUMO_ROUND}">Sto per fumare</button>
     </div>
     <section class="card">
       <div class="muted small">Senza fumare da</div>
@@ -160,11 +160,12 @@ function fumoRiduzioni() {
 
 // Dialogo per le voglie: pensiero del giorno e conto alla rovescia.
 let fumoTimer = null;
-function fumoCravingDialog() {
+const FUMO_ROUND = "width:124px;height:124px;border-radius:50%;padding:8px;line-height:1.2;white-space:normal;font-size:0.95rem;";
+function fumoCravingDialog(minutes) {
   const act = S.fumo.active;
   if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoPensieroById(act.tech), act.mins);
   const tec = fumoPensieroDiOggi();
-  const mins = S.fumo.timer || 10;
+  const mins = minutes || S.fumo.timer || 10;
   const end = fumoNow() + mins * 60 * 1000;
   S.fumo.cravings = S.fumo.cravings || [];
   S.fumo.cravings.push(new Date().toISOString());
@@ -201,6 +202,14 @@ function fumoShowCraving(end, tec, mins) {
 function fumoAct(a, el) {
   switch (a) {
     case "fumo-craving": fumoCravingDialog(); return true;
+    case "fumo-about":
+      openDialog(`
+        <h3>Riesci a resistere ancora 5 minuti?</h3>
+        <p class="muted small">Se sì, il conto alla rovescia parte adesso.</p>
+        <button class="btn primary wide" data-act="fumo-wait">Sì, provo</button>
+        <button class="btn ghost wide" data-act="fumo-relapse">No, ho fumato</button>`);
+      return true;
+    case "fumo-wait": fumoCravingDialog(5); return true;
     case "fumo-done":
       clearInterval(fumoTimer);
       S.fumo.active = null;
