@@ -134,6 +134,11 @@ function fumoPensieroDiOggi() {
   return FUMO_PENSIERI[dayIdx % FUMO_PENSIERI.length];
 }
 
+function fumoPensieroCard() {
+  const t = fumoPensieroDiOggi();
+  return `<section class="card" data-act="tab-fumo" style="cursor:pointer"><div class="muted small">Pensiero di oggi, tocca per la scheda Fumo</div><p><strong>${esc(t.n)}</strong>: ${esc(t.t)}</p></section>`;
+}
+
 function fumoPensieroById(id) {
   return FUMO_PENSIERI.find((t) => t.id === id) || FUMO_PENSIERI[0];
 }
@@ -204,6 +209,7 @@ function fumoShowCraving(end, tec, mins) {
 function fumoAct(a, el) {
   switch (a) {
     case "fumo-craving": fumoCravingDialog(); return true;
+    case "tab-fumo": view.tab = "fumo"; resetScroll = true; render(); return true;
     case "fumo-about":
       openDialog(`
         <h3>Quanti minuti riesci a resistere?</h3>
