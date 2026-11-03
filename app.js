@@ -39,6 +39,7 @@ S.myPlan = S.myPlan || [
   { name: "Pollo", qty: "300 g crudi a sera" },
 ];
 if (!S.myPlan.some((x) => x.name === "Target kcal (medico)")) S.myPlan.push({ name: "Target kcal (medico)", qty: "1250 kcal" });
+S.plannedDinner = S.plannedDinner || "";
 // piano aggiornato: 10 g di polvere per ogni yogurt e ogni albume
 S.myPlan.forEach((x) => {
   if (/yogurt/i.test(x.name)) x.qty = "2 vasetti da 150 g, con 10 g di polvere ciascuno";
@@ -1093,6 +1094,15 @@ function dayComment(k) {
     const lowText = lows.length >= 2 ? ` Vita bassa da ${fmtN(lows[0].low)} a ${fmtN(lows[lows.length - 1].low)} cm.` : "";
     journey = { over: all.over.length, days: all.days.length, pct, lowText };
   }
+  // cena prevista: quanto resta per il resto della giornata
+  if (S.plannedDinner && k === todayKey() && !d.closed) {
+    const pd = parseDiary(S.plannedDinner);
+    const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0);
+    if (pd.length) {
+      const leftK = Math.round(tg.kcal - t.kcal - dk), leftP = Math.round(tg.protein - t.p - dp);
+      lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Cena prevista: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
+    }
+  }
   const sgarriWeek = overview(k, 7).over.length;
   if (sgarriWeek >= 2) lines.push({ lvl: "bad", text: `Settimana: ${sgarriWeek} sgarri nei 7 giorni. Il recupero del primo non era ancora finito quando ne hai fatto un altro, e per questo il percorso si allunga.` });
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
@@ -1122,7 +1132,7 @@ function commentHtml(k) {
     ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">${meals} ${c.cut ? "Niente dolce e niente sgarri." : "Tieni 20 g di carboidrati per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
     : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
-  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Cena prevista")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
@@ -1644,11 +1654,12 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><div class="field"><label for="plan-dinner">Cena prevista, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="4">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
       S.myPlan.forEach((x, i) => { x.name = val(`#plan-n-${i}`).trim() || x.name; x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
+      S.plannedDinner = val("#plan-dinner").trim();
       const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
       if (nn) S.myPlan.splice(1, 0, { name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
       closeDialog(); break;
