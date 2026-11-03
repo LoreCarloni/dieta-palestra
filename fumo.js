@@ -59,7 +59,7 @@ function renderFumo() {
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
-      <button class="btn danger" data-act="fumo-about" style="${FUMO_ROUND}">Sto per fumare</button>
+      <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
     </div>
     <section class="card">
       <div class="muted small">Senza fumare da</div>
@@ -132,11 +132,6 @@ const FUMO_PENSIERI = [
 function fumoPensieroDiOggi() {
   const dayIdx = Math.floor(fumoNow() / 86400000);
   return FUMO_PENSIERI[dayIdx % FUMO_PENSIERI.length];
-}
-
-function fumoPensieroCard() {
-  const t = fumoPensieroDiOggi();
-  return `<section class="card" data-act="tab-fumo" style="cursor:pointer"><p>${esc(t.t)}</p></section>`;
 }
 
 function fumoPensieroById(id) {
@@ -232,7 +227,8 @@ function fumoAct(a, el) {
       return true;
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
-    case "fumo-lit": {
+    case "fumo-lit":
+    case "fumo-lit-now": {
       const act = S.fumo.active;
       clearInterval(fumoTimer);
       const now = fumoNow();
