@@ -110,8 +110,6 @@ function renderFumoSetup(editing) {
           <input type="number" name="packPrice" min="0.5" max="30" step="0.1" value="${f.packPrice}" required></label>
         <label>Sigarette per pacchetto
           <input type="number" name="packSize" min="1" max="50" step="1" value="${f.packSize}" required></label>
-        <label>Durata del conto alla rovescia per le voglie
-          <select name="timer">${[10, 15, 20].map((m) => `<option value="${m}" ${(f.timer || 10) === m ? "selected" : ""}>${m} minuti</option>`).join("")}</select></label>
         <label>Il tuo motivo per smettere
           <textarea name="reason" rows="2" maxlength="200">${esc(f.reason || "")}</textarea></label>
         <button class="btn primary wide" type="submit">Salva</button>
@@ -165,14 +163,39 @@ const FUMO_ROUND = "width:124px;height:124px;border-radius:50%;padding:8px;line-
 function fumoCravingDialog(minutes) {
   const act = S.fumo.active;
   if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoPensieroById(act.tech), act.mins);
+  if (!minutes) return fumoOpenPicker();
   const tec = fumoPensieroDiOggi();
-  const mins = minutes || S.fumo.timer || 10;
+  const mins = minutes;
   const end = fumoNow() + mins * 60 * 1000;
   S.fumo.cravings = S.fumo.cravings || [];
   S.fumo.cravings.push(new Date().toISOString());
   S.fumo.active = { end, tech: tec.id, mins };
   save();
   fumoShowCraving(end, tec, mins);
+}
+
+// Rotella per scegliere i minuti: parte da 1 e li sceglie l'utente scorrendo.
+const FUMO_ITEM_H = 40;
+function fumoOpenPicker() {
+  const items = Array.from({ length: 60 }, (_, i) => `<div style="height:${FUMO_ITEM_H}px;line-height:${FUMO_ITEM_H}px;scroll-snap-align:center;font-size:1.3rem">${i + 1}</div>`).join("");
+  const pad = `<div style="height:${FUMO_ITEM_H * 2}px"></div>`;
+  openDialog(`
+    <h3>Quanti minuti riesci ad aspettare?</h3>
+    <p class="muted small">Scorri la rotella fino al numero che vuoi.</p>
+    <div id="fumo-wheel" style="height:${FUMO_ITEM_H * 3}px;overflow-y:auto;scroll-snap-type:y mandatory;border:1px solid var(--line);border-radius:12px;text-align:center">${pad}${items}${pad}</div>
+    <p class="stat-v" id="fumo-wheel-val" style="text-align:center;font-size:1.6rem">1 minuto</p>
+    <button class="btn primary wide" data-act="fumo-wait">Inizia</button>
+    <button class="btn ghost wide" data-act="dlg-close">Annulla</button>`);
+  const w = $("#fumo-wheel");
+  w.addEventListener("scroll", () => {
+    const m = Math.min(60, Math.max(1, Math.round(w.scrollTop / FUMO_ITEM_H)));
+    $("#fumo-wheel-val").textContent = `${m} ${m === 1 ? "minuto" : "minuti"}`;
+  }, { passive: true });
+}
+
+function fumoSelectedMinutes() {
+  const w = $("#fumo-wheel");
+  return Math.min(60, Math.max(1, Math.round(w.scrollTop / FUMO_ITEM_H)));
 }
 
 function fumoShowCraving(end, tec, mins) {
@@ -205,17 +228,8 @@ function fumoAct(a, el) {
   switch (a) {
     case "fumo-craving": fumoCravingDialog(); return true;
     case "tab-fumo": view.tab = "fumo"; resetScroll = true; render(); return true;
-    case "fumo-about":
-      openDialog(`
-        <h3>Quanti minuti riesci a resistere?</h3>
-        <p class="muted small">Scrivi il tempo che ti aspetti. Il conto parte adesso.</p>
-        <input id="fumo-min" type="number" min="1" max="120" step="1" value="5" autofocus>
-        <button class="btn primary wide" data-act="fumo-wait">Inizia</button>
-        <button class="btn ghost wide" data-act="dlg-close">Annulla</button>`);
-      return true;
     case "fumo-wait": {
-      const m = Math.min(120, Math.max(1, parseInt($("#fumo-min").value) || 5));
-      fumoCravingDialog(m);
+      fumoCravingDialog(fumoSelectedMinutes());
       return true;
     }
     case "fumo-done":
@@ -269,7 +283,6 @@ document.addEventListener("submit", (e) => {
     packPrice: parseFloat(fd.get("packPrice")),
     packSize: parseFloat(fd.get("packSize")),
     reason: String(fd.get("reason") || "").trim(),
-    timer: parseInt(fd.get("timer")) || 10,
     cravings: prev.cravings || [],
   };
   view.fumoEdit = false;
