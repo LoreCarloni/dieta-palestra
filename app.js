@@ -144,6 +144,18 @@ function planFor(k) {
   if (cutKcal <= 0) return null;
   return { startKey, endKey, span, dayNo: diffDays(startKey, k) + 1, daysLeft: diffDays(k, endKey) + 1, cutKcal, count: sgarri.length };
 }
+// macro della giornata contando anche la cena prevista
+function plannedHtml(k, t, tg) {
+  if (!S.plannedDinner || k !== todayKey() || S.days[k]?.closed) return "";
+  const pd = parseDiary(S.plannedDinner);
+  if (!pd.length) return "";
+  const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
+  const left = Math.round(tg.kcal - t.kcal - dk);
+  const row = (lbl, v, target) => `<div>${lbl} <b class="${v > target ? "bad" : "good"}">${r0(v)} di ${r0(target)}${lbl.includes("kcal") ? "" : " g"}</b></div>`;
+  return `<div class="plan-line"><div><b>Con la cena prevista</b></div>
+    <div>Kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
+    ${row("Proteine", t.p + dp, tg.protein)}${row("Carboidrati", t.c + dc, tg.carbs)}${row("Grassi", t.f + df, tg.fat)}</div>`;
+}
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
 function targets(k) {
@@ -218,9 +230,7 @@ function render() {
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
   if (!S.profile && view.tab !== "fumo") { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
-  // Sulla scheda Oggi compare subito il pensiero del giorno della scheda Fumo.
-  const fumoHome = view.tab === "oggi" && S.fumo && typeof fumoPensieroCard === "function" ? fumoPensieroCard() : "";
-  main.innerHTML = fumoHome + { fumo: () => renderFumo(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  main.innerHTML = { fumo: () => renderFumo(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
   window.scrollTo(0, resetScroll ? 0 : keepY);
   if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   resetScroll = false;
@@ -283,6 +293,7 @@ function renderToday() {
       <button class="macro-btn" data-act="macro" data-m="c"><span class="muted small">Carboidrati</span><b>${r0(t.c)} di ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</button>
       <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
     </div>
+    ${plannedHtml(k, t, tg)}
     <div class="muted small tap-hint">Tocca Proteine o un'altra voce per vedere da dove arrivano i numeri.</div>
     <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
