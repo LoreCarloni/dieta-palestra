@@ -134,11 +134,6 @@ function fumoPensieroDiOggi() {
   return FUMO_PENSIERI[dayIdx % FUMO_PENSIERI.length];
 }
 
-function fumoPensieroCard() {
-  const t = fumoPensieroDiOggi();
-  return `<section class="card" data-act="tab-fumo" style="cursor:pointer"><p>${esc(t.t)}</p></section>`;
-}
-
 function fumoPensieroById(id) {
   return FUMO_PENSIERI.find((t) => t.id === id) || FUMO_PENSIERI[0];
 }
