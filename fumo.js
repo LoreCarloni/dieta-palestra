@@ -56,11 +56,11 @@ function renderFumo() {
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
+    <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
       <button class="btn danger" data-act="fumo-about" style="${FUMO_ROUND}">Sto per fumare</button>
     </div>
-    <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     <section class="card">
       <div class="muted small">Senza fumare da</div>
       <div class="stat-v" style="font-size:1.6rem">${esc(fumoDuration(st.ms))}</div>
