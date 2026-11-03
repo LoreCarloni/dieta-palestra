@@ -120,16 +120,31 @@ function renderFumoSetup(editing) {
 
 // Pensieri per le voglie: uno diverso ogni giorno. Non sono tecniche da eseguire, ma un modo diverso di guardare la sigaretta.
 const FUMO_PENSIERI = [
-  { id: "sollievo", n: "Il sollievo non è un piacere", t: "Quello che senti come sollievo è il bisogno creato dalla nicotina. Accendendola non guadagni niente: torni solo alla condizione di prima." },
-  { id: "scelta", n: "È una scelta, non una necessità", t: "Non devi decidere di non fumare per sempre. Basta non accendere questa sigaretta adesso." },
-  { id: "passa", n: "La voglia passa", t: "Una voglia dura pochi minuti, anche se sembra infinita. Ogni volta che passa senza fumare, dimostri a te stesso che puoi farlo." },
-  { id: "privazione", n: "Non stai perdendo niente", t: "Sembra una privazione, ma stai liberandoti di una dipendenza che ogni giorno occupa la tua mente." },
-  { id: "forza", n: "Non serve forza di volontà", t: "Chi smette non resiste con la forza: smette di credere che la sigaretta sia necessaria, e questo cambia tutto." },
+  { id: "sollievo", t: "Quello che senti come sollievo è il bisogno creato dalla nicotina. Accendendola non guadagni niente: torni solo alla condizione di prima." },
+  { id: "scelta", t: "Non devi decidere di non fumare per sempre. Basta non accendere questa sigaretta adesso." },
+  { id: "passa", t: "Una voglia dura pochi minuti, anche se sembra infinita. Ogni volta che passa senza fumare, dimostri a te stesso che puoi farlo." },
+  { id: "privazione", t: "Sembra una privazione, ma stai liberandoti di una dipendenza che ogni giorno occupa la tua mente." },
+  { id: "forza", t: "Chi smette non resiste con la forza: smette di credere che la sigaretta sia necessaria, e questo cambia tutto." },
+  { id: "capelli", t: "Il fumo restringe i piccoli vasi del corpo, anche quelli che nutrono i capelli. Ogni ora senza sigaretta è un'ora in cui non li stringi." },
+  { id: "sopracciglia", t: "Il grigio arriva comunque con il tempo. Quello che puoi decidere è quanto in fretta arriva." },
+  { id: "pelle", t: "Il fumo accelera l'invecchiamento della pelle. Ogni giorno senza sigarette è un giorno in cui la pelle ha meno cose da sopportare." },
+  { id: "specchio", t: "Tra un mese guardati allo specchio. Non serve un cambiamento perfetto: basta notare che sei già diverso da ieri." },
+  { id: "respiro", t: "Un respiro profondo adesso vale più di una boccata." },
+  { id: "motivo", t: "Pensa al motivo che hai scritto. Era la tua ragione quando eri lucido, e lo è ancora." },
+  { id: "ricomincio", t: "Anche se hai fumato ieri, oggi è un altro giorno: il conto ricomincia da adesso." },
+  { id: "chi_ami", t: "Chi ti vuole bene preferisce vederti respirare meglio, non solo smettere." },
+  { id: "odore", t: "Vestiti, casa, mani: il fumo si sente prima di quanto pensi. Smettere è anche tornare a sentire l'aria pulita." },
+  { id: "soldi", t: "Il prezzo di un pacchetto basta per comprare qualcosa che ti piace davvero." },
+  { id: "minuto", t: "Questo minuto passa anche se fumi. Prova a vedere quanti ne passano senza." },
+  { id: "gusto", t: "Il gusto del cibo torna più in fretta di quanto immagini: ti accorgerai del pane che sa di pane." },
+  { id: "non_sentirsi_bene", t: "Non devi sentirti bene per smettere: basta non accendere." },
 ];
 
+// Una frase per ogni apertura dell'app: viene scelta una volta al caricamento e resta quella finché la pagina è aperta.
+let fumoFraseAperta = null;
 function fumoPensieroDiOggi() {
-  const dayIdx = Math.floor(fumoNow() / 86400000);
-  return FUMO_PENSIERI[dayIdx % FUMO_PENSIERI.length];
+  if (!fumoFraseAperta) fumoFraseAperta = FUMO_PENSIERI[Math.floor(Math.random() * FUMO_PENSIERI.length)];
+  return fumoFraseAperta;
 }
 
 function fumoPensieroById(id) {
@@ -204,7 +219,7 @@ function fumoShowCraving(end, tec, mins) {
     <h3>Resisti ${mins} minuti</h3>
     <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center">${mins}:00</div>
     <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
-    <p><strong>${esc(tec.n)}.</strong> ${esc(tec.t)}</p>
+    <p>${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
     <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
