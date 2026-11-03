@@ -136,7 +136,7 @@ function fumoPensieroDiOggi() {
 
 function fumoPensieroCard() {
   const t = fumoPensieroDiOggi();
-  return `<section class="card" data-act="tab-fumo" style="cursor:pointer"><div class="muted small">Pensiero di oggi, tocca per la scheda Fumo</div><p><strong>${esc(t.n)}</strong>: ${esc(t.t)}</p></section>`;
+  return `<section class="card" data-act="tab-fumo" style="cursor:pointer"><p>${esc(t.t)}</p></section>`;
 }
 
 function fumoPensieroById(id) {
