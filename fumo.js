@@ -63,6 +63,7 @@ function renderFumo() {
     <section class="card">
       <div class="muted small">Senza fumare da</div>
       <div class="stat-v" style="font-size:1.6rem">${esc(fumoDuration(st.ms))}</div>
+      ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${Math.floor(f.attempts[f.attempts.length - 1].seconds / 60)} minuti e ${f.attempts[f.attempts.length - 1].seconds % 60} secondi</div>` : ""}
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
     <section class="card">
@@ -182,7 +183,8 @@ function fumoShowCraving(end, tec, mins) {
     <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
     <p><strong>${esc(tec.n)}.</strong> ${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
-    <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>`);
+    <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
+    <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
   clearInterval(fumoTimer);
   const tick = () => {
     const c = $("#fumo-count");
@@ -204,12 +206,17 @@ function fumoAct(a, el) {
     case "fumo-craving": fumoCravingDialog(); return true;
     case "fumo-about":
       openDialog(`
-        <h3>Riesci a resistere ancora 5 minuti?</h3>
-        <p class="muted small">Se sì, il conto alla rovescia parte adesso.</p>
-        <button class="btn primary wide" data-act="fumo-wait">Sì, provo</button>
-        <button class="btn ghost wide" data-act="fumo-relapse">No, ho fumato</button>`);
+        <h3>Quanti minuti riesci a resistere?</h3>
+        <p class="muted small">Scrivi il tempo che ti aspetti. Il conto parte adesso.</p>
+        <input id="fumo-min" type="number" min="1" max="120" step="1" value="5" autofocus>
+        <button class="btn primary wide" data-act="fumo-wait">Inizia</button>
+        <button class="btn ghost wide" data-act="dlg-close">Annulla</button>`);
       return true;
-    case "fumo-wait": fumoCravingDialog(5); return true;
+    case "fumo-wait": {
+      const m = Math.min(120, Math.max(1, parseInt($("#fumo-min").value) || 5));
+      fumoCravingDialog(m);
+      return true;
+    }
     case "fumo-done":
       clearInterval(fumoTimer);
       S.fumo.active = null;
@@ -219,22 +226,27 @@ function fumoAct(a, el) {
       return true;
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
-    case "fumo-relapse":
-      openDialog(`
-        <h3>Quante sigarette hai fumato?</h3>
-        <p class="muted small">Il conto riparte da adesso, ma le sigarette restano registrate nel totale.</p>
-        <input id="fumo-n" type="number" min="1" max="100" step="1" value="1" autofocus>
-        <button class="btn primary wide" data-act="fumo-relapse-confirm">Registra e ripartire</button>
-        <button class="btn ghost wide" data-act="dlg-close">Annulla</button>`);
-      return true;
-    case "fumo-relapse-confirm": {
-      const n = Math.max(1, parseInt($("#fumo-n").value) || 1);
-      S.fumo.smoked = (S.fumo.smoked || 0) + n;
+    case "fumo-lit": {
+      const act = S.fumo.active;
+      clearInterval(fumoTimer);
+      const now = fumoNow();
+      const started = act ? act.end - act.mins * 60000 : new Date(S.fumo.start).getTime();
+      const elapsed = Math.max(0, now - started);
+      const m = Math.floor(elapsed / 60000), sec = Math.floor((elapsed % 60000) / 1000);
+      S.fumo.attempts = S.fumo.attempts || [];
+      S.fumo.attempts.push({ at: new Date(now).toISOString(), seconds: Math.round(elapsed / 1000) });
+      S.fumo.active = null;
+      S.fumo.smoked = (S.fumo.smoked || 0) + 1;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
-      S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + n;
+      S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + 1;
       S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
-      S.fumo.start = new Date().toISOString();
-      closeDialog(); save(); resetScroll = true; render(); toast("Si riparte, un giorno alla volta");
+      S.fumo.start = new Date(now).toISOString();
+      save(); resetScroll = true;
+      openDialog(`
+        <h3>Hai resistito ${m} ${m === 1 ? "minuto" : "minuti"} e ${sec} ${sec === 1 ? "secondo" : "secondi"}</h3>
+        <p class="muted small">Il conto del tempo senza fumare riparte da adesso. Puoi ricominciare quando vuoi.</p>
+        <button class="btn primary wide" data-act="dlg-close">Ok</button>`);
+      render();
       return true;
     }
   }
