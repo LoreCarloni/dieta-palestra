@@ -58,6 +58,10 @@ function renderFumo() {
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
+    <div class="btns">
+      <button class="btn primary" data-act="fumo-craving">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
+      <button class="btn danger" data-act="fumo-relapse">Ho fumato</button>
+    </div>
     <section class="card">
       <div class="muted small">Senza fumare da</div>
       <div class="stat-v" style="font-size:1.6rem">${esc(fumoDuration(st.ms))}</div>
@@ -73,7 +77,6 @@ function renderFumo() {
       </div>
       <p class="muted small">La stima della vita recuperata conta 11 minuti per sigaretta evitata ed è solo indicativa.</p>
     </section>
-    <button class="btn primary wide" data-act="fumo-craving">${f.active && f.active.end > fumoNow() ? "Riprendi il conto alla rovescia" : "Ho voglia di fumare"}</button>
     <p class="muted small">Voglie superate oggi: ${resistedToday}. In totale: ${(f.resisted || []).length} superate su ${(f.cravings || []).length} registrate.</p>
     <section class="card">
       <h3>Prossimo traguardo</h3>
@@ -87,7 +90,6 @@ function renderFumo() {
       <h3>Impostazioni</h3>
       <div class="btns">
         <button class="btn ghost" data-act="fumo-edit">Modifica dati</button>
-        <button class="btn danger" data-act="fumo-relapse">Ho fumato</button>
       </div>
       <p class="muted small">Se hai fumato, non è un fallimento: riparti da adesso. I giorni fatti prima restano nello storico${f.best ? ` (record: ${esc(fumoDuration(f.best))})` : ""}.</p>
     </section>`;
