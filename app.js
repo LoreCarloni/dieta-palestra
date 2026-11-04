@@ -1121,6 +1121,13 @@ function dayComment(k) {
     if (pd.length) {
       const leftK = Math.round(tg.kcal - t.kcal - dk), leftP = Math.round(tg.protein - t.p - dp);
       if (leftK <= 0) lines.push({ lvl: "bad", text: "Con quanto previsto non c'è spazio per il pranzo: niente pasta né pane, al massimo verdura e albume." });
+      // pasti fissi (scritti con la parola "fisso"): si mangiano per forza, il resto va ridotto
+      if (leftK < 0) {
+        const each = S.plannedDinner.split("\n").filter((x) => x.trim()).map((l) => ({ fixed: /\bfisso\b/i.test(l), items: parseDiary(l.replace(/,?\s*fisso\b/i, "")) }));
+        const fixedKcal = each.filter((x) => x.fixed).reduce((q, x) => q + x.items.reduce((w, i) => w + i.kcal, 0), 0);
+        const free = each.filter((x) => !x.fixed).flatMap((x) => x.items).sort((p, q) => q.kcal - p.kcal);
+        if (free.length && each.some((x) => x.fixed)) lines.push({ lvl: "bad", text: `Il pasto fisso vale ${r0(fixedKcal)} kcal. Per restare nel target puoi togliere circa ${r0(-leftK)} kcal: per esempio ${free.slice(0, 3).map((x) => x.name).join(", ")}.` });
+      }
       lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Previsto: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
     }
   }
