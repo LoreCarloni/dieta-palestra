@@ -249,6 +249,16 @@ function kcalBar(v, target) {
   return `<div class="bar-over" role="img" aria-label="${perc} per cento dell'obiettivo"><span class="base" style="width:${base}%"></span><span class="extra" style="width:${extra}%"></span></div><div class="muted small">${perc}% dell'obiettivo</div>`;
 }
 
+// Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
+const HABIT_FOODS = ["Cotoletta di pollo impanata", "Patatine fritte", "Crocchette di patate", "Pizza margherita", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Cioccolato fondente", "Frutta secca mista", "Gelato alla crema"];
+function habitCard() {
+  const have = new Set(allFoods().map((f) => norm(f.name).trim()));
+  const missing = HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
+  if (!missing.length) return "";
+  const done = HABIT_FOODS.length - missing.length;
+  return `<section class="card habit-card"><h2>I tuoi alimenti abituali<span class="pill ok">${done} di ${HABIT_FOODS.length}</span></h2><p class="muted small">Inseriscili una volta sola, dall'etichetta. Poi li ritrovi in ricerca e i conti tornano per sempre.</p>${missing.slice(0, 3).map((n) => `<div class="row"><span>${esc(n)}</span><button class="btn small-btn primary" data-act="habit-add" data-name="${esc(n)}">Inserisci</button></div>`).join("")}</section>`;
+}
+
 function renderToday() {
   const k = view.date;
   const d = day(k);
@@ -270,6 +280,7 @@ function renderToday() {
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
+  ${k === todayKey() ? habitCard() : ""}
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
     <div class="center"><div class="date">${isToday ? "Oggi" : esc(fmtDate(k, { weekday: "long" }))}</div><div class="muted small">${esc(fmtDate(k, { day: "numeric", month: "long", year: "numeric" }))}</div></div>
@@ -1540,14 +1551,14 @@ function exerciseDialog(prefill = {}) {
     <button class="btn primary wide" data-act="save-ex">Aggiungi</button>`);
 }
 
-function customFoodDialog() {
+function customFoodDialog(prefill = "") {
   openDialog(`
     <h3>Nuovo alimento</h3>
     <p class="muted small">Copia i valori per 100 g dall'etichetta. Lo trovi poi tra "I miei alimenti".</p>
     <div class="field"><label>Da dove vengono i valori</label>
       <div class="seg" id="c-src"><button type="button" data-act="c-src" data-v="Valori dall'etichetta del prodotto">Etichetta</button><button type="button" data-act="c-src" data-v="Tabella ufficiale">Tabella ufficiale</button><button type="button" data-act="c-src" data-v="Stima, non verificata">Stima</button></div>
     </div>
-    <div class="field"><label>Nome</label><input id="c-name" type="text" autofocus></div>
+    <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}" autofocus></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
       <div class="field"><label>Porzione tipica (g)</label><input id="c-portion" type="number" inputmode="decimal" min="1" value="100"></div>
@@ -1712,6 +1723,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
+    case "habit-add": dlg().dataset.slot = "giorno"; return customFoodDialog(el.dataset.name);
     case "c-src": {
       document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b === el));
       dlg().dataset.src = el.dataset.v; break;
