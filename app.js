@@ -240,11 +240,22 @@ let resetScroll = false;
 let scrollToId = null;
 // Previsione automatica: quando cambiano i cibi mangiati di oggi, la parte generata si ricalcola sul rimanente.
 // Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
+// Ordine della giornata: colazione, pranzo, spuntini, cena. Usato sia per mostrare sia per segnare come mangiati.
+const mealRank = (line) => {
+  const n = foodKey(line);
+  if (/yogurt|latte|cereal|polvere|albume|fiocchi|colazione|caffe|cappuccino/.test(n)) return 0;
+  if (/pasta|riso|pane|pranzo/.test(n)) return 1;
+  if (/frutta|mela|banana|spuntino|merenda|mandorl|noci|pistacchi/.test(n)) return 2;
+  return 3;
+};
+const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
+
 function refreshForecast() {
   const k = view.date, future = k > todayKey();
   if (future) {
     // giorno futuro senza previsione: l'app propone subito cosa mangiare; se c'e gia una previsione la lascia com'e
-    if (S.plannedDinner) return;
+    // rigenera se la previsione e vuota o era solo quella generata in automatico
+    if (S.plannedDinner && S.plannedDinner !== (S.autoLines || []).join("\n")) return;
     const gen = autoPlan(S.blockedToday || "", "", k).split("\n").filter((x) => x.trim());
     if (gen.length) { S.autoLines = gen; S.plannedDinner = gen.join("\n"); save(); }
     return;
@@ -863,7 +874,7 @@ function renderPvList(q) {
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("")}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(sortPlanLines(S.plannedDinner).length ? sortPlanLines(S.plannedDinner) : ["Scrivi colazione, pranzo e cena, una riga per alimento con i grammi."]).map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("")}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1899,7 +1910,7 @@ function act(a, el) {
       break;
     }
     case "plan-eat-one": {
-      const lines = S.plannedDinner.split("\n").filter((x) => x.trim());
+      const lines = sortPlanLines(S.plannedDinner);
       const line = lines[+el.dataset.i];
       if (!line) break;
       const items = parseDiary(line.replace(/,?\s*bloccato\b/i, ""));
@@ -1912,7 +1923,7 @@ function act(a, el) {
       break;
     }
     case "plan-del-one": {
-      const lines = S.plannedDinner.split("\n").filter((x) => x.trim());
+      const lines = sortPlanLines(S.plannedDinner);
       if (lines[+el.dataset.i]) { unblock([lines[+el.dataset.i]]); lines.splice(+el.dataset.i, 1); }
       S.plannedDinner = lines.join("\n");
       break;
