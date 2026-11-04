@@ -257,7 +257,7 @@ pre.ex { background: var(--bg); padding: 8px 10px; border-radius: 10px; font-siz
 .mrow-h { display: flex; justify-content: space-between; gap: 10px; }
 .mrow .bar { margin: 4px 0 2px; height: 6px; }
 
-.upd-bar { position: fixed; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top)); z-index: 20; border: 0; background: var(--accent); color: var(--card); font-weight: 600; padding: 12px; border-radius: 12px; cursor: pointer; }
+.upd-bar { box-sizing: border-box; white-space: normal; line-height: 1.3; text-align: center; font-size: 0.92rem; overflow: hidden; position: fixed; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top)); z-index: 20; border: 0; background: var(--accent); color: var(--card); font-weight: 600; padding: 12px; border-radius: 12px; cursor: pointer; }
 
 .recovery { background: var(--card); border: 2px solid var(--accent); border-left-width: 8px; border-radius: 14px; padding: 14px; margin: 12px 0; box-shadow: 0 4px 14px rgba(15, 118, 110, 0.18); }
 .recovery-title { font-size: 1.25rem; font-weight: 800; color: var(--accent); letter-spacing: 0.01em; }
