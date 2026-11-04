@@ -5,15 +5,15 @@
   --text: #1c1c1e;
   --muted: #8e8e93;
   --line: rgba(60, 60, 67, 0.16);
-  --accent: #007aff;
-  --accent-soft: #e5f1ff;
-  --good: #34c759;
-  --bad: #ff3b30;
-  --warn: #ff9500;
-  --p: #af52de;
-  --c: #007aff;
-  --f: #ff9500;
-  --w: #32ade6;
+  --accent: #3f7fd6;
+  --accent-soft: #e8f0fb;
+  --good: #3fa566;
+  --bad: #d9685c;
+  --warn: #d89a4a;
+  --p: #8f72c9;
+  --c: #4a86d4;
+  --f: #d89a4a;
+  --w: #5aa6c4;
   --radius: 14px;
   color-scheme: light;
 }
