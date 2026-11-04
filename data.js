@@ -49,6 +49,7 @@ const FOODS = [
   ["Lasagne al forno", 165, 9, 14, 8, 300, "Piatti"],
   ["Passata di pomodoro", 21, 1.3, 3, 0.2, 100, "Condimenti", "CREA 2019: Pomodori, passata"],
   ["Sugo di pomodoro", 50, 1.5, 6, 2, 100, "Condimenti", "valori stimati, sugo di pomodoro con un filo d'olio"],
+  ["Sugo con pancetta e fagiolini", 414, 6, 6, 40, 100, "Condimenti", "valori stimati: 1 cucchiaio = 35 g, circa 145 kcal"],
   ["Pesto", 470, 5, 6, 47, 20, "Condimenti"],
   ["Ragù", 140, 9, 4, 10, 80, "Condimenti"],
   // Proteine
