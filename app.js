@@ -307,6 +307,11 @@ function habitDialog() {
 }
 // Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
 const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 100, src: "Stima, non verificata (ricetta di famiglia)" };
+// Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
+const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
+function ensureProteinPowder() {
+  if (!S.customFoods.some((x) => x.name === PROTEIN_POWDER.name)) S.customFoods.push({ ...PROTEIN_POWDER });
+}
 function ensureMomCutlet() {
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
@@ -829,7 +834,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
   };
   const ALB = [45, 10.7, 0.8, 0.2], YOG = [57, 10, 3.6, 0.2], TAC = [135, 29, 0, 2], PAS = [340, 13.5, 64, 2.5];
-  // proteine magre: albume a volontà, poi yogurt e tacchino, senza superare le calorie
+  // proteine: yogurt greco 0% con 10 g di proteine in polvere (valori dal database e dall'alimento personale), poi albume e tacchino
+  if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); add("Proteine in polvere", 10, [380, 78, 6, 5]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
   if (needP > 5) { const tg2 = Math.min(150, Math.round(needP / 0.29 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
   // carboidrati: pasta solo se entra e se servono
@@ -2370,6 +2376,7 @@ window.addEventListener("focus", checkUpdate);
 setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }, 60000);
 checkUpdate();
 ensureMomCutlet();
+ensureProteinPowder();
 setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
