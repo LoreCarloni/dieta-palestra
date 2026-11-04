@@ -1716,7 +1716,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="field"><label for="pb-search">Cerca un cibo bloccato nel database</label><input id="pb-search" type="search" autocomplete="off" placeholder="per esempio pollo impanato"></div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Altre previsioni per colazione, pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="chips" id="pb-cats">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="pb-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Altre previsioni per colazione, pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       renderPvList("");
       renderPbList("");
       return;
@@ -1729,6 +1729,10 @@ function act(a, el) {
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
       $("#pv-search").value = "";
       renderPvList("");
+      break;
+    }
+    case "pb-cat": {
+      $("#pb-list").innerHTML = allFoods().filter((f) => f.cat === el.dataset.c && !f.perServing).map((f) => `<button class="item" data-act="pb-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
       break;
     }
     case "pb-pick": {
@@ -2114,7 +2118,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
-  if (e.target.id === "pb-search") renderPbList(e.target.value);
+
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
