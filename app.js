@@ -1670,14 +1670,21 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><div class="field"><label for="plan-dinner">Previsto per pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="4">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Alimento (scegli dal database)</label><input id="plan-new-name" type="text" list="plan-foods" placeholder="per esempio Pasta integrale"><datalist id="plan-foods">${allFoods().filter((f) => !f.perServing).map((f) => `<option value="${esc(f.name)}">`).join("")}</datalist></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><div class="field"><label for="plan-dinner">Previsto per pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="4">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
       S.myPlan.forEach((x, i) => { x.name = val(`#plan-n-${i}`).trim() || x.name; x.qty = val(`#plan-q-${i}`).trim() || x.qty; });
       S.plannedDinner = val("#plan-dinner").trim();
       const nn = val("#plan-new-name").trim(), nq = val("#plan-new-qty").trim();
-      if (nn) S.myPlan.splice(1, 0, { name: nn, qty: nq ? `${nq.replace(",", ".")} g` : "" });
+      if (nn) {
+        const f = allFoods().find((x) => !x.perServing && norm(x.name) === norm(nn));
+        const g = num1(nq);
+        const row = { name: f ? f.name : nn, qty: g ? `${g} g` : "" };
+        if (f && g) Object.assign(row, { g, kcal: Math.round((f.kcal * g) / 100), p: Math.round((f.p * g) / 100), c: Math.round((f.c * g) / 100), f: Math.round((f.f * g) / 100) });
+        if (f && g) row.qty = `${g} g, ${row.kcal} kcal, ${row.p} g di proteine`;
+        S.myPlan.splice(1, 0, row);
+      }
       closeDialog(); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
