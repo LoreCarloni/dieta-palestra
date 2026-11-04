@@ -1537,8 +1537,28 @@ function barcodeDialog() {
     <h3>Scansiona il codice a barre</h3>
     <video id="bc-video" autoplay playsinline muted></video>
     <p class="muted small" id="bc-status">Inquadra il codice a barre sulla confezione.</p>
+    <label class="btn ghost wide label-file">Scatta una foto del codice<input id="bc-file" type="file" accept="image/*" capture="environment" class="visually-hidden"></label>
     <div class="field"><label for="bc-manual">Oppure scrivi le cifre sotto le barre</label><input id="bc-manual" type="text" inputmode="numeric" placeholder="8000000000000"></div>
     <button class="btn primary wide" data-act="bc-lookup">Cerca codice</button>`);
+  // foto del codice: funziona anche quando la diretta della fotocamera resta nera
+  const file = $("#bc-file");
+  if (file) file.addEventListener("change", async () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    stopScan();
+    const status = (t) => { const el = $("#bc-status"); if (el) el.textContent = t; };
+    status("Leggo il codice dalla foto...");
+    try {
+      await loadZxing();
+      const url = URL.createObjectURL(f);
+      const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]]]);
+      const res = await new ZXing.BrowserMultiFormatReader(hints).decodeFromImageUrl(url);
+      URL.revokeObjectURL(url);
+      lookupBarcode(res.getText());
+    } catch {
+      status("Non riesco a leggere il codice dalla foto. Riprova più vicino e dritto, oppure scrivi le cifre a mano.");
+    }
+  });
   startScan();
 }
 async function startScan() {
