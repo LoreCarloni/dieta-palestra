@@ -2,6 +2,7 @@
 // Valori medi indicativi (tabelle CREA ed etichette comuni).
 const FOODS = [
   ["Cotolette di pollo al forno o in friggitrice ad aria", 190, 27, 7, 5, 100, "Secondi", "valori dichiarati dall'utente", 100],
+  ["Cotoletta di pollo impanata", 265, 25, 14, 13, 100, "Secondi", "valori stimati: impanata con uovo, parmigiano e pangrattato, cotta"],
   ["Petto di tacchino cotto in friggitrice ad aria", 135, 29, 0, 2, 100, "Secondi", "valori dichiarati dall'utente"],
   // Colazione e latticini
   ["Latte parzialmente scremato", 46, 3.5, 5, 1.5, 200, "Colazione", "CREA 2019: Latte di vacca, pastorizzato, parzialmente scremato"],
