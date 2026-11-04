@@ -1168,7 +1168,11 @@ function dayComment(k) {
     }
   }
   const sgarriWeek = overview(k, 7).over.length;
-  if (sgarriWeek >= 2) lines.push({ lvl: "bad", text: `Settimana: ${sgarriWeek} sgarri nei 7 giorni. Il recupero del primo non era ancora finito quando ne hai fatto un altro, e per questo il percorso si allunga.` });
+  const sgarriPrev = overview(addDays(k, -7), 7).over.length;
+  if (sgarriWeek >= 1 || sgarriPrev >= 1) {
+    const cmp = sgarriWeek < sgarriPrev ? `${sgarriPrev - sgarriWeek} in meno della settimana prima` : sgarriWeek > sgarriPrev ? `${sgarriWeek - sgarriPrev} in più della settimana prima` : "come la settimana prima";
+    lines.push({ lvl: sgarriWeek > sgarriPrev ? "bad" : sgarriWeek < sgarriPrev ? "good" : "warn", text: `Settimana: ${sgarriWeek} sgarri, la settimana prima ${sgarriPrev}. Sono ${cmp}.` });
+  }
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
