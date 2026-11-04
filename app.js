@@ -251,12 +251,23 @@ function kcalBar(v, target) {
 
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
 const HABIT_FOODS = ["Cotoletta di pollo impanata", "Patatine fritte", "Crocchette di patate", "Pizza margherita", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Cioccolato fondente", "Frutta secca mista", "Gelato alla crema"];
-function habitCard() {
+function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
-  const missing = HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
-  if (!missing.length) return "";
+  return HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
+}
+// Avviso a comparsa, una volta al giorno, finche mancano alimenti abituali. "Piu tardi" lo rimanda a domani.
+function habitDialog() {
+  const missing = missingHabits();
   const done = HABIT_FOODS.length - missing.length;
-  return `<section class="card habit-card"><h2>I tuoi alimenti abituali<span class="pill ok">${done} di ${HABIT_FOODS.length}</span></h2><p class="muted small">Inseriscili una volta sola, dall'etichetta. Poi li ritrovi in ricerca e i conti tornano per sempre.</p>${missing.slice(0, 3).map((n) => `<div class="row"><span>${esc(n)}</span><button class="btn small-btn primary" data-act="habit-add" data-name="${esc(n)}">Inserisci</button></div>`).join("")}</section>`;
+  openDialog(`
+    <h3>I tuoi alimenti abituali</h3>
+    <p class="muted small">${done} di ${HABIT_FOODS.length} inseriti. Inseriscili una volta sola, dall'etichetta: poi li ritrovi in ricerca e i conti tornano per sempre.</p>
+    ${missing.slice(0, 3).map((n) => `<div class="row"><span>${esc(n)}</span><button class="btn small-btn primary" data-act="habit-add" data-name="${esc(n)}">Inserisci</button></div>`).join("")}
+    <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
+}
+function maybeHabitDialog() {
+  if (!S.profile || S.habitSeen === todayKey() || !missingHabits().length) return;
+  habitDialog();
 }
 
 function renderToday() {
@@ -280,7 +291,6 @@ function renderToday() {
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
-  ${k === todayKey() ? habitCard() : ""}
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
     <div class="center"><div class="date">${isToday ? "Oggi" : esc(fmtDate(k, { weekday: "long" }))}</div><div class="muted small">${esc(fmtDate(k, { day: "numeric", month: "long", year: "numeric" }))}</div></div>
@@ -1724,6 +1734,7 @@ function act(a, el) {
     }
     case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
     case "habit-add": dlg().dataset.slot = "giorno"; return customFoodDialog(el.dataset.name);
+    case "habit-later": S.habitSeen = todayKey(); save(); return closeDialog();
     case "c-src": {
       document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b === el));
       dlg().dataset.src = el.dataset.v; break;
@@ -2256,6 +2267,7 @@ window.addEventListener("pageshow", checkUpdate);
 window.addEventListener("focus", checkUpdate);
 setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }, 60000);
 checkUpdate();
+setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
