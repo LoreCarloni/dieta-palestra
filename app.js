@@ -312,15 +312,15 @@ function weekCard() {
   const tr = ps.rows.filter((r) => r.d.meals.length > 0);
   if (!tr.length) return `<section class="card week-card"><h2>Questa settimana</h2><p class="muted small">Nessun giorno registrato ancora.</p></section>`;
   const sumK = tr.reduce((a, r) => a + r.t.kcal, 0), sumT = tr.reduce((a, r) => a + r.tg.kcal, 0);
-  const diff = Math.round(sumK - sumT);
-  const avgK = Math.round(sumK / tr.length);
+  const diffTot = Math.round(sumK - sumT);
+  const diffDay = Math.round(diffTot / tr.length);
   const sumP = tr.reduce((a, r) => a + r.t.p, 0), sumPT = tr.reduce((a, r) => a + r.tg.protein, 0);
-  const cls = Math.abs(diff) <= 0.05 * sumT ? "good" : diff > 0 ? "bad" : "good";
-  const txt = diff > 0 ? "sopra il target" : "sotto il target";
+  const cls = diffTot > 0.05 * sumT ? "bad" : "good";
+  const word = diffDay > 0 ? "sopra" : "sotto";
   return `<section class="card week-card"><h2>Questa settimana <span class="muted small">${tr.length} ${tr.length === 1 ? "giorno registrato" : "giorni registrati"} su 7</span></h2>
-    <div class="week-big ${cls}">${r0(Math.abs(diff))} kcal</div>
-    <div class="muted small">${txt} sommando i giorni registrati. Media di ${r0(avgK)} kcal al giorno.</div>
-    <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g sommando i giorni registrati.</div></section>`;
+    <div class="week-big ${cls}">${r0(Math.abs(diffDay))} kcal</div>
+    <div class="muted small">in media al giorno ${word} il target. In totale, nella settimana, ${diffTot > 0 ? "sei sopra" : "sei sotto"} di ${r0(Math.abs(diffTot))} kcal.</div>
+    <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g in totale.</div></section>`;
 }
 
 function renderToday() {
