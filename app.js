@@ -730,14 +730,15 @@ function autoPlan(blockedText = "", planText = "") {
   };
   const ALB = [45, 10.7, 0.8, 0.2], YOG = [57, 10, 3.6, 0.2], TAC = [135, 29, 0, 2], PAS = [340, 13.5, 64, 2.5];
   // proteine magre: albume a volontà, poi yogurt e tacchino, senza superare le calorie
-  let g = 0;
-  while (needP > 0 && g < 400 && needK - ALB[0] * 1 > 0) { g += 50; if (needK - ALB[0] * g / 100 < 0) break; }
-  if (g > 0) add("Albume", g, ALB);
-  if (needP > 5 && needK > 150) { const yg = needK > 300 ? 150 : 0; if (yg) add("Yogurt greco 0%", yg, YOG); }
-  if (needP > 5 && needK > 200) { let tg2 = Math.min(150, Math.round(Math.max(0, needP) / 0.29 / 10) * 10); if (needK - TAC[0] * tg2 / 100 < 0) tg2 = Math.max(0, Math.round(needK / 1.35 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
+  if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
+  if (needP > 5) { const tg2 = Math.min(150, Math.round(needP / 0.29 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
-  if (needC > 4) { const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5); if (pg >= 10) add("Pasta integrale", pg, PAS); }
+  if (needC > 4) {
+    const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5);
+    if (pg >= 40) add("Pasta integrale", pg, PAS);
+    else { const bg = Math.round((needC / 0.595) / 5) * 5; if (bg > 0) add("Pane bianco", bg, [268, 8.1, 59.5, 0.5]); }
+  }
   // verdura: riempie senza calorie
   out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
   return out.join("\n");
