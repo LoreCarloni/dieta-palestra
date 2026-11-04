@@ -120,7 +120,12 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
 .btn.primary { background: var(--accent); color: #fff; }
 .btn.ghost { border-color: var(--line); color: var(--text); }
 .btn.danger { border-color: var(--bad); color: var(--bad); }
-.btn.wide { width: 100%; margin-top: 10px; }
+.btn.wide { width: 100%; margin-top: 10px; padding: 13px 16px; font-size: 1rem; }
+.btn.done { background: transparent; color: var(--good); border: 1px solid var(--good); }
+.plan-quick { margin-top: 8px; }
+.plan-quick .btns { margin-top: 4px; }
+dialog .btns { gap: 10px; }
+dialog .btn.wide + .btn.wide { margin-top: 8px; }
 .small-btn { padding: 6px 10px; font-size: 0.85rem; margin-top: 6px; }
 .water-n { margin-bottom: 2px; }
 
