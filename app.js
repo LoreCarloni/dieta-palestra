@@ -1088,10 +1088,10 @@ function dayComment(k) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
-    if (rem < 250) parts.push(`${rem <= 0 ? "Hai già finito il budget della giornata" : `Ti restano solo ${r0(rem)} kcal`}: per ${meal} resta leggero, verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti. Non compensare saltando i pasti di domani.`);
+    if (rem < 250) parts.push(`${rem <= 0 ? "Hai già finito il budget della giornata" : `Mangiato finora: restano solo ${r0(rem)} kcal`}: per ${meal} resta leggero, verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti. Non compensare saltando i pasti di domani.`);
     else {
       const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
-      parts.push(`Ti restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. A cena` : `Per ${meal}`}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
+      parts.push(`Mangiato finora: restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. A cena` : `Per ${meal}`}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
     }
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
@@ -1100,11 +1100,11 @@ function dayComment(k) {
   if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
-      lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
+      lines.push({ lvl: "tip", text: `Mangiato finora: restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
     } else {
       const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
       const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
-      lines.push({ lvl: "tip", text: `Oggi ti restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
+      lines.push({ lvl: "tip", text: `Mangiato finora: restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
     }
   }
   const st7 = periodStats(k, 7);
@@ -1164,7 +1164,7 @@ function dayComment(k) {
         const free = each.filter((x) => !x.fixed).flatMap((x) => x.items).sort((p, q) => q.kcal - p.kcal);
         if (free.length && each.some((x) => x.fixed)) lines.push({ lvl: "bad", text: `Il pasto bloccato per oggi vale ${r0(fixedKcal)} kcal. Per restare nel target puoi togliere circa ${r0(-leftK)} kcal: per esempio ${free.slice(0, 3).map((x) => x.name).join(", ")}.` });
       }
-      lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Previsto: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
+      lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Con la previsione: ${r0(dk)} kcal e ${r0(dp)} g di proteine in più. Restano ${leftK} kcal e ${leftP} g di proteine.` });
     }
   }
   const sgarriWeek = overview(k, 7).over.length;
