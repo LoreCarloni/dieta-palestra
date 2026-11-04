@@ -1535,7 +1535,7 @@ function stopScan() { if (scanner) { try { scanner.reset(); } catch {} scanner =
 function barcodeDialog() {
   openDialog(`
     <h3>Scansiona il codice a barre</h3>
-    <video id="bc-video" playsinline muted></video>
+    <video id="bc-video" autoplay playsinline muted></video>
     <p class="muted small" id="bc-status">Inquadra il codice a barre sulla confezione.</p>
     <div class="field"><label for="bc-manual">Oppure scrivi le cifre sotto le barre</label><input id="bc-manual" type="text" inputmode="numeric" placeholder="8000000000000"></div>
     <button class="btn primary wide" data-act="bc-lookup">Cerca codice</button>`);
@@ -1548,9 +1548,14 @@ async function startScan() {
     if (!dlg().open || !$("#bc-video")) return;
     const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]]]);
     scanner = new ZXing.BrowserMultiFormatReader(hints, 300);
-    await scanner.decodeFromVideoDevice(null, "bc-video", (res) => {
-      if (res) { const code = res.getText(); stopScan(); lookupBarcode(code); }
-    });
+    const onResult = (res) => { if (res) { const code = res.getText(); stopScan(); lookupBarcode(code); } };
+    // camera posteriore esplicita, cosi il video non resta nero su iPhone
+    try {
+      await scanner.decodeFromConstraints({ audio: false, video: { facingMode: { ideal: "environment" } } }, "bc-video", onResult);
+    } catch {
+      await scanner.decodeFromVideoDevice(null, "bc-video", onResult);
+    }
+    const v = $("#bc-video"); if (v) { v.muted = true; v.setAttribute("playsinline", ""); v.play && v.play().catch(() => {}); }
   } catch {
     status("Fotocamera non disponibile. Scrivi il codice a mano qui sotto.");
   }
