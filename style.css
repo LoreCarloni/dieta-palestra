@@ -53,12 +53,16 @@
   --w: #64d2ff;
   color-scheme: dark;
 }
+:root[data-theme="dark"] body { background-image: radial-gradient(circle at 85% 0%, rgba(120, 120, 140, 0.25), transparent 55%), linear-gradient(175deg, #101014 0%, #050507 100%); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body { background-image: radial-gradient(circle at 85% 0%, rgba(120, 120, 140, 0.25), transparent 55%), linear-gradient(175deg, #101014 0%, #050507 100%); }
+}
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   background: var(--bg);
-  background-image: radial-gradient(circle at 15% 0%, rgba(63, 127, 214, 0.22), transparent 45%), radial-gradient(circle at 90% 30%, rgba(143, 114, 201, 0.18), transparent 40%), radial-gradient(circle at 40% 100%, rgba(63, 165, 102, 0.14), transparent 45%);
+  background-image: radial-gradient(circle at 85% 0%, rgba(255, 255, 255, 0.9), transparent 55%), linear-gradient(175deg, #f4f1ee 0%, #e6e4ec 100%);
   background-attachment: fixed;
   color: var(--text);
   font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
