@@ -63,8 +63,8 @@ body {
   padding-bottom: calc(76px + env(safe-area-inset-bottom));
 }
 button, input, select, textarea { font: inherit; color: inherit; }
-.top { padding: calc(10px + env(safe-area-inset-top)) 16px 4px; }
-.top h1 { margin: 0; font-size: 1.15rem; color: var(--accent); }
+.top { padding: calc(14px + env(safe-area-inset-top)) 16px 2px; }
+.top h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
 main { max-width: 640px; margin: 0 auto; padding: 8px 16px 16px; }
 h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 h3 { margin: 0 0 8px; padding-right: 32px; }
@@ -167,7 +167,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 
 .nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: color-mix(in srgb, var(--card) 88%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 0.5px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
 .nav button { flex: 1; border: 0; background: none; padding: 16px 4px; font-weight: 600; color: var(--muted); cursor: pointer; }
-.nav button.active { color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+.nav button.active { color: var(--accent); }
 
 dialog { width: min(560px, calc(100% - 24px)); max-height: 85vh; border: 0; border-radius: 18px; padding: 18px 16px; background: var(--card); color: var(--text); overflow-y: auto; }
 dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
