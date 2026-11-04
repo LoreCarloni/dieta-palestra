@@ -2204,13 +2204,13 @@ async function codeStamp() {
     return (r.headers.get("etag") || "") + (r.headers.get("last-modified") || "") || null;
   } catch { return null; }
 }
-async function checkUpdate() {
-  const now = await codeStamp();
-  if (!now) return;
-  if (seenStamp === null) { seenStamp = now; return; }
-  if (now !== seenStamp) {
-    // nuova versione: pulisce la copia vecchia e ricarica da sola, senza toccare i dati salvati
-    seenStamp = now;
+// Quando arriva una versione nuova compare un avviso in alto: un tocco ricarica l'app. I dati salvati non vengono toccati.
+function showUpdateBar() {
+  if (document.querySelector(".upd-bar")) return;
+  const b = document.createElement("button");
+  b.className = "upd-bar";
+  b.textContent = "Nuova versione disponibile: tocca per aggiornare";
+  b.addEventListener("click", async () => {
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map((r) => r.unregister()));
@@ -2218,9 +2218,19 @@ async function checkUpdate() {
       await Promise.all(ks.map((k) => caches.delete(k)));
     } catch {}
     location.reload();
-  }
+  });
+  document.body.appendChild(b);
+}
+async function checkUpdate() {
+  const now = await codeStamp();
+  if (!now) return;
+  if (seenStamp === null) { seenStamp = now; return; }
+  if (now !== seenStamp) showUpdateBar();
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
+window.addEventListener("pageshow", checkUpdate);
+window.addEventListener("focus", checkUpdate);
+setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }, 60000);
 checkUpdate();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
