@@ -318,8 +318,8 @@ function weekCard() {
   const cls = diffTot > 0.05 * sumT ? "bad" : "good";
   const word = diffDay > 0 ? "sopra" : "sotto";
   return `<section class="card week-card"><h2>Questa settimana <span class="muted small">${tr.length} ${tr.length === 1 ? "giorno registrato" : "giorni registrati"} su 7</span></h2>
-    <div class="week-big ${cls}">${r0(Math.abs(diffDay))} kcal</div>
-    <div class="muted small">in media al giorno ${word} il target. In totale, nella settimana, ${diffTot > 0 ? "sei sopra" : "sei sotto"} di ${r0(Math.abs(diffTot))} kcal.</div>
+    <div class="week-big ${cls}">${r0(Math.abs(diffTot))} kcal</div>
+    <div class="muted small">nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.</div>
     <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g in totale.</div></section>`;
 }
 
