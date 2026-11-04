@@ -713,9 +713,10 @@ const dlg = () => $("#dlg");
 const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 // Crea la previsione: tiene i pasti fissi e completa il resto con alimenti magri, pasta e verdura, fino al target.
-function autoPlan() {
+function autoPlan(blockedText = "", planText = "") {
   const k = todayKey(), t = totals(k), tg = targets(k);
-  const each = (S.plannedDinner || "").split("\n").filter((x) => x.trim()).map((l) => ({ line: l, fixed: /\b(fisso|bloccato)\b/i.test(l), items: parseDiary(l.replace(/,?\s*(fisso|bloccato)\b/i, "")) }));
+  const src = [...blockedText.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato"), ...planText.split("\n").filter((x) => x.trim())];
+  const each = src.map((l) => ({ line: l, fixed: /\b(fisso|bloccato)\b/i.test(l), items: parseDiary(l.replace(/,?\s*(fisso|bloccato)\b/i, "")) }));
   const fixed = each.filter((x) => x.fixed);
   const fk = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.kcal, 0), 0);
   const fp = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.p, 0), 0);
@@ -1727,7 +1728,7 @@ function act(a, el) {
       if (!g || !(num1(g) > 0)) break;
       const box = $("#plan-dinner");
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
-      $("#pv-search").value = "";
+      const sv = $("#pv-search"); if (sv) sv.value = "";
       renderPvList("");
       break;
     }
@@ -1741,13 +1742,13 @@ function act(a, el) {
       if (!g || !(num1(g) > 0)) break;
       const box = $("#pv-blocked");
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
-      $("#pb-search").value = "";
+      const sb = $("#pb-search"); if (sb) sb.value = "";
       renderPbList("");
       break;
     }
     case "pv-auto": {
       const box = $("#plan-dinner");
-      if (box) box.value = autoPlan();
+      if (box) box.value = autoPlan(val("#pv-blocked"), val("#plan-dinner"));
       break;
     }
     case "pv-paste-add": {
