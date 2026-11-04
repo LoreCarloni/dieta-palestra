@@ -1221,13 +1221,10 @@ function macroDialog(m, k) {
   const status = m === "p"
     ? (diff >= 0 ? `Obiettivo raggiunto, ${r0(diff)} ${cfg.unit} in più.` : `Ti mancano ${r0(-diff)} ${cfg.unit} per l'obiettivo.`)
     : (over ? `Sei oltre l'obiettivo di ${r0(diff)} ${cfg.unit}.` : `Sei entro l'obiettivo, ti restano ${r0(Math.max(0, -diff))} ${cfg.unit}.`);
-  const top3 = rows.slice(0, 3);
-  const topShare = total ? Math.round((top3.reduce((a, x) => a + x.v, 0) / total) * 100) : 0;
   openDialog(`
     <h3>${cfg.label}: ${r0(cfg.val)} di ${r0(cfg.target)} ${cfg.unit}</h3>
     <p class="${kind === "troppo" || kind === "mancano" ? "bad" : "good"}"><b>${status}</b></p>
-    ${rows.length ? `<p class="small">${top3.length > 1 ? "" : ""}</p>
-    ${rows.map((x) => `<div class="mrow"><div class="mrow-h"><span>${esc(x.name)}</span><b>${r0(x.v)} ${cfg.unit}</b></div><div class="muted small">${Math.round((x.v / total) * 100)}% del totale${x.qty ? `, ${r0(x.qty)} ${x.qu}` : ""}</div>${bar(x.v, total, cfg.key === "kcal" ? "" : cfg.key)}</div>`).join("")}`
+    ${rows.length ? rows.map((x) => `<div class="mrow"><div class="mrow-h"><span>${esc(shortName(x.name))}</span><b>${r0(x.v)} ${cfg.unit}</b></div>${x.qty ? `<div class="muted small">${r0(x.qty)} ${x.qu}</div>` : ""}${bar(x.v, total, cfg.key === "kcal" ? "" : cfg.key)}</div>`).join("")
       : `<p class="muted small">Non hai ancora inserito alimenti che ne contengano.</p>`}
     <p class="muted small">${cfg.tip}</p>`);
 }
