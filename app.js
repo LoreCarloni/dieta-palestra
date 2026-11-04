@@ -294,7 +294,6 @@ function renderToday() {
     </div>
     ${plannedHtml(k, t, tg)}
     <div class="muted small tap-hint">Tocca Proteine o un'altra voce per vedere da dove arrivano i numeri.</div>
-    <div class="muted small">Bilancio stimato del giorno: <b class="${t.balance > 0 ? "bad" : "good"}">${t.balance > 0 ? "surplus" : "deficit"} di ${r0(Math.abs(t.balance))} kcal</b> (consumo ${r0(t.expenditure)} kcal)</div>
   </section>
 
   <section class="card">
@@ -1197,7 +1196,7 @@ function commentHtml(k) {
     ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">${meals} ${c.cut ? "Niente dolce e niente sgarri." : "Tieni 20 g di carboidrati per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
     : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
-  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
