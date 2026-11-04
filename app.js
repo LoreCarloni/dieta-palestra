@@ -1889,7 +1889,9 @@ function act(a, el) {
     case "pv-auto": {
       const box = $("#plan-dinner");
       S.autoForecast = true; S.forecastSnap = null;
-      if (box) box.value = autoPlan(val("#pv-blocked"), val("#plan-dinner"));
+      const kTd = todayKey(), over = targets(kTd).kcal - totals(kTd).kcal <= 0;
+      if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
+      if (box) box.value = over ? "" : autoPlan(val("#pv-blocked"), val("#plan-dinner"));
       S.autoLines = box ? box.value.split("\n").filter((x) => x.trim()) : [];
       break;
     }
