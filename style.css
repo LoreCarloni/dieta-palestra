@@ -91,8 +91,9 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   /* il bordo e in ombra, con la luce che arriva solo da alto a sinistra */
   box-shadow:
     0 12px 26px rgba(31, 38, 60, 0.12),
-    inset 0 0 22px 6px rgba(255, 255, 255, 0.55),
-    inset 0 -6px 12px -4px rgba(110, 104, 140, 0.16);
+    inset 0 0 28px 10px rgba(255, 255, 255, 0.7),
+    inset 4px 4px 14px -2px rgba(255, 255, 255, 0.9),
+    inset -6px -8px 18px -4px rgba(110, 104, 140, 0.22);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
 /* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
@@ -101,8 +102,8 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 10px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 22%, rgba(255, 255, 255, 0.05) 50%, rgba(120, 112, 150, 0.22) 85%, rgba(120, 112, 150, 0.12) 100%);
+  padding: 0;
+  background: none;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
