@@ -1541,6 +1541,9 @@ function customFoodDialog() {
   openDialog(`
     <h3>Nuovo alimento</h3>
     <p class="muted small">Copia i valori per 100 g dall'etichetta. Lo trovi poi tra "I miei alimenti".</p>
+    <div class="field"><label>Da dove vengono i valori</label>
+      <div class="seg" id="c-src"><button type="button" data-act="c-src" data-v="Valori dall'etichetta del prodotto">Etichetta</button><button type="button" data-act="c-src" data-v="Tabella ufficiale">Tabella ufficiale</button><button type="button" data-act="c-src" data-v="Stima, non verificata">Stima</button></div>
+    </div>
     <div class="field"><label>Nome</label><input id="c-name" type="text" autofocus></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
@@ -1705,9 +1708,14 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
+    case "c-src": {
+      document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b === el));
+      dlg().dataset.src = el.dataset.v; break;
+    }
     case "save-custom": {
-      const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100 };
+      const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
+      if (!f.src) return toast("Scegli da dove vengono i valori");
       S.customFoods = S.customFoods.filter((x) => x.name !== f.name).concat(f);
       save();
       return qtyDialog({ ...f, cat: "I miei alimenti" }, dlg().dataset.slot);
