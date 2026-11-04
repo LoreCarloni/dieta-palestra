@@ -1710,7 +1710,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="field"><label for="plan-dinner">Altre previsioni per colazione, pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       renderPvList("");
       return;
     }
@@ -1739,8 +1739,11 @@ function act(a, el) {
     }
     case "myplan-save": {
       const extra = val("#pv-paste").trim();
-      const base = val("#plan-dinner").trim();
-      S.plannedDinner = [base, extra].filter(Boolean).join("\n");
+      const base = val("#plan-dinner").trim().split("\n").filter((l) => !/,\s*bloccato$/i.test(l.trim())).join("\n");
+      const blocked = val("#pv-blocked").trim();
+      S.blockedToday = blocked;
+      const blockedLines = blocked ? blocked.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato") : [];
+      S.plannedDinner = [...blockedLines, base, extra].filter(Boolean).join("\n");
       closeDialog(); break;
     }
     case "tab-misure": view.tab = "misure"; resetScroll = true; break;
