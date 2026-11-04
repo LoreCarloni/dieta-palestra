@@ -1202,7 +1202,7 @@ function commentHtml(k) {
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
-const shortName = (n) => { const x = n.split(",")[0].trim(); return x.length > 38 ? x.slice(0, 36).trim() + "..." : x; };
+const shortName = (n) => { const x = n.replace(/^Aggiungi alimento\s*/i, "").split(",")[0].trim(); return x.length > 38 ? x.slice(0, 36).trim() + "..." : x; };
 function macroDialog(m, k) {
   const d = day(k), t = totals(k), tg = targets(k);
   const cfg = {
@@ -1226,7 +1226,7 @@ function macroDialog(m, k) {
   openDialog(`
     <h3>${cfg.label}: ${r0(cfg.val)} di ${r0(cfg.target)} ${cfg.unit}</h3>
     <p class="${kind === "troppo" || kind === "mancano" ? "bad" : "good"}"><b>${status}</b></p>
-    ${rows.length ? `<p class="small">${top3.length > 1 ? `Le prime ${top3.length} voci pesano il ${topShare}% del totale: ${top3.map((x) => esc(shortName(x.name))).join(", ")}.` : `Quasi tutto viene da ${esc(shortName(top3[0].name))}.`}</p>
+    ${rows.length ? `<p class="small">${top3.length > 1 ? "" : ""}</p>
     ${rows.map((x) => `<div class="mrow"><div class="mrow-h"><span>${esc(x.name)}</span><b>${r0(x.v)} ${cfg.unit}</b></div><div class="muted small">${Math.round((x.v / total) * 100)}% del totale${x.qty ? `, ${r0(x.qty)} ${x.qu}` : ""}</div>${bar(x.v, total, cfg.key === "kcal" ? "" : cfg.key)}</div>`).join("")}`
       : `<p class="muted small">Non hai ancora inserito alimenti che ne contengano.</p>`}
     <p class="muted small">${cfg.tip}</p>`);
