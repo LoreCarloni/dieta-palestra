@@ -39,6 +39,8 @@ S.myPlan = S.myPlan || [
   { name: "Pollo", qty: "300 g crudi a sera" },
 ];
 if (!S.myPlan.some((x) => x.name === "Target kcal (medico)")) S.myPlan.push({ name: "Target kcal (medico)", qty: "1250 kcal" });
+// Recupero: il target medico scende a 1250 kcal (una volta sola, senza toccare altri valori scelti dall'utente).
+if (!S.medKcal1250) { const row = S.myPlan.find((x) => x.name === "Target kcal (medico)"); if (row) row.qty = "1250 kcal"; S.medKcal1250 = true; }
 S.plannedDinner = S.plannedDinner || "";
 // piano aggiornato: 10 g di polvere per ogni yogurt e ogni albume
 S.myPlan.forEach((x) => {
@@ -304,6 +306,23 @@ function unblock(lines) {
   S.blockedToday = S.blockedToday.split("\n").filter((x) => x.trim() && !keys.has(foodKey(x))).join("\n");
 }
 
+// Riepilogo della settimana, in evidenza in cima a Oggi: il conto conta sulla settimana, non sul singolo giorno.
+function weekCard() {
+  const ps = periodStats(todayKey(), 7);
+  const tr = ps.rows.filter((r) => r.d.meals.length > 0);
+  if (!tr.length) return `<section class="card week-card"><h2>Questa settimana</h2><p class="muted small">Nessun giorno registrato ancora.</p></section>`;
+  const sumK = tr.reduce((a, r) => a + r.t.kcal, 0), sumT = tr.reduce((a, r) => a + r.tg.kcal, 0);
+  const diff = Math.round(sumK - sumT);
+  const avgK = Math.round(sumK / tr.length);
+  const sumP = tr.reduce((a, r) => a + r.t.p, 0), sumPT = tr.reduce((a, r) => a + r.tg.protein, 0);
+  const cls = Math.abs(diff) <= 0.05 * sumT ? "good" : diff > 0 ? "bad" : "good";
+  const txt = diff > 0 ? "sopra il target" : "sotto il target";
+  return `<section class="card week-card"><h2>Questa settimana <span class="muted small">${tr.length} ${tr.length === 1 ? "giorno registrato" : "giorni registrati"} su 7</span></h2>
+    <div class="week-big ${cls}">${r0(Math.abs(diff))} kcal</div>
+    <div class="muted small">${txt} sommando i giorni registrati. Media di ${r0(avgK)} kcal al giorno.</div>
+    <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g sommando i giorni registrati.</div></section>`;
+}
+
 function renderToday() {
   const k = view.date;
   const d = day(k);
@@ -325,6 +344,7 @@ function renderToday() {
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
+  ${view.date === todayKey() ? weekCard() : ""}
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
     <div class="center"><div class="date">${isToday ? "Oggi" : esc(fmtDate(k, { weekday: "long" }))}</div><div class="muted small">${esc(fmtDate(k, { day: "numeric", month: "long", year: "numeric" }))}</div></div>
