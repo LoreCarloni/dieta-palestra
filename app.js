@@ -1741,7 +1741,7 @@ function parseLabel(text) {
   const t = text.replace(/\s+/g, " ");
   const num = (m) => (m ? parseFloat(m[1].replace(",", ".")) : null);
   // kcal: prima la cifra scritta accanto a "kcal", poi il valore dopo "/" accanto a kJ
-  const energy = t.match(/(\d+[.,]?\d*)\s*k\s?cal/i) || t.match(/\d+[.,]?\d*\s*k\s?j\s*\/\s*(\d+[.,]?\d*)/i);
+  const energy = t.match(/(\d+[.,]?\d*)\s*(?:kcal|keal|kca|k\s?cal|ky)\b/i) || t.match(/\d+[.,]?\d*\s*k\s?j\s*\/\s*(\d+[.,]?\d*)/i);
   return {
     kcal: num(energy),
     p: num(t.match(/prote\S*[^\d]{0,30}(\d+[.,]?\d*)/i)),
