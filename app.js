@@ -151,10 +151,9 @@ function plannedHtml(k, t, tg) {
   if (!pd.length) return "";
   const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
   const left = Math.round(tg.kcal - t.kcal - dk);
-  const row = (lbl, v, target) => `<div>${lbl} <b class="${v > target ? "bad" : "good"}">${r0(v)} di ${r0(target)}${lbl.includes("kcal") ? "" : " g"}</b></div>`;
-  return `<div class="plan-line"><div><b>Con quanto previsto</b></div>
-    <div>Kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
-    ${row("Proteine", t.p + dp, tg.protein)}${row("Carboidrati", t.c + dc, tg.carbs)}${row("Grassi", t.f + df, tg.fat)}</div>`;
+  const m = (cls, lbl, v, target) => `<div class="macro-btn"><span class="muted small">${lbl}</span><b>${r0(v)} di ${r0(target)} g</b>${bar(v, target, cls)}</div>`;
+  return `<div class="plan-line"><div><b>Con quanto previsto</b> · kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
+    <div class="macros">${m("p", "Proteine", t.p + dp, tg.protein)}${m("c", "Carboidrati", t.c + dc, tg.carbs)}${m("f", "Grassi", t.f + df, tg.fat)}</div></div>`;
 }
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
