@@ -77,9 +77,9 @@ h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 
 h3 { margin: 0 0 8px; padding-right: 32px; }
 /* effetto vetro (Liquid Glass): card traslucide, sfocate, con un bordo chiaro che brilla */
 .card {
-  background: color-mix(in srgb, var(--card) 90%, transparent);
-  -webkit-backdrop-filter: saturate(160%) blur(16px);
-  backdrop-filter: saturate(160%) blur(16px);
+  background: color-mix(in srgb, var(--card) 66%, transparent);
+  -webkit-backdrop-filter: saturate(170%) blur(14px);
+  backdrop-filter: saturate(170%) blur(14px);
   border: 0;
   border-radius: 22px;
   padding: 16px;
@@ -87,7 +87,14 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   position: relative;
   isolation: isolate;
   /* il bordo brilla verso l'interno (luce sul vetro), la superficie resta piatta */
-  box-shadow: 0 12px 26px rgba(31, 38, 60, 0.12), 0 0 0 0.5px rgba(60, 60, 90, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.9), inset 0 0 0 9px rgba(255, 255, 255, 0.0), inset 0 0 18px 4px rgba(120, 110, 165, 0.10);
+  /* spessore sfumato verso l'interno, come l'increspatura di una goccia sull'acqua */
+  box-shadow:
+    0 12px 26px rgba(31, 38, 60, 0.10),
+    0 0 0 0.5px rgba(60, 60, 90, 0.10),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 14px 6px rgba(255, 255, 255, 0.55),
+    inset 0 -10px 16px -8px rgba(120, 110, 165, 0.22),
+    inset 0 10px 14px -10px rgba(255, 255, 255, 0.9);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
 /* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
@@ -96,8 +103,8 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 9px;
-  background: linear-gradient(145deg, #ffffff 0%, rgba(255, 255, 255, 0.75) 25%, rgba(240, 240, 248, 0.6) 55%, rgba(196, 192, 214, 0.55) 100%);
+  padding: 3px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.4) 35%, rgba(200, 196, 220, 0.25) 70%, rgba(255, 255, 255, 0.6) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
