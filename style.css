@@ -302,13 +302,16 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 html, body, button, a, input, label, .btn { touch-action: manipulation; }
 
 /* il testo va a capo dentro i riquadri, niente zoom */
-body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: anywhere; word-break: break-word; }
+/* le parole non si spezzano: si va a capo solo tra una parola e l'altra */
+body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: break-word; }
+h2 { white-space: normal; }
+h2 .pill, h2 .link, h2 .badge { white-space: nowrap; flex: none; }
 dialog, .card { overflow-x: hidden; max-width: 100%; }
 
 /* Il mio piano: nome e quantità restano sulla stessa riga, il testo va a capo */
 .plan-rows .row { align-items: flex-start; }
-.plan-rows .row > div:first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-.plan-rows .row-r { flex: 0 1 45%; min-width: 0; white-space: normal; text-align: right; overflow-wrap: anywhere; }
+.plan-rows .row > div:first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
+.plan-rows .row-r { flex: 0 1 45%; min-width: 0; white-space: normal; text-align: right; overflow-wrap: break-word; }
 .plan-rows h2 { flex-wrap: wrap; }
 
 /* la previsione sta sotto i macro, senza riquadro */
