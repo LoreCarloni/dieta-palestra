@@ -152,7 +152,7 @@ function plannedHtml(k, t, tg) {
   const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
   const left = Math.round(tg.kcal - t.kcal - dk);
   const row = (lbl, v, target) => `<div>${lbl} <b class="${v > target ? "bad" : "good"}">${r0(v)} di ${r0(target)}${lbl.includes("kcal") ? "" : " g"}</b></div>`;
-  return `<div class="plan-line"><div><b>Con la cena prevista</b></div>
+  return `<div class="plan-line"><div><b>Con quanto previsto</b></div>
     <div>Kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
     ${row("Proteine", t.p + dp, tg.protein)}${row("Carboidrati", t.c + dc, tg.carbs)}${row("Grassi", t.f + df, tg.fat)}</div>`;
 }
@@ -1115,8 +1115,8 @@ function dayComment(k) {
     const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0);
     if (pd.length) {
       const leftK = Math.round(tg.kcal - t.kcal - dk), leftP = Math.round(tg.protein - t.p - dp);
-      if (leftK <= 0) lines.push({ lvl: "bad", text: "Con la cena prevista non c'è spazio per il pranzo: niente pasta né pane, al massimo verdura e albume." });
-      lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Cena prevista: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
+      if (leftK <= 0) lines.push({ lvl: "bad", text: "Con quanto previsto non c'è spazio per il pranzo: niente pasta né pane, al massimo verdura e albume." });
+      lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Previsto: ${r0(dk)} kcal e ${r0(dp)} g di proteine. Per il resto della giornata ti restano ${leftK} kcal e ${leftP} g di proteine.` });
     }
   }
   const sgarriWeek = overview(k, 7).over.length;
@@ -1148,7 +1148,7 @@ function commentHtml(k) {
     ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">${meals} ${c.cut ? "Niente dolce e niente sgarri." : "Tieni 20 g di carboidrati per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
     : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
-  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Cena prevista")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Piano di oggi<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
@@ -1670,7 +1670,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><div class="field"><label for="plan-dinner">Cena prevista, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="4">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Il mio piano</h3>${S.myPlan.map((x, i) => `<div class="field"><label for="plan-n-${i}">Nome</label><input id="plan-n-${i}" type="text" value="${esc(x.name)}"></div><div class="field"><label for="plan-q-${i}">Quantità</label><input id="plan-q-${i}" type="text" value="${esc(x.qty)}"></div>`).join("")}<div class="field"><label for="plan-new-name">Nome</label><input id="plan-new-name" type="text" placeholder="per esempio Pasta integrale"></div><div class="field"><label for="plan-new-qty">Grammi</label><input id="plan-new-qty" type="number" inputmode="decimal" placeholder="per esempio 40"></div><div class="field"><label for="plan-dinner">Previsto per pranzo e cena, una riga per alimento con i grammi</label><textarea id="plan-dinner" rows="4">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       return;
     }
     case "myplan-save": {
