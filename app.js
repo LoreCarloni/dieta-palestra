@@ -340,7 +340,9 @@ function renderToday() {
       <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
       ${S.plans.map((p) => `<div class="plan-quick"><span class="muted small">${esc(p.name)}</span><div class="btns">${p.days.map((dd) => {
         const done = d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`);
-        return `<button class="btn small-btn ${done ? "done" : "primary"}" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">${done ? `Fatto: giorno ${esc(dd.label)}` : `Ho fatto giorno ${esc(dd.label)}`}</button>`;
+        return done
+          ? `<span class="chip done-chip">Giorno ${esc(dd.label)} fatto</span>`
+          : `<button class="btn small-btn primary" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto giorno ${esc(dd.label)}</button>`;
       }).join("")}</div></div>`).join("")}
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
