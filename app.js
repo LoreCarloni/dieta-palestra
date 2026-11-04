@@ -739,7 +739,7 @@ function autoPlan(blockedText = "", planText = "") {
   if (needC > 15 && needK > 150) { const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5); if (pg >= 30 && needK - PAS[0] * pg / 100 > 0) add("Pasta integrale", pg, PAS); }
   // verdura: riempie senza calorie
   out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
-  return [...fixed.map((x) => x.line.trim()), ...out].join("\n");
+  return out.join("\n");
 }
 // Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
 function renderPbList(q) {
