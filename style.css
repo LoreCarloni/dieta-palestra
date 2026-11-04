@@ -80,18 +80,30 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   background: color-mix(in srgb, var(--card) 90%, transparent);
   -webkit-backdrop-filter: saturate(160%) blur(16px);
   backdrop-filter: saturate(160%) blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-bottom-color: rgba(120, 110, 165, 0.18);
-  border-right-color: rgba(120, 110, 165, 0.12);
+  border: 0;
   border-radius: 22px;
   padding: 16px;
   margin-bottom: 14px;
   position: relative;
   isolation: isolate;
-  box-shadow: 0 10px 24px rgba(31, 38, 60, 0.10), 0 0 0 0.5px rgba(60, 60, 90, 0.10);
+  /* il bordo brilla verso l'interno (luce sul vetro), la superficie resta piatta */
+  box-shadow: 0 10px 24px rgba(31, 38, 60, 0.10), 0 0 0 0.5px rgba(60, 60, 90, 0.10), inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 10px 1px rgba(255, 255, 255, 0.85);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
-.card::before { display: none; }
+/* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(145deg, #ffffff 0%, rgba(255, 255, 255, 0.5) 30%, rgba(255, 255, 255, 0.05) 60%, rgba(120, 110, 165, 0.25) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
 /* solo un filo di luce lungo il bordo alto, il resto della card resta piatto */
 .card::after {
   content: "";
