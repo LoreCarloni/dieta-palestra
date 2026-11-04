@@ -333,19 +333,21 @@ function renderToday() {
 
   <section class="card" id="sec-attivita">
     <h2>Attività</h2>
+    <div class="steps-box">
+      <label for="steps" class="muted small">Passi del giorno</label>
+      <input id="steps" class="steps-input" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps">
+    </div>
+    ${(() => {
+      const done = S.plans.flatMap((p) => p.days.filter((dd) => d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`)).map((dd) => `giorno ${dd.label}`));
+      return done.length ? `<p class="done-line">Palestra fatta: ${esc(done.join(", "))}</p>` : `<p class="muted small done-line">Palestra: nessun giorno ancora segnato</p>`;
+    })()}
     ${d.ex.map((e) => `<div class="row"><div><div>${esc(e.name)}</div><div class="muted small">${r0(e.min)} minuti${e.note ? ", " + esc(e.note) : ""}</div></div><div class="row-r"><span>${r0(e.kcal)}</span><button class="x" data-act="del-ex" data-id="${e.id}" aria-label="Elimina">×</button></div></div>`).join("")}
-    <div class="field inline"><label for="steps">Passi del giorno</label><input id="steps" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps"></div>
     <div class="btns">
       <button class="btn primary" data-act="activity-dialog">Scrivi o incolla le attività</button>
       <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
-      ${S.plans.map((p) => `<div class="plan-quick"><span class="muted small">${esc(p.name)}</span><div class="btns">${p.days.map((dd) => {
-        const done = d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`);
-        return done
-          ? `<span class="chip done-chip">Giorno ${esc(dd.label)} fatto</span>`
-          : `<button class="btn small-btn primary" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto giorno ${esc(dd.label)}</button>`;
-      }).join("")}</div></div>`).join("")}
       <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
     </div>
+    ${S.plans.map((p) => `<div class="plan-quick"><span class="muted small">${esc(p.name)}</span><div class="btns">${p.days.filter((dd) => !d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`)).map((dd) => `<button class="btn small-btn ghost" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto giorno ${esc(dd.label)}</button>`).join("")}</div></div>`).join("")}
   </section>
 
   <section class="card">

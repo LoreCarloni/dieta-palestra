@@ -121,7 +121,11 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
 .btn.ghost { border-color: var(--line); color: var(--text); }
 .btn.danger { border-color: var(--bad); color: var(--bad); }
 .btn.wide { width: 100%; margin-top: 10px; padding: 13px 16px; font-size: 1rem; }
-.chip.done-chip { border: 0; background: rgba(52, 199, 89, 0.16); color: var(--good); font-weight: 600; font-size: 0.85rem; padding: 6px 12px; }
+.steps-box { text-align: center; padding: 4px 0 10px; display: flex; flex-direction: column; align-items: center; }
+.steps-input { width: 100%; max-width: 220px; border: 0; background: transparent; padding: 0; font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; text-align: center; font-variant-numeric: tabular-nums; }
+.steps-input:focus { outline: none; }
+.done-line { margin: 6px 0 8px; font-weight: 600; color: var(--good); }
+.plan-quick .btn.ghost { padding: 6px 12px; }
 .plan-quick { margin-top: 8px; }
 .plan-quick .btns { margin-top: 4px; }
 dialog .btns { gap: 10px; }
