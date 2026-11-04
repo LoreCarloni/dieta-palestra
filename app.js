@@ -224,7 +224,25 @@ function periodStats(endKey, n) {
 // ---------- Rendering principale ----------
 let resetScroll = false;
 let scrollToId = null;
+// Previsione automatica: quando cambiano i cibi mangiati di oggi, la parte generata si ricalcola sul rimanente.
+// Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
+function refreshForecast() {
+  if (!S.autoForecast || view.date !== todayKey()) return;
+  const k = todayKey(), t = totals(k), tg = targets(k);
+  const snap = [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
+  if (snap === S.forecastSnap) return;
+  S.forecastSnap = snap;
+  // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
+  const prev = S.autoLines || [];
+  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.includes(x));
+  const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", "").split("\n").filter((x) => x.trim());
+  S.autoLines = gen;
+  S.plannedDinner = [...kept, ...gen].join("\n");
+  save();
+}
+
 function render() {
+  refreshForecast();
   const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
@@ -1850,7 +1868,9 @@ function act(a, el) {
     }
     case "pv-auto": {
       const box = $("#plan-dinner");
+      S.autoForecast = true; S.forecastSnap = null;
       if (box) box.value = autoPlan(val("#pv-blocked"), val("#plan-dinner"));
+      S.autoLines = box ? box.value.split("\n").filter((x) => x.trim()) : [];
       break;
     }
     case "pv-paste-add": {
