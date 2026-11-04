@@ -360,7 +360,7 @@ function renderToday() {
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
     <div class="center"><div class="date">${isToday ? "Oggi" : esc(fmtDate(k, { weekday: "long" }))}</div><div class="muted small">${esc(fmtDate(k, { day: "numeric", month: "long", year: "numeric" }))}</div></div>
-    <button class="icon" data-act="next-day" aria-label="Giorno successivo" ${k >= addDays(todayKey(), 1) ? "disabled" : ""}>›</button>
+    <button class="icon" data-act="next-day" aria-label="Giorno successivo">›</button>
   </div>
 
   <section class="card hero">
@@ -1754,7 +1754,7 @@ function act(a, el) {
   switch (a) {
     case "food-menu": view.foodMenu = !view.foodMenu; break;
     case "prev-day": view.date = addDays(k, -1); resetScroll = true; break;
-    case "next-day": if (k < addDays(todayKey(), 1)) view.date = addDays(k, 1); resetScroll = true; break;
+    case "next-day": view.date = addDays(k, 1); resetScroll = true; break;
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; resetScroll = true; break;
     case "period": view.period = +el.dataset.n; resetScroll = true; break;
     case "food": return foodDialog();
