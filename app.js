@@ -1676,7 +1676,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><details><summary>Incolla un riepilogo</summary><div class="field"><textarea id="pv-paste" rows="5" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn wide" data-act="pv-paste-add">Aggiungi alla previsione</button></details><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       renderPvList("");
       return;
     }
@@ -1688,6 +1688,14 @@ function act(a, el) {
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
       $("#pv-search").value = "";
       renderPvList("");
+      break;
+    }
+    case "pv-paste-add": {
+      const txt = val("#pv-paste").trim();
+      if (!txt) break;
+      const box = $("#plan-dinner");
+      box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + txt;
+      $("#pv-paste").value = "";
       break;
     }
     case "myplan-save": {
