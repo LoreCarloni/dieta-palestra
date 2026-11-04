@@ -799,7 +799,7 @@ function renderPvList(q) {
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button></div>`).join("")}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("")}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1815,6 +1815,19 @@ function act(a, el) {
       unblock([line]);
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
+      break;
+    }
+    case "plan-del-one": {
+      const lines = S.plannedDinner.split("\n").filter((x) => x.trim());
+      if (lines[+el.dataset.i]) { unblock([lines[+el.dataset.i]]); lines.splice(+el.dataset.i, 1); }
+      S.plannedDinner = lines.join("\n");
+      break;
+    }
+    case "plan-clear": {
+      if (!confirm("Cancellare tutta la previsione di oggi?")) break;
+      S.plannedDinner = "";
+      S.blockedToday = "";
+      toast("Previsione cancellata");
       break;
     }
     case "plan-eat": {
