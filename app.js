@@ -1677,6 +1677,11 @@ function exerciseDialog(prefill = {}) {
     <button class="btn primary wide" data-act="save-ex">Aggiungi</button>`);
 }
 
+// Alimento gia presente con gli stessi valori (kcal, proteine, carboidrati, grassi): non va duplicato.
+function sameValuesFood(f) {
+  const near = (a, b) => Math.abs((+a || 0) - (+b || 0)) <= 0.5;
+  return allFoods().find((x) => norm(x.name).trim() !== norm(f.name).trim() && near(x.kcal, f.kcal) && near(x.p, f.p) && near(x.c, f.c) && near(x.f, f.f)) || null;
+}
 function customFoodDialog(prefill = "") {
   openDialog(`
     <h3>Nuovo alimento</h3>
@@ -1818,6 +1823,8 @@ function act(a, el) {
     case "bc-confirm": {
       const f = JSON.parse(dlg().dataset.pending);
       delete f.missing;
+      const twin = sameValuesFood(f);
+      if (twin) { closeDialog(); return toast(`Ha gli stessi valori di "${twin.name}": non serve aggiungerlo, usa quello.`); }
       S.customFoods = S.customFoods.filter((x) => x.barcode !== f.barcode).concat(f);
       save();
       return qtyDialog(f, dlg().dataset.slot);
@@ -1864,6 +1871,8 @@ function act(a, el) {
       const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
+      const twin = sameValuesFood(f);
+      if (twin) return toast(`Ha gli stessi valori di "${twin.name}": non serve aggiungerlo, usa quello.`);
       S.customFoods = S.customFoods.filter((x) => x.name !== f.name).concat(f);
       save();
       return qtyDialog({ ...f, cat: "I miei alimenti" }, dlg().dataset.slot);
