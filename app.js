@@ -1740,7 +1740,8 @@ function loadTesseract() {
 function parseLabel(text) {
   const t = text.replace(/\s+/g, " ");
   const num = (m) => (m ? parseFloat(m[1].replace(",", ".")) : null);
-  const energy = t.match(/energia[^\d]{0,40}\d+\s*\/\s*(\d+)/i) || t.match(/(\d+[.,]?\d*)\s*kcal/i);
+  // kcal: prima la cifra scritta accanto a "kcal", poi il valore dopo "/" accanto a kJ
+  const energy = t.match(/(\d+[.,]?\d*)\s*k\s?cal/i) || t.match(/\d+[.,]?\d*\s*k\s?j\s*\/\s*(\d+[.,]?\d*)/i);
   return {
     kcal: num(energy),
     p: num(t.match(/prote\S*[^\d]{0,30}(\d+[.,]?\d*)/i)),
@@ -1753,12 +1754,16 @@ async function readLabel(file) {
   toast("Leggo l'etichetta...");
   try {
     const T = await loadTesseract();
-    const r = await T.recognize(file, "eng");
-    const v = parseLabel(r.data.text);
+    let r;
+    try { r = await T.recognize(file, "ita+eng"); } catch { r = await T.recognize(file, "eng"); }
+    const text = r.data.text || "";
+    const v = parseLabel(text);
     customFoodDialog();
     const set = (id, x) => { if (x !== null && !isNaN(x)) $("#" + id).value = x; };
     set("c-kcal", v.kcal); set("c-p", v.p); set("c-c", v.c); set("c-f", v.f);
-    toast("Controlla i valori letti prima di salvare");
+    // il testo letto resta visibile, cosi si capisce cosa correggere
+    $("#dlg-body").insertAdjacentHTML("beforeend", `<details class="more"><summary>Testo letto dall'etichetta</summary><pre class="ex">${esc(text.trim() || "(nessun testo riconosciuto)")}</pre></details>`);
+    toast(v.kcal == null && v.p == null ? "Non ho riconosciuto i valori: controlla il testo letto e inseriscili a mano" : "Controlla i valori letti prima di salvare");
   } catch (e) {
     toast("Non riesco a leggere l'etichetta: prova con più luce o inserisci i valori a mano");
   }
