@@ -251,3 +251,9 @@ dialog, .card { overflow-x: hidden; max-width: 100%; }
 .plan-rows .row > div:first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .plan-rows .row-r { flex: 0 1 45%; min-width: 0; white-space: normal; text-align: right; overflow-wrap: anywhere; }
 .plan-rows h2 { flex-wrap: wrap; }
+
+/* la previsione sta sotto i macro, senza riquadro */
+.plan-line { border: 0; padding: 0; margin: 4px 0 8px; display: block; background: none; }
+.plan-line .macros { margin-top: 4px; }
+/* il tasto Modifica resta su una riga */
+h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
