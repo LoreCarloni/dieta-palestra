@@ -265,6 +265,13 @@ function habitDialog() {
     ${missing.slice(0, 3).map((n) => `<div class="row"><span>${esc(n)}</span><button class="btn small-btn primary" data-act="habit-add" data-name="${esc(n)}">Inserisci</button></div>`).join("")}
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
+// Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
+const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 100, src: "Stima, non verificata (ricetta di famiglia)" };
+function ensureMomCutlet() {
+  if (S.momCutletAdded) return;
+  if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
+  S.momCutletAdded = true; save();
+}
 function maybeHabitDialog() {
   if (!S.profile || S.habitSeen === todayKey() || !missingHabits().length) return;
   habitDialog();
@@ -2287,6 +2294,7 @@ window.addEventListener("pageshow", checkUpdate);
 window.addEventListener("focus", checkUpdate);
 setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }, 60000);
 checkUpdate();
+ensureMomCutlet();
 setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
