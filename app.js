@@ -713,6 +713,13 @@ const dlg = () => $("#dlg");
 // ordine fisso: yogurt, proteine in polvere, albume (colazione), pasta (pranzo), pollo (cena), poi il resto, target in fondo
 const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
+// Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
+function renderPvList(q) {
+  const box = $("#pv-list");
+  if (!box) return;
+  const list = q.trim() ? searchFoods(q.trim()).slice(0, 8) : [];
+  box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
+}
 function myPlanCard() {
   return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2><p class="small" style="white-space:pre-line">${esc(S.plannedDinner) || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi."}</p></section>`;
 }
@@ -1669,8 +1676,19 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="10">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      renderPvList("");
       return;
+    }
+    case "pv-pick": {
+      const name = el.dataset.name;
+      const g = prompt(`Quanti grammi di ${name}?`, "100");
+      if (!g || !(num1(g) > 0)) break;
+      const box = $("#plan-dinner");
+      box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
+      $("#pv-search").value = "";
+      renderPvList("");
+      break;
     }
     case "myplan-save": {
       S.plannedDinner = val("#plan-dinner").trim();
@@ -2026,6 +2044,7 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
+  if (e.target.id === "pv-search") renderPvList(e.target.value);
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
