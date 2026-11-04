@@ -757,7 +757,7 @@ function renderPvList(q) {
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x) => `<div class="small plan-item">${esc(x)}</div>`).join("")}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x) => `<div class="plan-item">${esc(x)}</div>`).join("")}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1746,6 +1746,15 @@ function act(a, el) {
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
       const sb = $("#pb-search"); if (sb) sb.value = "";
       renderPbList("");
+      break;
+    }
+    case "plan-eat": {
+      if (!confirm("Spostare la previsione tra i cibi mangiati di oggi?")) break;
+      const items = parseDiary(S.plannedDinner);
+      const d = day(k, true);
+      items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
+      S.plannedDinner = "";
+      toast(`${items.length} alimenti segnati come mangiati`);
       break;
     }
     case "pv-auto": {
