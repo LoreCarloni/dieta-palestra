@@ -1028,7 +1028,6 @@ function dayComment(k) {
     lines.push({ lvl: "tip", text: `Per restare nel target riduci ${shortName(big.name).toLowerCase()} di circa ${r0(cut)} g.` });
   }
   const bySlot = (s) => d.meals.filter((m) => m.slot === s).reduce((a, m) => a + m.kcal, 0);
-  if (Object.keys(SLOT_NAMES).some((s) => bySlot(s) > 0)) lines.push({ lvl: "tip", text: `Ripartizione: colazione ${r0(bySlot("colazione"))} kcal, pranzo ${r0(bySlot("pranzo"))} kcal, cena ${r0(bySlot("cena"))} kcal.` });
   const fOver = t.f - tg.fat;
   const wk = periodStats(k, 7);
   const wkOk = wk.tracked >= 3;
