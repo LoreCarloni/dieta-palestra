@@ -270,6 +270,15 @@ function maybeHabitDialog() {
   habitDialog();
 }
 
+// Chiave di confronto di una riga di cibo: nome senza grammi e senza la scritta "bloccato".
+const foodKey = (line) => line.replace(/,?\s*bloccato\b/ig, "").replace(/[\d.,]+\s*g\b/ig, "").replace(/,\s*$/, "").trim().toLowerCase();
+// Toglie dai cibi bloccati le righe appena spostate tra i mangiati.
+function unblock(lines) {
+  if (!S.blockedToday) return;
+  const keys = new Set(lines.map(foodKey));
+  S.blockedToday = S.blockedToday.split("\n").filter((x) => x.trim() && !keys.has(foodKey(x))).join("\n");
+}
+
 function renderToday() {
   const k = view.date;
   const d = day(k);
@@ -1796,6 +1805,7 @@ function act(a, el) {
       if (!items.length) return toast("Questo alimento non è nel database: inseriscilo prima con Alimento non in lista, poi riprova.");
       const d = day(k, true);
       items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
+      unblock([line]);
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
       break;
@@ -1805,12 +1815,15 @@ function act(a, el) {
       // le righe che non si riconoscono restano nella previsione: nessuna riga viene persa
       const d = day(k, true);
       let moved = 0; const kept = [];
+      const movedLines = [];
       S.plannedDinner.split("\n").filter((x) => x.trim()).forEach((line) => {
         const items = parseDiary(line.replace(/,?\s*bloccato\b/i, ""));
         if (!items.length) { kept.push(line); return; }
+        movedLines.push(line);
         items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
         moved += items.length;
       });
+      unblock(movedLines);
       S.plannedDinner = kept.join("\n");
       toast(kept.length ? `${moved} alimenti segnati. Restano ${kept.length} righe non riconosciute.` : `${moved} alimenti segnati come mangiati`);
       break;
