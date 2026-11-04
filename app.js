@@ -973,7 +973,7 @@ function tokenScore(t, words) {
   for (const w of words) {
     if (w === t) return 3;
     if (w.startsWith(t)) best = Math.max(best, 2);
-    else if (t.length >= 5 && lev(t, w.slice(0, t.length + 1)) <= Math.round(t.length * 0.45)) best = Math.max(best, 1);
+    else if (t.length >= 5 && lev(t, w.slice(0, t.length + 1)) <= Math.max(1, Math.floor(t.length * 0.2))) best = Math.max(best, 1); // tolleranza stretta: niente falsi abbinamenti tipo lasagna-banana
   }
   return best;
 }
