@@ -75,55 +75,31 @@ button, input, select, textarea { font: inherit; color: inherit; }
 main { max-width: 640px; margin: 0 auto; padding: 8px 16px 16px; }
 h2 { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 h3 { margin: 0 0 8px; padding-right: 32px; }
-/* effetto vetro (Liquid Glass): card traslucide, sfocate, con un bordo chiaro che brilla */
+/* card bianche con filo di luce sottile in alto e bordo chiaro, ombra morbida fuori (anteprima B) */
 .card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82) 0%, rgba(240, 241, 244, 0.6) 100%);
-  -webkit-backdrop-filter: saturate(170%) blur(14px);
-  backdrop-filter: saturate(170%) blur(14px);
-  border: 0.5px solid rgba(20, 20, 30, 0.12);
+  background: var(--card);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-top-color: #ffffff;
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 14px;
   position: relative;
   isolation: isolate;
-  /* il bordo brilla verso l'interno (luce sul vetro), la superficie resta piatta */
-  /* spessore sfumato verso l'interno, come l'increspatura di una goccia sull'acqua */
-  /* il bordo e in ombra, con la luce che arriva solo da alto a sinistra */
-  box-shadow:
-    0 12px 26px rgba(31, 38, 60, 0.12),
-    inset 0 0 22px 2px rgba(20, 20, 30, 0.08),
-    inset 6px 8px 16px -10px rgba(255, 255, 255, 0.8),
-    inset -8px -10px 18px -10px rgba(20, 20, 30, 0.14);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-/* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
-/* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 0;
-  background: none;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-}
-/* solo un filo di luce lungo il bordo alto, il resto della card resta piatto */
 .card::after {
   content: "";
   position: absolute;
   top: 0;
-  left: 14px;
-  right: 14px;
+  left: 16px;
+  right: 16px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 1), transparent);
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
   pointer-events: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .card { background: linear-gradient(160deg, rgba(60, 60, 66, 0.55) 0%, rgba(28, 28, 32, 0.6) 100%); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.03); }
-  :root:not([data-theme="light"]) .card::before { background: linear-gradient(155deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 35%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.12) 100%); }
+  :root:not([data-theme="light"]) .card { background: #1c1c1e; border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+  :root:not([data-theme="light"]) .card::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent); }
 }
 .muted { color: var(--muted); }
 .small { font-size: 0.82rem; }
