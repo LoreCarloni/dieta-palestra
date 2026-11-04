@@ -1,6 +1,6 @@
 {
-  "name": "Dieta e Palestra",
-  "short_name": "Dieta",
+  "name": "DietaSei",
+  "short_name": "DietaSei",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
