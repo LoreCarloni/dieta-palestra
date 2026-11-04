@@ -10,7 +10,7 @@
   --good: #3fa566;
   --bad: #d9685c;
   --warn: #d89a4a;
-  --p: #8f72c9;
+  --p: #e0352b;
   --c: #4a86d4;
   --f: #d89a4a;
   --w: #5aa6c4;
@@ -29,7 +29,7 @@
     --good: #30d158;
     --bad: #ff453a;
     --warn: #ff9f0a;
-    --p: #bf5af2;
+    --p: #ff453a;
     --c: #0a84ff;
     --f: #ff9f0a;
     --w: #64d2ff;
@@ -47,7 +47,7 @@
   --good: #30d158;
   --bad: #ff453a;
   --warn: #ff9f0a;
-  --p: #bf5af2;
+  --p: #ff453a;
   --c: #0a84ff;
   --f: #ff9f0a;
   --w: #64d2ff;
@@ -63,7 +63,7 @@ body {
   margin: 0;
   background: var(--bg);
   background-color: #eeedf2;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.38  0 0 0 0 0.6  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.2  0 0 0 0 0.25  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   background-attachment: fixed;
   color: var(--text);
   font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -73,15 +73,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .top { padding: calc(14px + env(safe-area-inset-top)) 16px 2px; }
 .top h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
 main { max-width: 640px; margin: 0 auto; padding: 8px 16px 16px; }
-h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+h2 { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 h3 { margin: 0 0 8px; padding-right: 32px; }
 /* effetto vetro (Liquid Glass): card traslucide, sfocate, con un bordo chiaro che brilla */
 .card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72) 0%, rgba(247, 247, 250, 0.5) 60%, rgba(255, 255, 255, 0.62) 100%);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82) 0%, rgba(240, 241, 244, 0.6) 100%);
   -webkit-backdrop-filter: saturate(170%) blur(14px);
   backdrop-filter: saturate(170%) blur(14px);
-  border: 0.5px solid rgba(120, 110, 165, 0.14);
-  border-radius: 22px;
+  border: 0.5px solid rgba(20, 20, 30, 0.12);
+  border-radius: 16px;
   padding: 16px;
   margin-bottom: 14px;
   position: relative;
@@ -91,9 +91,9 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   /* il bordo e in ombra, con la luce che arriva solo da alto a sinistra */
   box-shadow:
     0 12px 26px rgba(31, 38, 60, 0.12),
-    inset 0 0 26px 2px rgba(110, 104, 140, 0.10),
+    inset 0 0 22px 2px rgba(20, 20, 30, 0.08),
     inset 6px 8px 16px -10px rgba(255, 255, 255, 0.8),
-    inset -8px -10px 18px -10px rgba(110, 104, 140, 0.18);
+    inset -8px -10px 18px -10px rgba(20, 20, 30, 0.14);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
 /* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
@@ -122,7 +122,7 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   pointer-events: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .card { background: linear-gradient(160deg, rgba(90, 120, 170, 0.34) 0%, rgba(60, 60, 110, 0.30) 60%, rgba(110, 70, 150, 0.30) 100%); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.03); }
+  :root:not([data-theme="light"]) .card { background: linear-gradient(160deg, rgba(60, 60, 66, 0.55) 0%, rgba(28, 28, 32, 0.6) 100%); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.03); }
   :root:not([data-theme="light"]) .card::before { background: linear-gradient(155deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 35%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.12) 100%); }
 }
 .muted { color: var(--muted); }
