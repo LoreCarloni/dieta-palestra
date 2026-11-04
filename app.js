@@ -83,6 +83,18 @@ const fmtDate = (k, opts = { weekday: "long", day: "numeric", month: "long" }) =
 const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
 
 let view = { tab: "oggi", date: todayKey(), period: 7 };
+// Previsione e cibi bloccati sono salvati per giorno: oggi o un giorno futuro (es. domani).
+S.plansByDay = S.plansByDay || {};
+{
+  const oldP = S.plannedDinner || "", oldB = S.blockedToday || "";
+  delete S.plannedDinner; delete S.blockedToday;
+  if (oldP || oldB) { S.plansByDay[todayKey()] = S.plansByDay[todayKey()] || { p: oldP, b: oldB }; }
+  const dayOfView = () => { try { return view.date; } catch (e) { return todayKey(); } }; // view non ancora inizializzata durante il caricamento
+  const per = (key, field) => Object.defineProperty(S, key, { configurable: true, enumerable: false,
+    get() { return (S.plansByDay[dayOfView()] || {})[field] || ""; },
+    set(v) { const d = dayOfView(); S.plansByDay[d] = S.plansByDay[d] || {}; S.plansByDay[d][field] = v; } });
+  per("plannedDinner", "p"); per("blockedToday", "b");
+}
 
 // Alimenti ripetuti ogni giorno: inseriti una sola volta all'apertura del giorno, ogni riga resta eliminabile.
 function applyHabits(k) {
@@ -148,7 +160,7 @@ function planFor(k) {
 }
 // macro della giornata contando anche la cena prevista
 function plannedHtml(k, t, tg) {
-  if (!S.plannedDinner || k !== todayKey() || S.days[k]?.closed) return "";
+  if (!S.plannedDinner || k < todayKey() || S.days[k]?.closed) return "";
   const pd = parseDiary(S.plannedDinner);
   if (!pd.length) return "";
   const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
@@ -229,15 +241,15 @@ let scrollToId = null;
 // Previsione automatica: quando cambiano i cibi mangiati di oggi, la parte generata si ricalcola sul rimanente.
 // Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
 function refreshForecast() {
-  if (!S.autoForecast || view.date !== todayKey()) return;
-  const k = todayKey(), t = totals(k), tg = targets(k);
+  if (!S.autoForecast || view.date < todayKey()) return;
+  const k = view.date, t = totals(k), tg = targets(k);
   const snap = [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
   if (snap === S.forecastSnap) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   const prev = S.autoLines || [];
   const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.includes(x));
-  const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", "").split("\n").filter((x) => x.trim());
+  const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", "", k).split("\n").filter((x) => x.trim());
   S.autoLines = gen;
   S.plannedDinner = [...kept, ...gen].join("\n");
   save();
@@ -348,7 +360,7 @@ function renderToday() {
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
     <div class="center"><div class="date">${isToday ? "Oggi" : esc(fmtDate(k, { weekday: "long" }))}</div><div class="muted small">${esc(fmtDate(k, { day: "numeric", month: "long", year: "numeric" }))}</div></div>
-    <button class="icon" data-act="next-day" aria-label="Giorno successivo" ${isToday ? "disabled" : ""}>›</button>
+    <button class="icon" data-act="next-day" aria-label="Giorno successivo" ${k >= addDays(todayKey(), 1) ? "disabled" : ""}>›</button>
   </div>
 
   <section class="card hero">
@@ -793,8 +805,8 @@ const dlg = () => $("#dlg");
 const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 // Crea la previsione: tiene i pasti fissi e completa il resto con alimenti magri, pasta e verdura, fino al target.
-function autoPlan(blockedText = "", planText = "") {
-  const k = todayKey(), t = totals(k), tg = targets(k);
+function autoPlan(blockedText = "", planText = "", k = todayKey()) {
+  const t = totals(k), tg = targets(k);
   const src = [...blockedText.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato"), ...planText.split("\n").filter((x) => x.trim())];
   const each = src.map((l) => ({ line: l, fixed: /\b(fisso|bloccato)\b/i.test(l), items: parseDiary(l.replace(/,?\s*(fisso|bloccato)\b/i, "")) }));
   const fixed = each.filter((x) => x.fixed);
@@ -1101,7 +1113,7 @@ function dayComment(k) {
   const lines = [];
   const diff = t.kcal - tg.kcal;
   // se la cena prevista supera il resto della giornata, niente consigli su pranzo e cena
-  const overPlanned = !!S.plannedDinner && k === todayKey() && parseDiary(S.plannedDinner).length > 0 && tg.kcal - t.kcal - parseDiary(S.plannedDinner).reduce((a, x) => a + x.kcal, 0) <= 0;
+  const overPlanned = !!S.plannedDinner && k >= todayKey() && parseDiary(S.plannedDinner).length > 0 && tg.kcal - t.kcal - parseDiary(S.plannedDinner).reduce((a, x) => a + x.kcal, 0) <= 0;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Non è una giornata in linea, e il recupero non la copre tutta.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
@@ -1234,7 +1246,7 @@ function dayComment(k) {
     journey = { over: all.over.length, days: all.days.length, pct, lowText };
   }
   // cena prevista: quanto resta per il resto della giornata
-  if (S.plannedDinner && k === todayKey() && !d.closed) {
+  if (S.plannedDinner && k >= todayKey() && !d.closed) {
     const pd = parseDiary(S.plannedDinner);
     const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0);
     if (pd.length) {
@@ -1742,7 +1754,7 @@ function act(a, el) {
   switch (a) {
     case "food-menu": view.foodMenu = !view.foodMenu; break;
     case "prev-day": view.date = addDays(k, -1); resetScroll = true; break;
-    case "next-day": if (k < todayKey()) view.date = addDays(k, 1); resetScroll = true; break;
+    case "next-day": if (k < addDays(todayKey(), 1)) view.date = addDays(k, 1); resetScroll = true; break;
     case "goto": view.date = el.dataset.k; view.tab = "oggi"; resetScroll = true; break;
     case "period": view.period = +el.dataset.n; resetScroll = true; break;
     case "food": return foodDialog();
@@ -1889,9 +1901,9 @@ function act(a, el) {
     case "pv-auto": {
       const box = $("#plan-dinner");
       S.autoForecast = true; S.forecastSnap = null;
-      const kTd = todayKey(), over = targets(kTd).kcal - totals(kTd).kcal <= 0;
+      const kTd = view.date, over = targets(kTd).kcal - totals(kTd).kcal <= 0;
       if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
-      if (box) box.value = over ? "" : autoPlan(val("#pv-blocked"), val("#plan-dinner"));
+      if (box) box.value = over ? "" : autoPlan(val("#pv-blocked"), val("#plan-dinner"), kTd);
       S.autoLines = box ? box.value.split("\n").filter((x) => x.trim()) : [];
       break;
     }
