@@ -736,7 +736,8 @@ function autoPlan(blockedText = "", planText = "") {
   if (needP > 5 && needK > 150) { const yg = needK > 300 ? 150 : 0; if (yg) add("Yogurt greco 0%", yg, YOG); }
   if (needP > 5 && needK > 200) { let tg2 = Math.min(150, Math.round(Math.max(0, needP) / 0.29 / 10) * 10); if (needK - TAC[0] * tg2 / 100 < 0) tg2 = Math.max(0, Math.round(needK / 1.35 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
   // carboidrati: pasta solo se entra e se servono
-  if (needC > 15 && needK > 150) { const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5); if (pg >= 30 && needK - PAS[0] * pg / 100 > 0) add("Pasta integrale", pg, PAS); }
+  // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
+  if (needC > 4) { const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5); if (pg >= 10) add("Pasta integrale", pg, PAS); }
   // verdura: riempie senza calorie
   out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
   return out.join("\n");
