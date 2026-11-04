@@ -893,9 +893,26 @@ function recentFoods() {
 }
 function allFoods() { return [...S.customFoods.map((f) => ({ ...f, cat: "I miei alimenti" })), ...FOODS]; }
 
+// Doppioni tra i propri alimenti: stessi valori, nomi diversi (o uguali con spazi diversi).
+function duplicateGroups() {
+  const groups = [];
+  S.customFoods.forEach((f) => {
+    const key = [f.kcal, f.p, f.c, f.f].map((x) => Math.round((+x || 0) * 2) / 2).join("|");
+    const g = groups.find((x) => x.key === key);
+    if (g) g.items.push(f); else groups.push({ key, items: [f] });
+  });
+  return groups.filter((g) => g.items.length > 1);
+}
+function duplicatesBanner() {
+  const groups = duplicateGroups();
+  if (!groups.length) return "";
+  const names = groups.map((g) => g.items.map((x) => `"${esc(x.name)}"`).join(" e ")).join("; ");
+  return `<div class="warn-line">Hai alimenti doppi con gli stessi valori: ${names}. <button class="link small-link" data-act="dedupe">Cancella i doppioni</button></div>`;
+}
 function foodDialog() {
   openDialog(`
     <h3>Aggiungi alimento</h3>
+    ${duplicatesBanner()}
     <input id="f-slot" type="hidden" value="giorno">
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
     <div id="f-list" class="list"></div>
@@ -2208,6 +2225,16 @@ function act(a, el) {
       break;
     }
     case "del-meal": { const d = day(k, true); d.meals = d.meals.filter((m) => m.id !== el.dataset.id); break; }
+    case "dedupe": {
+      // tiene il primo di ogni gruppo (quello verificato, se c'e) e cancella gli altri
+      const drop = new Set();
+      duplicateGroups().forEach((g) => {
+        const keep = g.items.find((x) => /verificat|CREA|etichetta/i.test(x.src || "")) || g.items[0];
+        g.items.forEach((x) => { if (x !== keep) drop.add(x.name + "|" + x.kcal); });
+      });
+      S.customFoods = S.customFoods.filter((x) => !drop.has(x.name + "|" + x.kcal));
+      save(); toast(`${drop.size} doppioni cancellati`); return foodDialog();
+    }
     case "del-custom": {
       const name = el.dataset.name;
       if (!confirm(`Eliminare "${name}" dalla memoria? Non si recupera.`)) break;
