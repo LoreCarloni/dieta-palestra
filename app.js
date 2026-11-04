@@ -757,7 +757,7 @@ function renderPvList(q) {
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2><p class="small" style="white-space:pre-line">${esc(S.plannedDinner) || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi."}</p></section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${(S.plannedDinner || "Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.").split("\n").filter((x) => x.trim()).map((x) => `<div class="small plan-item">${esc(x)}</div>`).join("")}</section>`;
 }
 function openDialog(html) {
   const d = dlg();

@@ -257,3 +257,6 @@ dialog, .card { overflow-x: hidden; max-width: 100%; }
 .plan-line .macros { margin-top: 4px; }
 /* il tasto Modifica resta su una riga */
 h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
+
+.plan-item { padding: 3px 0; border-bottom: 1px solid var(--line); }
+.plan-item:last-child { border-bottom: 0; }
