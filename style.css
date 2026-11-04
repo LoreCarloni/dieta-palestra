@@ -77,7 +77,7 @@ h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 
 h3 { margin: 0 0 8px; padding-right: 32px; }
 /* effetto vetro (Liquid Glass): card traslucide, sfocate, con un bordo chiaro che brilla */
 .card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82) 0%, rgba(206, 226, 252, 0.46) 42%, rgba(228, 216, 248, 0.5) 78%, rgba(255, 255, 255, 0.6) 100%);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72) 0%, rgba(247, 247, 250, 0.5) 60%, rgba(255, 255, 255, 0.62) 100%);
   -webkit-backdrop-filter: saturate(170%) blur(14px);
   backdrop-filter: saturate(170%) blur(14px);
   border: 0.5px solid rgba(120, 110, 165, 0.14);
@@ -91,9 +91,8 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   /* il bordo e in ombra, con la luce che arriva solo da alto a sinistra */
   box-shadow:
     0 12px 26px rgba(31, 38, 60, 0.12),
-    inset 0 0 14px 2px rgba(70, 60, 120, 0.14),
-    inset 1px 2px 3px rgba(255, 255, 255, 0.6),
-    inset -2px -3px 6px rgba(90, 80, 140, 0.14);
+    inset 0 0 22px 6px rgba(255, 255, 255, 0.55),
+    inset 0 -6px 12px -4px rgba(110, 104, 140, 0.16);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
 /* filo specolare: chiaro in alto a sinistra, quasi spento in basso a destra */
@@ -102,8 +101,8 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 3px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 70%, rgba(150, 140, 200, 0.16) 100%);
+  padding: 10px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 22%, rgba(255, 255, 255, 0.05) 50%, rgba(120, 112, 150, 0.22) 85%, rgba(120, 112, 150, 0.12) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
