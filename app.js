@@ -791,8 +791,11 @@ function foodDialog() {
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
+// Un alimento e verificato solo se la fonte e una tabella ufficiale o un'etichetta, non una stima o un valore dichiarato.
+const isVerified = (f) => /CREA|tabella|etichetta/i.test(f.src || "") && !/stima|dichiarat|calcolat/i.test(f.src || "");
+const sourceBadge = (f) => isVerified(f) ? `<span class="badge ok">verificato</span>` : `<span class="badge warn">stima</span>`;
 const foodItem = (f) => {
-  const item = `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
+  const item = `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)} ${sourceBadge(f)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
   return S.customFoods.some((x) => x.name === f.name) ? `<div class="item-row">${item}<button class="x" data-act="del-custom" data-name="${esc(f.name)}" aria-label="Elimina">×</button></div>` : item;
 };
 
@@ -1498,7 +1501,7 @@ function qtyDialog(f, slot) {
   openDialog(`
     <h3>${esc(f.name)}</h3>
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
-    <p class="muted small">${f.src ? `Fonte: ${esc(f.src)}.` : "Valori stimati, non ancora verificati: possono contenere errori."}</p>
+    <p class="muted small">${isVerified(f) ? `Verificato. Fonte: ${esc(f.src)}.` : `Stima non verificata${f.src ? ` (${esc(f.src)})` : ""}. I valori potrebbero contenere errori: se hai l'etichetta del prodotto, usala per correggerli.`}</p>
     ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
     <div class="field"><label>Quantità in grammi</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}></div>
     <div class="chips">${[0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>

@@ -324,3 +324,8 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 
 .plan-line.tiny { font-size: 0.72rem; margin: 2px 0 6px; color: var(--muted); }
 .plan-line.tiny b { color: var(--text); }
+
+/* etichette di affidabilita dei valori nutrizionali */
+.badge { display: inline-block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
+.badge.ok { background: rgba(52, 199, 89, 0.16); color: var(--good); }
+.badge.warn { background: rgba(255, 149, 0, 0.16); color: var(--warn); }
