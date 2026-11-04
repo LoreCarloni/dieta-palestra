@@ -260,3 +260,5 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 
 .plan-item { padding: 3px 0; border-bottom: 1px solid var(--line); }
 .plan-item:last-child { border-bottom: 0; }
+
+.warn-line.tiny { font-size: 0.7rem; padding: 3px 8px; margin: 4px 0; line-height: 1.3; }

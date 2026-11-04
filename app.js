@@ -285,7 +285,7 @@ function renderToday() {
     <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
     ${tg.plan ? `<div class="plan-line"><div>Target vero: <b>${tg.kcal + tg.plan.cutKcal} kcal</b></div><div>Target di recupero, da seguire adesso: <b>${tg.kcal} kcal</b> (meno ${tg.plan.cutKcal}) per altri ${tg.plan.daysLeft} giorni</div></div>` : ""}
     ${kcalBar(t.kcal, tg.kcal)}
-    ${tg.kcal < tg.bmr ? `<p class="warn-line small">Il target di oggi è sotto il tuo metabolismo basale (${r0(tg.bmr)} kcal). Un calo così va concordato con un medico o un dietista, soprattutto se ti alleni.</p>` : ""}
+    ${tg.kcal < tg.bmr ? `<p class="warn-line tiny">Sotto il metabolismo basale (${r0(tg.bmr)} kcal): da concordare con un medico.</p>` : ""}
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
       <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine <span class="info-dot" aria-hidden="true">i</span></span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
