@@ -1553,6 +1553,7 @@ function customFoodDialog() {
       <div class="field"><label>Grassi</label><input id="c-f" type="number" inputmode="decimal" min="0" step="0.1" value="0"></div>
     </div>
     <button class="btn primary wide" data-act="save-custom">Salva e continua</button>`);
+  dlg().dataset.src = "";
 }
 
 function quickKcalDialog() {
