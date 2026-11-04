@@ -48,6 +48,7 @@ const FOODS = [
   ["Pizza margherita", 255, 12.1, 35.5, 7.6, 300, "Piatti", "CREA 2019: Pizza con pomodoro e mozzarella"],
   ["Lasagne al forno", 165, 9, 14, 8, 300, "Piatti"],
   ["Passata di pomodoro", 21, 1.3, 3, 0.2, 100, "Condimenti", "CREA 2019: Pomodori, passata"],
+  ["Sugo di pomodoro", 50, 1.5, 6, 2, 100, "Condimenti", "valori stimati, sugo di pomodoro con un filo d'olio"],
   ["Pesto", 470, 5, 6, 47, 20, "Condimenti"],
   ["Ragù", 140, 9, 4, 10, 80, "Condimenti"],
   // Proteine
