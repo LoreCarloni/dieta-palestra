@@ -266,7 +266,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 3)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${(view.foodsOpen ? d.meals : d.meals.slice(0, 2)).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -306,7 +306,7 @@ function renderToday() {
     </div>` : ""}
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
-    ${d.meals.length > 3 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Espandi alimenti (${d.meals.length})`}</button>` : ""}
+    ${d.meals.length > 2 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Riduci elenco" : `Tutti (${d.meals.length})`}</button>` : ""}
   </section>
 
   ${myPlanCard()}
