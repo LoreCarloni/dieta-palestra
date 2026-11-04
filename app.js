@@ -1706,7 +1706,6 @@ function customFoodDialog(prefill = "") {
     <div class="field"><label>Da dove vengono i valori</label>
       <div class="seg" id="c-src"><button type="button" data-act="c-src" data-v="Valori dall'etichetta del prodotto">Etichetta</button><button type="button" data-act="c-src" data-v="Tabella ufficiale">Tabella ufficiale</button><button type="button" data-act="c-src" data-v="Stima, non verificata">Stima</button></div>
     </div>
-    <div class="field"><label>Stima prudente (alza kcal, carboidrati e grassi, mai le proteine)</label><select id="c-prud"><option value="0">No, valori esatti</option><option value="10">+10%</option><option value="20">+20%</option></select></div>
     <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}" autofocus></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
@@ -1889,7 +1888,8 @@ function act(a, el) {
       const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
-      const prud = +val("#c-prud") || 0;
+      // regola fissa: per le stime l'app alza kcal, carboidrati e grassi del 15%, le proteine restano uguali
+      const prud = /stima/i.test(f.src) ? 15 : 0;
       if (prud > 0) {
         // stima prudente: alzo kcal, carboidrati e grassi, lascio le proteine com'erano
         const up = (x) => Math.round(x * (1 + prud / 100) * 10) / 10;
