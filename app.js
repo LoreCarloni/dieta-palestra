@@ -1793,6 +1793,7 @@ function act(a, el) {
       const line = lines[+el.dataset.i];
       if (!line) break;
       const items = parseDiary(line.replace(/,?\s*bloccato\b/i, ""));
+      if (!items.length) return toast("Questo alimento non è nel database: inseriscilo prima con Alimento non in lista, poi riprova.");
       const d = day(k, true);
       items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
       lines.splice(+el.dataset.i, 1);
@@ -1801,11 +1802,17 @@ function act(a, el) {
     }
     case "plan-eat": {
       if (!confirm("Spostare la previsione tra i cibi mangiati di oggi?")) break;
-      const items = parseDiary(S.plannedDinner);
+      // le righe che non si riconoscono restano nella previsione: nessuna riga viene persa
       const d = day(k, true);
-      items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
-      S.plannedDinner = "";
-      toast(`${items.length} alimenti segnati come mangiati`);
+      let moved = 0; const kept = [];
+      S.plannedDinner.split("\n").filter((x) => x.trim()).forEach((line) => {
+        const items = parseDiary(line.replace(/,?\s*bloccato\b/i, ""));
+        if (!items.length) { kept.push(line); return; }
+        items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
+        moved += items.length;
+      });
+      S.plannedDinner = kept.join("\n");
+      toast(kept.length ? `${moved} alimenti segnati. Restano ${kept.length} righe non riconosciute.` : `${moved} alimenti segnati come mangiati`);
       break;
     }
     case "pv-auto": {
