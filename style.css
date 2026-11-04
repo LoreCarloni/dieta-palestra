@@ -305,7 +305,8 @@ html, body, button, a, input, label, .btn { touch-action: manipulation; }
 /* le parole non si spezzano: si va a capo solo tra una parola e l'altra */
 body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: break-word; }
 h2 { white-space: normal; }
-h2 .pill, h2 .link, h2 .badge { white-space: nowrap; flex: none; }
+h2 .link, h2 .badge { white-space: nowrap; flex: none; }
+h2 .pill { white-space: normal; flex: 0 1 auto; max-width: 62%; text-align: center; line-height: 1.25; }
 dialog, .card { overflow-x: hidden; max-width: 100%; }
 
 /* Il mio piano: nome e quantità restano sulla stessa riga, il testo va a capo */
