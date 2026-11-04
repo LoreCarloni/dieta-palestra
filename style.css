@@ -53,9 +53,9 @@
   --w: #64d2ff;
   color-scheme: dark;
 }
-:root[data-theme="dark"] body { background-color: #000; background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1.2px, transparent 1.8px); background-size: 22px 22px; }
+:root[data-theme="dark"] body { background-color: #050507; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.8  0 0 0 0 0.8  0 0 0 0 0.9  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body { background-color: #000; background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1.2px, transparent 1.8px); background-size: 22px 22px; }
+  :root:not([data-theme="light"]) body { background-color: #050507; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.8  0 0 0 0 0.8  0 0 0 0 0.9  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -63,8 +63,7 @@ body {
   margin: 0;
   background: var(--bg);
   background-color: #eeedf2;
-  background-image: radial-gradient(rgba(120, 100, 180, 0.28) 1.3px, transparent 1.9px);
-  background-size: 22px 22px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.38  0 0 0 0 0.6  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   background-attachment: fixed;
   color: var(--text);
   font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -81,28 +80,18 @@ h3 { margin: 0 0 8px; padding-right: 32px; }
   background: color-mix(in srgb, var(--card) 90%, transparent);
   -webkit-backdrop-filter: saturate(160%) blur(16px);
   backdrop-filter: saturate(160%) blur(16px);
-  border: 0;
+  border: 1px solid rgba(110, 100, 150, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-left-color: rgba(255, 255, 255, 0.8);
   border-radius: 20px;
   padding: 16px;
   margin-bottom: 14px;
   position: relative;
   isolation: isolate;
-  box-shadow: 0 12px 30px rgba(31, 38, 60, 0.10), 0 2px 6px rgba(31, 38, 60, 0.06), inset 0 2px 2px rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(31, 38, 60, 0.04);
+  box-shadow: 0 14px 32px rgba(31, 38, 60, 0.12), 0 2px 6px rgba(31, 38, 60, 0.07), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(110, 100, 150, 0.12);
 }
 /* bordo a spessore: piu luminoso in alto a sinistra, quasi invisibile in basso */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(150deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 18%, rgba(200, 200, 215, 0.35) 45%, rgba(255, 255, 255, 0.5) 75%, rgba(190, 190, 210, 0.9) 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-}
+.card::before { display: none; }
 /* riflesso morbido in alto, come la luce su vetro */
 .card::after {
   content: "";
