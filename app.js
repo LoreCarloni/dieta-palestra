@@ -241,9 +241,17 @@ let scrollToId = null;
 // Previsione automatica: quando cambiano i cibi mangiati di oggi, la parte generata si ricalcola sul rimanente.
 // Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
 function refreshForecast() {
-  if (!S.autoForecast || view.date < todayKey()) return;
-  const k = view.date, t = totals(k), tg = targets(k);
-  const snap = [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
+  const k = view.date, future = k > todayKey();
+  if (future) {
+    // giorno futuro senza previsione: l'app propone subito cosa mangiare; se c'e gia una previsione la lascia com'e
+    if (S.plannedDinner) return;
+    const gen = autoPlan(S.blockedToday || "", "", k).split("\n").filter((x) => x.trim());
+    if (gen.length) { S.autoLines = gen; S.plannedDinner = gen.join("\n"); save(); }
+    return;
+  }
+  if (!S.autoForecast) return;
+  const t = totals(k), tg = targets(k);
+  const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
   if (snap === S.forecastSnap) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
