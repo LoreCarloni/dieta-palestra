@@ -138,6 +138,7 @@ const FUMO_PENSIERI = [
   { id: "minuto", t: "Questo minuto passa anche se fumi. Prova a vedere quanti ne passano senza." },
   { id: "gusto", t: "Il gusto del cibo torna più in fretta di quanto immagini: ti accorgerai del pane che sa di pane." },
   { id: "non_sentirsi_bene", t: "Non devi sentirti bene per smettere: basta non accendere." },
+  { id: "stelline", t: "Dai, accendiamo un'altra stellina di Natale. Sarebbe la sigaretta, per chi non l'avesse capito." },
   { id: "comico_1", t: "Se la sigaretta fosse un'app, avrebbe quattro stelle e cento recensioni di gente che l'ha disinstallata." },
   { id: "comico_2", t: "Il pacchetto scrive 'nuoce gravemente alla salute'. Grazie, lo avevo capito dalla tosse." },
   { id: "comico_3", t: "Ogni sigaretta ti dice 'dai, solo questa'. Non l'ha mai detta una volta sola." },
