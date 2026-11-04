@@ -712,6 +712,34 @@ const dlg = () => $("#dlg");
 // ordine fisso: yogurt, proteine in polvere, albume (colazione), pasta (pranzo), pollo (cena), poi il resto, target in fondo
 const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
+// Crea la previsione: tiene i pasti fissi e completa il resto con alimenti magri, pasta e verdura, fino al target.
+function autoPlan() {
+  const k = todayKey(), t = totals(k), tg = targets(k);
+  const each = (S.plannedDinner || "").split("\n").filter((x) => x.trim()).map((l) => ({ line: l, fixed: /\bfisso\b/i.test(l), items: parseDiary(l.replace(/,?\s*fisso\b/i, "")) }));
+  const fixed = each.filter((x) => x.fixed);
+  const fk = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.kcal, 0), 0);
+  const fp = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.p, 0), 0);
+  const fc = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.c, 0), 0);
+  const ff = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.f, 0), 0);
+  let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
+  const out = [];
+  const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
+    out.push(`${name}, ${g} g`);
+    needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
+  };
+  const ALB = [45, 10.7, 0.8, 0.2], YOG = [57, 10, 3.6, 0.2], TAC = [135, 29, 0, 2], PAS = [340, 13.5, 64, 2.5];
+  // proteine magre: albume a volontà, poi yogurt e tacchino, senza superare le calorie
+  let g = 0;
+  while (needP > 0 && g < 400 && needK - ALB[0] * 1 > 0) { g += 50; if (needK - ALB[0] * g / 100 < 0) break; }
+  if (g > 0) add("Albume", g, ALB);
+  if (needP > 5 && needK > 150) { const yg = needK > 300 ? 150 : 0; if (yg) add("Yogurt greco 0%", yg, YOG); }
+  if (needP > 5 && needK > 200) { let tg2 = Math.min(150, Math.round(Math.max(0, needP) / 0.29 / 10) * 10); if (needK - TAC[0] * tg2 / 100 < 0) tg2 = Math.max(0, Math.round(needK / 1.35 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
+  // carboidrati: pasta solo se entra e se servono
+  if (needC > 15 && needK > 150) { const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5); if (pg >= 30 && needK - PAS[0] * pg / 100 > 0) add("Pasta integrale", pg, PAS); }
+  // verdura: riempie senza calorie
+  out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
+  return [...fixed.map((x) => x.line.trim()), ...out].join("\n");
+}
 // Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
 function renderPvList(q) {
   const box = $("#pv-list");
@@ -1682,7 +1710,7 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento e aggiungilo</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="plan-dinner">Una riga per alimento con i grammi, per colazione, pranzo e cena</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       renderPvList("");
       return;
     }
@@ -1694,6 +1722,11 @@ function act(a, el) {
       box.value = (box.value.trim() ? box.value.trim() + "\n" : "") + `${name}, ${num1(g)} g`;
       $("#pv-search").value = "";
       renderPvList("");
+      break;
+    }
+    case "pv-auto": {
+      const box = $("#plan-dinner");
+      if (box) box.value = autoPlan();
       break;
     }
     case "pv-paste-add": {
