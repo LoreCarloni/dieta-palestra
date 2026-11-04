@@ -293,7 +293,6 @@ function renderToday() {
       <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
     </div>
     ${plannedHtml(k, t, tg)}
-    <div class="muted small tap-hint">Tocca Proteine o un'altra voce per vedere da dove arrivano i numeri.</div>
   </section>
 
   <section class="card">
