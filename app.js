@@ -2111,7 +2111,53 @@ function act(a, el) {
         <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
         <div id="fv-res"></div>
+        <button class="btn ghost wide" data-act="dish-open">Piatto composto (es. pasta e zucca)</button>
         <button class="btn ghost wide" data-act="custom-food">Nuovo alimento</button>`);
+    }
+    case "dish-open": {
+      return openDialog(`
+        <h3>Piatto composto</h3>
+        <p class="muted small">Parti dalle domande facili: il peso di ogni ingrediente, o quanti cucchiai e quanto pesa un cucchiaio. Se non lo sai, lascia vuoto: resta una stima.</p>
+        <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" autofocus></div>
+        <div id="dish-rows"></div>
+        <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
+        <button class="btn primary wide" data-act="dish-save">Salva il piatto</button>`);
+    }
+    case "dish-add-row": {
+      const box = $("#dish-rows"); if (!box) break;
+      const i = box.children.length;
+      box.insertAdjacentHTML("beforeend", `<div class="dish-row" style="border-top:0.5px solid var(--line);padding:8px 0">
+        <div class="field"><label>Ingrediente</label><input class="dish-name" type="text" placeholder="Zucca"></div>
+        <div class="grid2">
+          <div class="field"><label>Grammi</label><input class="dish-g" type="text" inputmode="decimal" placeholder="es. 200"></div>
+          <div class="field"><label>Oppure cucchiai</label><input class="dish-n" type="text" inputmode="decimal" placeholder="es. 3"></div>
+        </div>
+        <div class="field"><label>Peso di un cucchiaio (g)</label><input class="dish-w" type="text" inputmode="decimal" placeholder="es. 15"></div>
+      </div>`);
+      break;
+    }
+    case "dish-save": {
+      const name = val("#dish-name").trim();
+      const rows = [...document.querySelectorAll("#dish-rows .dish-row")];
+      if (!name || !rows.length) return toast("Scrivi il nome e almeno un ingrediente");
+      let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0, missing = 0;
+      rows.forEach((r) => {
+        const ing = r.querySelector(".dish-name").value.trim();
+        const num1 = (x) => parseFloat(String(x).replace(",", ".")) || 0;
+        let g = num1(r.querySelector(".dish-g").value);
+        if (!g) g = num1(r.querySelector(".dish-n").value) * num1(r.querySelector(".dish-w").value);
+        if (!ing) return;
+        const f = byName(ing) || searchFoods(ing)[0];
+        if (!g) { missing++; return; }
+        if (!f) { missing++; tg += g; return; } // ingrediente sconosciuto: pesa nel piatto ma senza valori, il piatto resta incompleto
+        tg += g; tk += f.kcal * g / 100; tp += (f.p || 0) * g / 100; tc += (f.c || 0) * g / 100; tf += (f.f || 0) * g / 100;
+      });
+      if (!(tg > 0)) return toast("Serve almeno un ingrediente con il peso");
+      const complete = Math.round(((rows.length - missing) / rows.length) * 100);
+      const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${missing ? ", mancano alcuni ingredienti" : ""}` };
+      S.customFoods = S.customFoods.filter((x) => norm(x.name).trim() !== norm(name).trim()).concat(dish);
+      save();
+      return qtyDialog({ ...dish, cat: "I miei alimenti" }, "giorno");
     }
     case "fv-search": {
       const q = val("#fv-q").trim();

@@ -22,6 +22,7 @@ const FOODS = [
   ["Uovo intero, cotto (sodo o alla coque)", 128, 12.4, 0, 8.7, 60, "Proteine", "CREA 2019: Uova di gallina, intero, cotto, alla coque o sodo"],
   ["Albume", 43, 10.7, 0, 0, 100, "Proteine", "CREA 2019: Uova di gallina, albume"],
   // Pane, cereali, primi
+  ["Zucca gialla, fresca", 29, 1.1, 3.5, 0.1, 100, "Verdure", "CREA 2019: Zucca gialla, fresca"],
   ["Pane bianco (tipo 00)", 268, 8.1, 59.5, 0.5, 50, "Cereali", "CREA 2019: Pane bianco"],
   ["Pane integrale", 224, 8.5, 44.1, 1.3, 50, "Cereali", "CREA 2019: Pane di tipo integrale"],
   ["Crackers", 386, 9.4, 67.5, 10, 25, "Cereali", "CREA 2019: Crackers, salati"],
