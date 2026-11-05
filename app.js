@@ -1769,8 +1769,8 @@ function qtyDialog(f, slot) {
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
     <p class="muted small">${isVerified(f) ? `Verificato. Fonte: ${esc(f.src)}.` : `Stima non verificata${f.src ? ` (${esc(f.src)})` : ""}. Se hai l'etichetta del prodotto, usala per correggere i valori.`}</p>
     ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
-    <div class="field"><label>${f.parts ? "Quanto ne mangi adesso (grammi del piatto)" : "Quantità in grammi"}</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || 100}"${f.piece ? "" : " autofocus"}>${f.parts ? `<span class="muted small">Il piatto intero pesa ${esc(String(f.portion))} g.</span>` : ""}</div>
-    <div class="chips">${[0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
+    <div class="field"><label>${f.parts ? "Quanto ne mangi adesso (grammi del piatto)" : "Quantità in grammi"}</label><input id="q-g" type="text" inputmode="decimal"value="${f.parts ? "" : (f.piece || f.portion || 100)}" placeholder="${f.parts ? "scegli sotto" : ""}"${f.piece ? "" : " autofocus"}></div>
+    <div class="chips">${(f.parts ? [[0.25, "un quarto"], [1 / 3, "un terzo"], [0.5, "metà"], [1, "tutto"]] : [[0.5, ""], [1, ""], [1.5, ""], [2, ""]]).map(([x, lab]) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${lab ? lab + " · " : ""}${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
     <div id="q-prev" class="preview"></div>
     <button class="btn primary wide" data-act="save-food">Aggiungi</button>`);
   dlg().dataset.food = JSON.stringify(f);
