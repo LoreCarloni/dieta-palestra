@@ -336,6 +336,13 @@ function habitDialog() {
 const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 230, src: "Stima, non verificata (ricetta di famiglia)" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
+// Pasta zucca e pancetta salvato prima dell'elenco ingredienti: ricostruisco gli ingredienti dichiarati (una sola volta, i valori salvati restano)
+function ensureDishParts() {
+  if (S.dishPartsFixed) return;
+  const d = S.customFoods.find((x) => norm(x.name).trim() === "pasta zucca e pancetta" && !x.parts);
+  if (d) d.parts = [{ name: "Pasta di semola", g: 45 }, { name: "Zucca gialla, fresca", g: 45 }, { name: "Pancetta", g: 15 }, { name: "Olio extravergine d'oliva", g: 10 }];
+  S.dishPartsFixed = true; save();
+}
 function ensureBarcodeSources() {
   let n = 0;
   S.customFoods.forEach((f) => { if (f.barcode && !f.src) { f.src = "Etichetta: codice a barre"; n++; } });
@@ -2827,6 +2834,7 @@ setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }
 checkUpdate();
 ensureMomCutlet();
 ensureBarcodeSources();
+ensureDishParts();
 setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
