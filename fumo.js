@@ -36,6 +36,21 @@ function fumoDuration(ms) {
   return `${mm} minuti`;
 }
 
+function fumoHMS(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+  return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+
+// Il cronometro grande della scheda Fumo si aggiorna ogni secondo, senza rifare la pagina.
+if (!window.fumoLiveStarted) {
+  window.fumoLiveStarted = true;
+  setInterval(() => {
+    const el = document.getElementById("fumo-live");
+    if (el && S.fumo) el.textContent = fumoHMS(fumoNow() - new Date(S.fumo.start).getTime());
+  }, 1000);
+}
+
 function toLocalInput(d) {
   const p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -58,6 +73,11 @@ function renderFumo() {
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
+    <section class="card" style="text-align:center;padding:18px 10px">
+      <div class="muted small">Senza fumare da</div>
+      <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
+      <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
+    </section>
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     ${resisting}
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
@@ -65,10 +85,7 @@ function renderFumo() {
       <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
     </div>
     <section class="card">
-      <div class="muted small">Senza fumare da</div>
-      <div class="stat-v" style="font-size:1.6rem">${esc(fumoDuration(st.ms))}</div>
       ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${Math.floor(f.attempts[f.attempts.length - 1].seconds / 60)} minuti e ${f.attempts[f.attempts.length - 1].seconds % 60} secondi</div>` : ""}
-      <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
     <section class="card">
       <div class="stats">
@@ -207,9 +224,9 @@ function fumoClock(ms) {
 function fumoCravingDialog(minutes) {
   const act = fumoActive();
   if (act) return fumoShowCraving(act);
-  if (!minutes) return fumoOpenPicker();
   const tec = fumoPensieroDiOggi();
   const start = fumoNow();
+  minutes = minutes || 10;
   S.fumo.cravings = S.fumo.cravings || [];
   S.fumo.cravings.push(new Date(start).toISOString());
   S.fumo.active = { start, end: start + minutes * 60000, mins: minutes, tech: tec.id };
@@ -245,7 +262,7 @@ function fumoShowCraving(act) {
   const tec = fumoPensieroById(act.tech);
   openDialog(`
     <h3>Cronometro</h3>
-    <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center"></div>
+    <div id="fumo-count" style="font-size:3rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums"></div>
     <div class="bar" style="margin:10px 0"><span id="fumo-bar" style="width:0%"></span></div>
     <p id="fumo-breath" class="small" style="text-align:center"></p>
     <p>${esc(tec.t)}</p>
@@ -258,11 +275,11 @@ function fumoShowCraving(act) {
     const c = $("#fumo-count");
     if (!c || !dlg().open) { clearInterval(fumoTimer); return; }
     const elapsed = Math.max(0, fumoNow() - act.start);
-    c.textContent = fumoClock(elapsed);
+    c.textContent = fumoHMS(elapsed);
     $("#fumo-bar").style.width = Math.min(100, Math.round((elapsed / target) * 100)) + "%";
     $("#fumo-breath").textContent = elapsed < target
-      ? `Obiettivo: ${act.mins} ${act.mins === 1 ? "minuto" : "minuti"}`
-      : "Obiettivo raggiunto. Continua così.";
+      ? `Conto alla rovescia: ${fumoClock(target - elapsed)}`
+      : "Obiettivo superato. Continua così.";
   };
   tick();
   fumoTimer = setInterval(tick, 500);
