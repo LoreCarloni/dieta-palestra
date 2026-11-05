@@ -1019,7 +1019,7 @@ function myPlanCard() {
   const k = view.date, left = targets(k).kcal - totals(k).kcal;
   const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
   const over = planned - left;
-  const warn = over > 0 ? `<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
+  const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${planItemsHtml()}<div class="btns"><button class="btn ghost small-btn" data-act="fv-open">Aggiungi</button>${S.plannedDinner ? `<button class="btn ghost small-btn" data-act="plan-regen">Rigenera</button><button class="btn ghost small-btn" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
