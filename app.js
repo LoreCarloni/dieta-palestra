@@ -1805,7 +1805,8 @@ function customFoodDialog(prefill = "") {
     <button class="btn primary wide" data-act="save-custom">Salva e continua</button>`);
   dlg().dataset.src = "";
   // se l'alimento esiste gia, riprendo i suoi valori e la sua fonte: basta salvare
-  const ex = prefill && S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim());
+  // dal mio elenco, oppure dal database se non l'ho ancora salvato a parte
+  const ex = prefill && (S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim()) || allFoods().find((x) => norm(x.name).trim() === norm(prefill).trim()));
   if (ex && isVerified(ex)) {
     // valori verificati (etichetta o tabella): restano bloccati, non si modificano
     ["#c-kcal", "#c-p", "#c-c", "#c-f"].forEach((id) => { const el = $(id); if (el) el.readOnly = true; });
