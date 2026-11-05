@@ -1998,9 +1998,10 @@ function act(a, el) {
     }
     case "plan-add-fav": {
       // aggiunge in fondo i cibi abituali che non sono gia in previsione e non sono gia stati mangiati oggi
-      const cur = new Set(sortPlanLines(S.plannedDinner).map((l) => norm(l.split(/[,:(]/)[0]).trim()));
+      // confronto sul nome completo, senza grammi e senza la scritta bloccato: niente doppioni
+      const cur = new Set(sortPlanLines(S.plannedDinner).map((l) => foodKey(l).replace(/:.*$/, "").trim()));
       const eaten = new Set(((S.days[view.date] || {}).meals || []).map((m) => norm(m.name).trim()));
-      const add = favoriteFoods(view.date).filter((f) => !cur.has(norm(f.name).trim()) && !eaten.has(norm(f.name).trim())).slice(0, 3);
+      const add = favoriteFoods(view.date).filter((f) => !cur.has(foodKey(f.name)) && !eaten.has(norm(f.name).trim())).slice(0, 3);
       if (!add.length) return toast("Nessun cibo abituale da aggiungere");
       S.plannedDinner = [S.plannedDinner, ...add.map((f) => `${f.name}, ${f.g} g`)].filter((x) => x && x.trim()).join("\n");
       toast(`Aggiunto: ${add.map((f) => f.name).join(", ")}`);
