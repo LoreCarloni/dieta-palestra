@@ -1059,6 +1059,9 @@ function tokenScore(t, words) {
   return best;
 }
 function searchFoods(q) {
+  // nomi brevi come "Pane bianco" puntano all'alimento giusto del database
+  const alias = Object.keys(FOOD_ALIAS).find((k) => norm(k).trim() === norm(q).trim());
+  if (alias) q = FOOD_ALIAS[alias];
   const tokens = norm(q).split(/[^a-z0-9]+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
   if (!tokens.length) return [];
   return allFoods()
