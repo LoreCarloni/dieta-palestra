@@ -2120,8 +2120,23 @@ function act(a, el) {
         <p class="muted small">Parti dalle domande facili: il peso di ogni ingrediente, o quanti cucchiai e quanto pesa un cucchiaio. Se non lo sai, lascia vuoto: resta una stima.</p>
         <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" autofocus></div>
         <div id="dish-rows"></div>
+        <button class="btn ghost wide" data-act="dish-load">Carica il piatto salvato con questo nome</button>
         <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
         <button class="btn primary wide" data-act="dish-save">Salva il piatto</button>`);
+    }
+    case "dish-load": {
+      const nm = val("#dish-name").trim();
+      const dish = S.customFoods.find((x) => norm(x.name).trim() === norm(nm).trim() && x.parts);
+      if (!dish) return toast("Nessun piatto salvato con questo nome");
+      $("#dish-rows").innerHTML = "";
+      dish.parts.forEach((pt) => {
+        document.querySelector('[data-act=dish-add-row]').click();
+        const row = document.querySelectorAll("#dish-rows .dish-row");
+        const last = row[row.length - 1];
+        last.querySelector(".dish-name").value = pt.name; last.querySelector(".dish-g").value = pt.g;
+      });
+      toast("Piatto caricato: aggiungi l'ingrediente nuovo e salva");
+      break;
     }
     case "dish-add-row": {
       const box = $("#dish-rows"); if (!box) break;
@@ -2141,6 +2156,7 @@ function act(a, el) {
       const rows = [...document.querySelectorAll("#dish-rows .dish-row")];
       if (!name || !rows.length) return toast("Scrivi il nome e almeno un ingrediente");
       let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0, missing = 0;
+      const parts = [];
       rows.forEach((r) => {
         const ing = r.querySelector(".dish-name").value.trim();
         const num1 = (x) => parseFloat(String(x).replace(",", ".")) || 0;
@@ -2149,12 +2165,13 @@ function act(a, el) {
         if (!ing) return;
         const f = byName(ing) || searchFoods(ing)[0];
         if (!g) { missing++; return; }
+        parts.push({ name: ing, g });
         if (!f) { missing++; tg += g; return; } // ingrediente sconosciuto: pesa nel piatto ma senza valori, il piatto resta incompleto
         tg += g; tk += f.kcal * g / 100; tp += (f.p || 0) * g / 100; tc += (f.c || 0) * g / 100; tf += (f.f || 0) * g / 100;
       });
       if (!(tg > 0)) return toast("Serve almeno un ingrediente con il peso");
       const complete = Math.round(((rows.length - missing) / rows.length) * 100);
-      const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${missing ? ", mancano alcuni ingredienti" : ""}` };
+      const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${missing ? ", mancano alcuni ingredienti" : ""}`, parts };
       S.customFoods = S.customFoods.filter((x) => norm(x.name).trim() !== norm(name).trim()).concat(dish);
       save();
       return qtyDialog({ ...dish, cat: "I miei alimenti" }, "giorno");
