@@ -1828,7 +1828,7 @@ function customFoodDialog(prefill = "") {
   // se l'alimento esiste gia, riprendo i suoi valori e la sua fonte: basta salvare
   // dal mio elenco, oppure dal database se non l'ho ancora salvato a parte
   const ex = prefill && (S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim()) || allFoods().find((x) => norm(x.name).trim() === norm(prefill).trim()));
-  if (ex && isVerified(ex) && valuesOk(ex)) {
+  if (false) {
     // valori verificati (etichetta o tabella): restano bloccati, non si modificano
     ["#c-kcal", "#c-p", "#c-c", "#c-f"].forEach((id) => { const el = $(id); if (el) el.readOnly = true; });
     $("#dlg-body").insertAdjacentHTML("afterbegin", `<p><span class="badge ok">verificato: valori bloccati</span></p>`);
@@ -2017,7 +2017,7 @@ function act(a, el) {
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
       const oldV = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
-      if (oldV && isVerified(oldV) && valuesOk(oldV)) return qtyDialog({ ...oldV, cat: "I miei alimenti" }, dlg().dataset.slot);
+
       // regola fissa: per le stime l'app alza kcal, carboidrati e grassi del 15%, le proteine restano uguali
       const prud = /stima/i.test(f.src) ? 15 : 0;
       if (prud > 0) {
