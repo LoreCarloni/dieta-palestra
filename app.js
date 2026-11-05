@@ -340,7 +340,15 @@ const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f:
 function ensureDishParts() {
   if (S.dishPartsFixed) return;
   const d = S.customFoods.find((x) => norm(x.name).trim() === "pasta zucca e pancetta" && !x.parts);
-  if (d) d.parts = [{ name: "Pasta di semola", g: 45 }, { name: "Zucca gialla, fresca", g: 45 }, { name: "Pancetta", g: 15 }, { name: "Olio extravergine d'oliva", g: 10 }];
+  if (d) {
+    d.parts = [{ name: "Pasta di semola", g: 45 }, { name: "Zucca gialla, fresca", g: 45 }, { name: "Pancetta", g: 15 }, { name: "Olio extravergine d'oliva", g: 10 }];
+    // valori per 100 g: CREA per pasta, zucca e olio; pancetta stimata (400 kcal, 15 g P, 0 C, 36 g G)
+    const per = { "pasta di semola": [341, 13.5, 72.7, 1.2], "zucca gialla, fresca": [29, 1.1, 3.5, 0.1], "pancetta": [400, 15, 0, 36], "olio extravergine d'oliva": [899, 0, 0, 99.9] };
+    let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0;
+    d.parts.forEach((pt) => { const v = per[norm(pt.name).trim()]; tg += pt.g; if (v) { tk += v[0] * pt.g / 100; tp += v[1] * pt.g / 100; tc += v[2] * pt.g / 100; tf += v[3] * pt.g / 100; } });
+    d.kcal = Math.round(tk / tg * 100); d.p = Math.round(tp / tg * 1000) / 10; d.c = Math.round(tc / tg * 1000) / 10; d.f = Math.round(tf / tg * 1000) / 10;
+    d.portion = Math.round(tg); d.src = "Piatto composto, pancetta stimata";
+  }
   S.dishPartsFixed = true; save();
 }
 function ensureBarcodeSources() {
