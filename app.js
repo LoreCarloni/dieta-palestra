@@ -944,7 +944,7 @@ function planItemsHtml() {
     const fd = allFoods().find((f) => norm(f.name).trim().toLowerCase() === key);
     const badge = fd ? sourceBadge(fd) : "";
     const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
-    return `<div class="plan-item">${esc(shown)} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+    return `<div class="plan-item">${esc(shown)} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2097,6 +2097,26 @@ function act(a, el) {
     case "fv-add": {
       S.plannedDinner = [S.plannedDinner, `${el.dataset.name}, ${el.dataset.g} g`].filter((x) => x && x.trim()).join("\n");
       closeDialog(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
+    }
+    case "plan-grams": {
+      // cambia i grammi di questa riga della previsione
+      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      if (!line) break;
+      const cur = (line.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, ""])[1];
+      return openDialog(`
+        <h3>Quantità</h3>
+        <p class="muted small">${esc(line.replace(/,?\s*bloccato\b/ig, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, ""))}</p>
+        <div class="field"><label for="pg-g">Grammi</label><input id="pg-g" type="text" inputmode="decimal" value="${esc(cur)}" autofocus></div>
+        <button class="btn primary wide" data-act="plan-grams-save" data-i="${el.dataset.i}">Salva</button>`);
+    }
+    case "plan-grams-save": {
+      const lines = sortPlanLines(S.plannedDinner);
+      const idx = +el.dataset.i;
+      const g = val("#pg-g").replace(",", ".").trim();
+      if (!lines[idx] || !(+g > 0)) return toast("Inserisci i grammi");
+      lines[idx] = lines[idx].replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${g}$2g`);
+      S.plannedDinner = lines.join("\n");
+      closeDialog(); toast("Grammi aggiornati"); break;
     }
     case "plan-fav": {
       // segna o toglie il preferito direttamente dalla previsione
