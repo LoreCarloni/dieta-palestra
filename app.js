@@ -1859,7 +1859,11 @@ async function readLabel(file) {
     try { r = await T.recognize(file, "ita+eng"); } catch { r = await T.recognize(file, "eng"); }
     const text = r.data.text || "";
     const v = parseLabel(text);
-    customFoodDialog();
+    // dopo la foto il nome gia scritto resta, e la fonte e "etichetta"
+    const nm = (document.querySelector("#c-name") || {}).value || "";
+    customFoodDialog(nm);
+    dlg().dataset.src = "Valori dall'etichetta del prodotto";
+    document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b.dataset.v === dlg().dataset.src));
     const set = (id, x) => { if (x !== null && !isNaN(x)) $("#" + id).value = x; };
     set("c-kcal", v.kcal); set("c-p", v.p); set("c-c", v.c); set("c-f", v.f);
     // il testo letto resta visibile, cosi si capisce cosa correggere
