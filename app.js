@@ -902,7 +902,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
-  if (needP > 5) { const tg2 = Math.min(150, Math.round(needP / 0.29 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
+  // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
+  const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
+  if (needP > 5 && momCut && momCut.p > 0) { const g = Math.min(230, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g > 0) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4) {
