@@ -2142,7 +2142,7 @@ function act(a, el) {
         <h3>Quantità</h3>
         <p class="muted small">${esc(line.replace(/,?\s*bloccato\b/ig, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, ""))}</p>
         <div class="field"><label for="pg-g">Grammi</label><input id="pg-g" type="text" inputmode="decimal" value="${esc(cur)}" autofocus></div>
-        <p class="muted small">Per pesare solo il cibo: appoggia il piatto vuoto sulla bilancia, premi azzera (tara), poi metti il cibo sul piatto: il peso che legge è quello del cibo, senza piatto e posate. Senza bilancia, un cucchiaio da tavola di zucca cotta pesa circa 15 o 20 grammi.</p>
+        <p class="muted small">Per pesare solo il cibo: appoggia il piatto vuoto sulla bilancia, premi azzera (tara), poi metti il cibo sul piatto: il peso che legge è quello del cibo, senza piatto e posate. Senza bilancia, un cucchiaio da tavola di zucca cotta pesa circa 15 o 20 grammi. Al ristorante chiedi al cameriere quanti grammi è una porzione: spesso lo sanno o lo pesano.</p>
         <button class="btn primary wide" data-act="plan-grams-save" data-i="${el.dataset.i}">Salva</button>`);
     }
     case "plan-grams-save": {
