@@ -46,7 +46,7 @@ const FUMO_AZIONI = [
   { t: "Metti le sigarette in un cassetto lontano e chiudilo.", when: "sempre" },
   { t: "Scrivi o chiama una persona e raccontale come stai andando.", when: "sempre" },
   { t: "Guarda fuori dalla finestra per un minuto e respira piano.", when: "sempre" },
-  { t: "Buongiorno: fatti una doccia e cambia la maglietta.", when: "mattina" },
+  { t: "Fatti una doccia e cambia la maglietta.", when: "mattina" },
   { t: "Apri la finestra, fai entrare aria e prepara la colazione.", when: "mattina" },
   { t: "Prepara la borsa o la giornata di oggi, una cosa alla volta.", when: "mattina" },
   { t: "Lava i denti e mettiti il pigiama.", when: "sera" },
