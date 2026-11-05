@@ -932,9 +932,12 @@ function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
   return lines.map((x, i) => {
-    const fd = allFoods().find((f) => norm(f.name).trim() === norm(x.split(/[,:(]/)[0]).trim());
+    // nome completo senza grammi e senza la scritta "bloccato", cosi anche i nomi con parentesi (JUST WHEY (GymBeam)) si riconoscono
+    const key = foodKey(x).replace(/:.*$/, "").trim();
+    const fd = allFoods().find((f) => norm(f.name).trim().toLowerCase() === key);
     const badge = fd ? sourceBadge(fd) : "";
-    return `<div class="plan-item">${esc(x.replace(/^Aggiungi alimento\s*/i, ""))} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+    const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
+    return `<div class="plan-item">${esc(shown)} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
   }).join("");
 }
 function myPlanCard() {
