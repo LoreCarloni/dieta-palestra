@@ -2026,7 +2026,17 @@ function act(a, el) {
     case "fv-search": {
       const q = val("#fv-q").trim();
       const res = q ? searchFoods(q).slice(0, 8) : [];
-      $("#fv-res").innerHTML = res.length ? res.map((f) => `<div class="row"><span>${esc(f.name)}</span><span class="row-r"><button class="btn small-btn primary" data-act="fv-add" data-name="${esc(f.name)}" data-g="${f.portion || f.piece || 100}">Aggiungi</button><button class="btn small-btn ghost" data-act="habit-add" data-name="${esc(f.name)}">Valori</button></span></div>`).join("") : `<p class="muted small">Nessun risultato: usa "Nuovo alimento".</p>`;
+      // quanto pesa ogni risultato sulla giornata, prima di aggiungerlo
+      const k = view.date, tg = targets(k), t = totals(k);
+      const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+      const left = tg.kcal - t.kcal - planned;
+      $("#fv-res").innerHTML = res.length ? res.map((f) => {
+        const g = f.portion || f.piece || 100;
+        const kc = Math.round(f.kcal * g / 100);
+        const after = Math.round(left - kc);
+        const impact = after >= 0 ? `Porzione di ${g} g: ${kc} kcal, restano ${after} kcal.` : `Porzione di ${g} g: ${kc} kcal, sforeresti di ${-after} kcal.`;
+        return `<div class="row"><div><div>${esc(f.name)}</div><div class="muted small">${impact}</div></div><span class="row-r"><button class="btn small-btn primary" data-act="fv-add" data-name="${esc(f.name)}" data-g="${g}">Aggiungi</button><button class="btn small-btn ghost" data-act="habit-add" data-name="${esc(f.name)}">Valori</button></span></div>`;
+      }).join("") : `<p class="muted small">Nessun risultato: usa "Nuovo alimento".</p>`;
       break;
     }
     case "fv-add": {
