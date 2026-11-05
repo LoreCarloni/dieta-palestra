@@ -352,8 +352,9 @@ const foodKey = (line) => line.replace(/,?\s*bloccato\b/ig, "").replace(/[\d.,]+
 // Toglie dai cibi bloccati le righe appena spostate tra i mangiati.
 function unblock(lines) {
   if (!S.blockedToday) return;
-  const keys = new Set(lines.map(foodKey));
-  S.blockedToday = S.blockedToday.split("\n").filter((x) => x.trim() && !keys.has(foodKey(x))).join("\n");
+  // confronto sul gruppo del nome (le prime due parole): "Pane bianco" e "Pane bianco (tipo 00)" sono lo stesso cibo
+  const keys = new Set(lines.map((l) => foodGroup(foodKey(l))));
+  S.blockedToday = S.blockedToday.split("\n").filter((x) => x.trim() && !keys.has(foodGroup(foodKey(x)))).join("\n");
 }
 
 // Riepilogo della settimana, in evidenza in cima a Oggi: il conto conta sulla settimana, non sul singolo giorno.
