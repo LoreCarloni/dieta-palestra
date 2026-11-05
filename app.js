@@ -920,7 +920,11 @@ function renderPvList(q) {
 function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
-  return lines.map((x, i) => `<div class="plan-item">${esc(x.replace(/^Aggiungi alimento\s*/i, ""))} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
+  return lines.map((x, i) => {
+    const fd = allFoods().find((f) => norm(f.name).trim() === norm(x.split(/[,:(]/)[0]).trim());
+    const badge = fd ? sourceBadge(fd) : "";
+    return `<div class="plan-item">${esc(x.replace(/^Aggiungi alimento\s*/i, ""))} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+  }).join("");
 }
 function myPlanCard() {
   const k = view.date, left = targets(k).kcal - totals(k).kcal;
@@ -1775,6 +1779,11 @@ function customFoodDialog(prefill = "") {
   dlg().dataset.src = "";
   // se l'alimento esiste gia, riprendo i suoi valori e la sua fonte: basta salvare
   const ex = prefill && S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim());
+  if (ex && isVerified(ex)) {
+    // valori verificati (etichetta o tabella): restano bloccati, non si modificano
+    ["#c-kcal", "#c-p", "#c-c", "#c-f", "#c-portion", "#c-name"].forEach((id) => { const el = $(id); if (el) el.readOnly = true; });
+    $("#dlg-body").insertAdjacentHTML("afterbegin", `<p><span class="badge ok">verificato: valori bloccati</span></p>`);
+  }
   if (ex) {
     const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
     set("#c-kcal", ex.kcal); set("#c-p", ex.p); set("#c-c", ex.c); set("#c-f", ex.f); set("#c-portion", ex.portion || 100);
@@ -1957,6 +1966,8 @@ function act(a, el) {
       const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
+      const oldV = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
+      if (oldV && isVerified(oldV)) return qtyDialog({ ...oldV, cat: "I miei alimenti" }, dlg().dataset.slot);
       // regola fissa: per le stime l'app alza kcal, carboidrati e grassi del 15%, le proteine restano uguali
       const prud = /stima/i.test(f.src) ? 15 : 0;
       if (prud > 0) {
