@@ -360,7 +360,7 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 .mark.warn { color: var(--warn); font-weight: 600; letter-spacing: 0.02em; }
 
 /* confronto con la settimana scorsa: discreto */
-.prev-week { font-size: 0.7rem; font-weight: 600; color: var(--accent); letter-spacing: 0.02em; display: block; }
+.prev-week { font-size: 0.7rem; font-weight: 600; color: #6b7a99; letter-spacing: 0.02em; display: block; }
 
 /* titolo della previsione su una sola riga */
 h2.plan-h2 { white-space: nowrap; font-size: 0.8rem; letter-spacing: 0.03em; gap: 6px; }
