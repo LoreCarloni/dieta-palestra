@@ -853,7 +853,7 @@ function favoriteFoods(k) {
     const per = c.per.map((x) => Math.round((x / c.w) * 10) / 10);
     if (g > 0 && per[0] > 0) out.push({ name: c.name, g, per });
   });
-  return out.slice(0, 3);
+  return out.slice(0, 12);
 }
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
@@ -874,10 +874,11 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // proteine: yogurt greco 0% con 10 g di proteine in polvere (valori dal database e dall'alimento personale), poi albume e tacchino
   // prima i cibi che mangi di solito (ultimi 30 giorni), con la porzione che usi di solito
   const eatenToday = new Set(((S.days[k] || {}).meals || []).map((m) => norm(m.name).trim()));
+  let picked = 0;
   favoriteFoods(k).forEach((fv) => {
-    if (eatenToday.has(norm(fv.name).trim())) return;
+    if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
     if (needK - fv.per[0] * fv.g / 100 < -150) return; // non far superare troppo le calorie
-    add(fv.name, fv.g, fv.per);
+    add(fv.name, fv.g, fv.per); picked++;
   });
   if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); add("Proteine in polvere", 10, [380, 78, 6, 5]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
@@ -1999,7 +2000,7 @@ function act(a, el) {
       // aggiunge in fondo i cibi abituali che non sono gia in previsione e non sono gia stati mangiati oggi
       const cur = new Set(sortPlanLines(S.plannedDinner).map((l) => norm(l.split(/[,:(]/)[0]).trim()));
       const eaten = new Set(((S.days[view.date] || {}).meals || []).map((m) => norm(m.name).trim()));
-      const add = favoriteFoods(view.date).filter((f) => !cur.has(norm(f.name).trim()) && !eaten.has(norm(f.name).trim()));
+      const add = favoriteFoods(view.date).filter((f) => !cur.has(norm(f.name).trim()) && !eaten.has(norm(f.name).trim())).slice(0, 3);
       if (!add.length) return toast("Nessun cibo abituale da aggiungere");
       S.plannedDinner = [S.plannedDinner, ...add.map((f) => `${f.name}, ${f.g} g`)].filter((x) => x && x.trim()).join("\n");
       toast(`Aggiunto: ${add.map((f) => f.name).join(", ")}`);
