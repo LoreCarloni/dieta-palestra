@@ -1985,9 +1985,11 @@ function act(a, el) {
     case "food-cat": return foodCat(el.dataset.c);
     case "ps-add": {
       const f = JSON.parse(el.dataset.food);
-      const n = num1(val("#ps-n")) || 1;
-      const name = n > 1 ? `${f.name} x ${n}` : f.name;
-      day(k, true).meals.push({ id: uid(), slot: "giorno", name, g: null, kcal: f.kcal * n, p: f.p * n, c: f.c * n, f: f.f * n });
+      // se scrivi i grammi, i macro si ricalcolano da soli sulla porzione di riferimento
+      const grams = num1(val("#ps-g"));
+      const n = grams > 0 ? grams / (f.portion || 100) : (num1(val("#ps-n")) || 1);
+      const name = grams > 0 ? f.name : (n > 1 ? `${f.name} x ${n}` : f.name);
+      day(k, true).meals.push({ id: uid(), slot: "giorno", name, g: grams > 0 ? Math.round(grams) : null, kcal: f.kcal * n, p: f.p * n, c: f.c * n, f: f.f * n });
       rememberFood({ ...f, seen: undefined });
       closeDialog(); toast(`${name} aggiunto`); break;
     }
@@ -1997,7 +1999,9 @@ function act(a, el) {
         openDialog(`
           <h3>${esc(f.name)}</h3>
           <p class="muted small">Per porzione: ${r0(f.kcal)} kcal, P ${r1(f.p)} C ${r1(f.c)} G ${r1(f.f)}</p>
-          <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="text" inputmode="decimal" value="1" autofocus></div>
+          <div class="field"><label for="ps-g">Quanti grammi ne mangi?</label><input id="ps-g" type="text" inputmode="decimal" placeholder="es. 50" autofocus></div>
+          <p class="muted small">Oppure, se preferisci, quante porzioni da ${r0(f.portion || 100)} g:</p>
+          <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="text" inputmode="decimal" value="1"></div>
           <button class="btn primary wide" data-act="ps-add" data-food="${esc(JSON.stringify(f))}">Aggiungi</button>`);
         break;
       }
