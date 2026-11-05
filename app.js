@@ -1051,8 +1051,8 @@ const STIMA_INGREDIENTI = {
   "sedano": { v: [23, 2.3, 2.4, 0.2], fonte: "CREA: sedano crudo" },
   "spinaci": { v: [35, 3.4, 2.9, 0.7], fonte: "CREA: spinaci crudi" },
   // stime dichiarate (nessuna voce CREA trovata)
-  "carne macinata": { v: [175, 20, 0, 10], fonte: "stima" },
-  "macinato di manzo": { v: [175, 20, 0, 10], fonte: "stima" },
+  "carne macinata": { v: [276, 25.4, 0, 18.6], fonte: "manzo macinato, categoria 20% di grasso (una fonte coerente)" },
+  "macinato di manzo": { v: [276, 25.4, 0, 18.6], fonte: "manzo macinato, categoria 20% di grasso (una fonte coerente)" },
   "besciamella": { v: [218, 5.1, 13.6, 15.9], fonte: "media di 2 fonti (Coop, Cookidoo)" },
   "pasta fresca": { v: [340, 12, 66, 4], fonte: "stima" },
   "pasta all'uovo": { v: [340, 12, 66, 4], fonte: "stima" },
