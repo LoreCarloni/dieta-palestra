@@ -266,7 +266,9 @@ function refreshForecast() {
   if (!S.autoForecast) return;
   const t = totals(k), tg = targets(k);
   const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
-  if (snap === S.forecastSnap) return;
+  // se la previsione supera il rimanente va sempre ricontrollata, anche senza nuovi cibi
+  const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
+  if (snap === S.forecastSnap && !overNow) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
