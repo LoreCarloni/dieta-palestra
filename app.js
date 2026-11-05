@@ -269,8 +269,10 @@ function refreshForecast() {
   if (snap === S.forecastSnap) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
+  // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
+  const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
   const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
-  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x));
+  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x) && !autoRe.test(x.trim()));
   const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), k).split("\n").filter((x) => x.trim());
   S.autoAll = [...new Set([...(S.autoAll || []), ...gen])].slice(-300);
   S.autoLines = gen;
