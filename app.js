@@ -430,7 +430,7 @@ function renderToday() {
     </div>` : ""}
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
-    ${d.meals.length > 0 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Chiudi" : `Mostra cosa hai mangiato ${d.meals.length}`}</button>` : ""}
+    ${d.meals.length > 0 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Chiudi" : `Mostra ${d.meals.length}`}</button>` : ""}
   </section>
 
   ${myPlanCard()}
