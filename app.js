@@ -1022,7 +1022,7 @@ function tokenScore(t, words) {
   return best;
 }
 function searchFoods(q) {
-  const tokens = norm(q).split(/\s+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
+  const tokens = norm(q).split(/[^a-z0-9]+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
   if (!tokens.length) return [];
   return allFoods()
     .map((f) => {
