@@ -361,3 +361,7 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 
 /* confronto con la settimana scorsa: discreto */
 .prev-week { font-size: 0.68rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+
+/* titolo della previsione su una sola riga */
+h2.plan-h2 { white-space: nowrap; font-size: 0.8rem; letter-spacing: 0.03em; gap: 6px; }
+h2.plan-h2 .link { font-size: 0.8rem; }

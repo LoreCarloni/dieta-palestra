@@ -990,7 +990,7 @@ function myPlanCard() {
   const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
   const over = planned - left;
   const warn = over > 0 ? `<p class="warn-line">La previsione supera le calorie rimaste di ${r0(over)} kcal. Togli qualche riga con × oppure mangia meno.</p>` : "";
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica previsione</button></h2>${warn}${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2 class="plan-h2">Previsione della giornata <button class="link" data-act="myplan-edit">Modifica previsione</button></h2>${warn}${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
