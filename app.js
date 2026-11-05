@@ -1021,7 +1021,8 @@ const valuesOk = (f) => {
   const calc = 4 * p + 4 * c + 9 * fat;
   return k <= 0 || Math.abs(calc - k) <= Math.max(25, k * 0.25);
 };
-const sourceBadge = (f) => !valuesOk(f) ? `<span class="badge warn">da controllare</span>` : isVerified(f) ? `<span class="badge ok">verificato</span>` : `<span class="badge warn">stima</span>`;
+// segno piccolo: spunta verde per i verificati, testo discreto per stime e valori da controllare
+const sourceBadge = (f) => !valuesOk(f) ? `<span class="mark warn" title="da controllare">da controllare</span>` : isVerified(f) ? `<span class="mark ok" title="verificato">✓</span>` : `<span class="mark warn" title="stima">stima</span>`;
 const foodItem = (f) => {
   const item = `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)} ${sourceBadge(f)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
   return S.customFoods.some((x) => x.name === f.name) ? `<div class="item-row">${item}<button class="x" data-act="del-custom" data-name="${esc(f.name)}" aria-label="Elimina">×</button></div>` : item;
