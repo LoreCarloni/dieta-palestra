@@ -321,13 +321,14 @@ function habitDialog() {
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
 // Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
-const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 100, src: "Stima, non verificata (ricetta di famiglia)" };
+const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 230, src: "Stima, non verificata (ricetta di famiglia)" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
 function ensureProteinPowder() {
   if (!S.customFoods.some((x) => x.name === PROTEIN_POWDER.name)) S.customFoods.push({ ...PROTEIN_POWDER });
 }
 function ensureMomCutlet() {
+  if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   S.momCutletAdded = true; save();
