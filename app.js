@@ -1786,7 +1786,7 @@ function customFoodDialog(prefill = "") {
   const ex = prefill && S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim());
   if (ex && isVerified(ex)) {
     // valori verificati (etichetta o tabella): restano bloccati, non si modificano
-    ["#c-kcal", "#c-p", "#c-c", "#c-f", "#c-portion", "#c-name"].forEach((id) => { const el = $(id); if (el) el.readOnly = true; });
+    ["#c-kcal", "#c-p", "#c-c", "#c-f"].forEach((id) => { const el = $(id); if (el) el.readOnly = true; });
     $("#dlg-body").insertAdjacentHTML("afterbegin", `<p><span class="badge ok">verificato: valori bloccati</span></p>`);
   }
   if (ex) {
