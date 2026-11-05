@@ -244,28 +244,25 @@ function fumoSelectedMinutes() {
 function fumoShowCraving(act) {
   const tec = fumoPensieroById(act.tech);
   openDialog(`
-    <h3 id="fumo-title">Resisti ${act.mins} minuti</h3>
+    <h3>Cronometro</h3>
     <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center"></div>
-    <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
+    <div class="bar" style="margin:10px 0"><span id="fumo-bar" style="width:0%"></span></div>
+    <p id="fumo-breath" class="small" style="text-align:center"></p>
     <p>${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
     <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
   clearInterval(fumoTimer);
+  const target = act.mins * 60000;
   const tick = () => {
     const c = $("#fumo-count");
     if (!c || !dlg().open) { clearInterval(fumoTimer); return; }
-    const now = fumoNow();
-    const left = act.end - now;
-    if (left > 0) {
-      c.textContent = fumoClock(left);
-      const s = Math.floor((now - act.start) / 1000) % 12;
-      $("#fumo-breath").textContent = s < 4 ? "Inspira dal naso" : s < 6 ? "Trattieni" : "Espira lentamente";
-    } else {
-      c.textContent = fumoClock(now - act.start);
-      $("#fumo-title").textContent = `Hai superato i ${act.mins} minuti`;
-      $("#fumo-breath").textContent = "Continua così. Il conto va avanti.";
-    }
+    const elapsed = Math.max(0, fumoNow() - act.start);
+    c.textContent = fumoClock(elapsed);
+    $("#fumo-bar").style.width = Math.min(100, Math.round((elapsed / target) * 100)) + "%";
+    $("#fumo-breath").textContent = elapsed < target
+      ? `Obiettivo: ${act.mins} ${act.mins === 1 ? "minuto" : "minuti"}`
+      : "Obiettivo raggiunto. Continua così.";
   };
   tick();
   fumoTimer = setInterval(tick, 500);
