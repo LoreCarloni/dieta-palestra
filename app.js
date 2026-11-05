@@ -1323,15 +1323,8 @@ function dayComment(k) {
   // se la cena prevista supera il resto della giornata, niente consigli su pranzo e cena
   const overPlanned = !!S.plannedDinner && k >= todayKey() && parseDiary(S.plannedDinner).length > 0 && tg.kcal - t.kcal - parseDiary(S.plannedDinner).reduce((a, x) => a + x.kcal, 0) <= 0;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
-  if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Non è una giornata in linea, e il recupero non la copre tutta.` });
-  if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi è uno sgarro: le voci che hanno pesato di più sono ${list(top("kcal"), "kcal", "kcal")}.` });
+  if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
   else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
-  const weighed = d.meals.filter((m) => m.g && m.kcal > 0);
-  if (diff > 0 && weighed.length) {
-    const big = weighed.reduce((a, m) => (m.kcal > a.kcal ? m : a));
-    const cut = Math.min(big.g * 0.5, Math.ceil(diff / (big.kcal / big.g) / 10) * 10);
-    lines.push({ lvl: "tip", text: `Per restare nel target riduci ${shortName(big.name).toLowerCase()} di circa ${r0(cut)} g.` });
-  }
   const bySlot = (s) => d.meals.filter((m) => m.slot === s).reduce((a, m) => a + m.kcal, 0);
   const fOver = t.f - tg.fat;
   const wk = periodStats(k, 7);
@@ -1343,7 +1336,7 @@ function dayComment(k) {
     const sgK = ov.over.map((d) => `${shortDay(d.k)}: ${r0(d.kcal - d.tgK)} kcal in più`).join("; ");
     const sgF = ov.overF.map((d) => shortDay(d.k)).join(", ");
     const parts = [];
-    parts.push(`Questa settimana hai tracciato ${ov.days.length} giorni su 7. Sgarri calorici: ${ov.over.length}${ov.over.length ? ` - ${sgK}` : ""}. Giorni con grassi sopra il limite: ${ov.overF.length}${ov.overF.length ? ` (${sgF})` : ""}.`);
+    parts.push(`Questa settimana hai tracciato ${ov.days.length} giorni su 7. Sgarri calorici: ${ov.over.length}${ov.over.length ? `: ${sgK}` : ""}. Giorni con grassi sopra il limite: ${ov.overF.length}${ov.overF.length ? ` (${sgF})` : ""}.`);
     parts.push(`Media settimanale: ${r0(ov.avgK)} kcal contro ${r0(ov.tgK)}, grassi ${r0(ov.avgF)} g contro ${r0(ov.tgF)}.`);
     if (trend !== null) parts.push(trend > 50 ? `Rispetto alla settimana scorsa stai mangiando di più (+${r0(trend)} kcal di media).` : trend < -50 ? `Rispetto alla settimana scorsa stai mangiando meno (${r0(trend)} kcal di media): buon segno.` : "Rispetto alla settimana scorsa il livello è stabile.");
     const m30 = overview(k, 30);
@@ -1354,12 +1347,10 @@ function dayComment(k) {
     const who = S.profile && S.profile.name ? S.profile.name : "";
     const greet = (t) => (who ? `${who}, ${t.charAt(0).toLowerCase()}${t.slice(1)}` : t);
     const closing = sg === 0 && sgFat <= 1
-      ? greet("Settimana pulita. Adesso non farti tentare dal fine settimana: è la parte in cui si perde quello che hai costruito.")
+      ? greet("Settimana in linea, senza sgarri calorici.")
       : sg <= 1 && sgFat <= 2
-        ? greet(`Una settimana quasi buona. ${sg} sgarro calorico e ${sgFat} giorni di grassi alti: va bene, ma il prossimo lunedì voglio vedere zero sgarri.`)
-        : sg >= 3
-          ? greet(`Questa settimana hai sgarrato ${sg} volte. Il punto è rispettare la dieta: la palestra da sola non basta.`)
-          : greet(`Hai sgarrato ${sg} volte, e i grassi sono alti ${sgFat} giorni. Sei a metà strada: basta chiudere i giorni del fine settimana, e il resto lo fai da solo.`);
+        ? greet(`Settimana quasi in linea: ${sg} ${sg === 1 ? "sgarro calorico" : "sgarri caloric"} e ${sgFat} giorni di grassi alti.`)
+        : greet(`Questa settimana ci sono ${sg} sgarri calorici e ${sgFat} giorni di grassi alti. Conta la media dei giorni, non il singolo sgarro.`);
     lines.push({ lvl: sg <= 1 ? "good" : "bad", text: closing });
   }
   const cOver = t.c - tg.carbs;
@@ -1415,21 +1406,19 @@ function dayComment(k) {
     const perWeek = (st7.balance * 7) / 7700;
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
     const sg7 = overview(k, 7).over.length;
-    const pace = perWeek > 0.05 ? "Con questo ritmo la vita non scende, e i numeri della pancia lo confermeranno nelle prossime misurazioni." : sg7 >= 2 ? `Con ${sg7} sgarri nei 7 giorni la vita non scende in modo affidabile: la stima dipende da quanto calano gli sgarri, e finché continuano non puoi contarci.` : sg7 === 1 ? "Con questo ritmo la vita può scendere, ma lo sgarro di questa settimana pesa sulla stima: non è ancora un ritmo da confermare." : "Con questo ritmo la vita può scendere: continua così nelle misurazioni del lunedì.";
-    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}, e la stima dipende dagli sgarri della settimana. ${pace}` });
+    const pace = perWeek > 0.05 ? "Con questo ritmo il peso stimato tende a salire." : sg7 >= 2 ? `Ci sono ${sg7} sgarri nei 7 giorni, quindi la stima è incerta.` : sg7 === 1 ? "Lo sgarro di questa settimana pesa sulla stima: il ritmo non è ancora affidabile." : "Con questo ritmo il peso stimato può scendere: continua così nelle misurazioni del lunedì.";
+    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${pace}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
   if (cOver > tg.carbs * 0.1) tips.push("tieni una sola fonte di carboidrati per pasto");
   if (sweetKcal >= 150) tips.push("limita il dolce a una porzione piccola e programmata");
-  if (t.steps < 8000) tips.push(`${k === todayKey() ? "da oggi" : "da quel giorno"} fai una camminata di 30 minuti al giorno per 7 giorni, oggi incluso: camminare è la base della forma e aiuta a tonificare le gambe`);
   // Il recupero parte dal primo sgarro dei 7 giorni fino a oggi e si spalma sui giorni che restano nella finestra.
   const plan = tg.plan;
   const startKey = plan ? plan.startKey : null;
   const cutG = plan ? Math.round(plan.cutKcal / 4 / 5) * 5 : 0;
   const dayNo = plan ? plan.dayNo : 0, daysLeft = plan ? plan.daysLeft : 0;
-  if (k === todayKey() && startKey && diff > tg.kcal * 0.1) tips.unshift("attenzione: oggi sgarri di nuovo, quindi il recupero si allunga di un giorno");
-  if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. La pancia non scende finché non li recuperi: servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Ogni sgarro in più allunga il percorso di altri giorni.` });
+  if (plan && plan.count >= 2) lines.push({ lvl: "warn", text: `Recupero: dal ${shortDay(startKey)} ci sono ${plan.count} sgarri. Il target resta ridotto per ${plan.span} giorni, fino al ${shortDay(plan.endKey)}.` });
   // alimento proteico che non compare nei pasti recenti: lo proponiamo quando mancano proteine
   let newFood = null;
   if (t.p + pl.p < tg.protein * 0.85 && !overPlanned) {
@@ -1476,7 +1465,6 @@ function dayComment(k) {
     const cmp = sgarriWeek < sgarriPrev ? `${sgarriPrev - sgarriWeek} in meno della settimana prima` : sgarriWeek > sgarriPrev ? `${sgarriWeek - sgarriPrev} in più della settimana prima` : "come la settimana prima";
     lines.push({ lvl: sgarriWeek > sgarriPrev ? "bad" : sgarriWeek < sgarriPrev ? "good" : "warn", text: `Settimana: ${sgarriWeek} sgarri, la settimana prima ${sgarriPrev}. Sono ${cmp}.` });
   }
-  if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
   return { verdict, lines, journey, newFood, overPlanned, remCarb: tg.carbs - t.c - pl.c, lunchOpen: pranzoLibero, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
@@ -1488,22 +1476,9 @@ function commentHtml(k) {
   const dinner = [];
   const rest = c.lines.filter((l) => !dinner.includes(l));
   const j = c.journey;
-  const head = j && j.over ? `<p class="headline">Stai andando male dall'inizio: ${j.over} sgarri su ${j.days} giorni (${j.pct}%).${c.cut ? " La pancia non scende finché non recuperi." : ""}</p>` : "";
-  const until = c.cut ? ` Vale fino ${/^(8|11) /.test(c.until) ? "all'" : "al "}${esc(c.until)}.` : "";
-  const reserve = c.cut ? 0 : 20, U = Math.max(0, c.remCarb - reserve);
-  const r5 = (x) => Math.max(0, Math.round(x / 5) * 5);
-  let meals;
-  if (!c.lunchOpen) meals = `Cena: pane ${r5(U / 0.595)} g.`;
-  else if (U >= 65) {
-    // pranzo con pasta, cena con pane: la pasta non scende sotto una porzione cucinabile
-    const pasta = Math.min(80, r5((U - 18 - 2) / 0.79));
-    meals = `Pranzo: pasta ${pasta} g a secco. Cena: pane ${Math.max(30, r5((U - pasta * 0.79) / 0.595))} g.`;
-  } else meals = `Pranzo: pane ${r5((U * 0.6) / 0.595)} g. Cena: pane ${r5((U * 0.4) / 0.595)} g.`;
-  const action = c.isToday && !c.overPlanned
-    ? (c.remCarb > (c.cut ? 10 : 30) ? `<p class="action">${meals} ${c.cut ? "Niente dolce e niente sgarri." : "Tieni 20 g di carboidrati per un dolce."}${until}</p>` : `<p class="action">Oggi hai già finito i carboidrati: niente pane o pasta.${until}</p>`)
-    : "";
+  const head = j && j.over ? `<p class="headline">Dall'inizio: ${j.over} giorni con sgarri su ${j.days} tracciati (${j.pct}%).</p>` : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
-  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${action}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
