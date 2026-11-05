@@ -916,7 +916,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
-  if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
+  const yog = byName("Yogurt greco 0%");
+  if (needP > 5) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
@@ -952,7 +953,7 @@ function planItemsHtml() {
   return lines.map((x, i) => {
     // nome completo senza grammi e senza la scritta "bloccato", cosi anche i nomi con parentesi (JUST WHEY (GymBeam)) si riconoscono
     const key = foodKey(x).replace(/:.*$/, "").trim();
-    const fd = allFoods().find((f) => norm(f.name).trim().toLowerCase() === key);
+    const fd = byName(key);
     const badge = fd ? sourceBadge(fd) : "";
     const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
@@ -1025,6 +1026,8 @@ const valuesOk = (f) => {
   const calc = 4 * p + 4 * c + 9 * fat;
   return k <= 0 || Math.abs(calc - k) <= Math.max(25, k * 0.25);
 };
+// tra alimenti con lo stesso nome vince quello verificato
+const byName = (name) => { const n = norm(name).trim(); const all = allFoods().filter((f) => norm(f.name).trim() === n); return all.find((f) => isVerified(f) && valuesOk(f)) || all[0] || null; };
 // segno piccolo: spunta verde per i verificati, testo discreto per stime e valori da controllare
 const sourceBadge = (f) => !valuesOk(f) ? `<span class="mark warn" title="da controllare">da controllare</span>` : isVerified(f) ? `<span class="mark ok" title="verificato">✓ ver.</span>` : `<span class="mark warn" title="stima">stima</span>`;
 const foodItem = (f) => {
