@@ -356,5 +356,5 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 
 /* segni piccoli accanto al nome: spunta per i verificati, testo discreto per stime */
 .mark { display: inline-block; font-size: 0.7rem; font-weight: 700; margin-left: 4px; vertical-align: middle; line-height: 1; }
-.mark.ok { color: var(--good); font-size: 0.78rem; font-weight: 700; }
+.mark.ok { color: var(--good); background: rgba(52, 199, 89, 0.16); border-radius: 99px; padding: 1px 6px; font-size: 0.68rem; font-weight: 700; }
 .mark.warn { color: var(--warn); font-weight: 600; letter-spacing: 0.02em; }
