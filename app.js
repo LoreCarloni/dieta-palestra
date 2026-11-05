@@ -920,7 +920,7 @@ function renderPvList(q) {
 function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
-  return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
+  return lines.map((x, i) => `<div class="plan-item">${esc(x.replace(/^Aggiungi alimento\s*/i, ""))} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
   const k = view.date, left = targets(k).kcal - totals(k).kcal;
