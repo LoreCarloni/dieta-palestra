@@ -2135,6 +2135,7 @@ function act(a, el) {
       const dish = S.customFoods.find((x) => norm(x.name).trim() === norm(nm).trim() && x.parts);
       if (!dish) return toast("Nessun piatto salvato con questo nome");
       $("#dish-rows").innerHTML = "";
+      if (!dish.parts) { toast("Piatto salvato senza elenco ingredienti: l'ingrediente che aggiungi si somma al totale"); break; }
       dish.parts.forEach((pt) => {
         document.querySelector('[data-act=dish-add-row]').click();
         const row = document.querySelectorAll("#dish-rows .dish-row");
