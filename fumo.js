@@ -46,6 +46,8 @@ function renderFumo() {
   if (view.fumoEdit) return renderFumoSetup(true);
   const f = S.fumo, st = fumoStats();
   const tecOggi = fumoPensieroDiOggi();
+  const actNow = fumoActive();
+  const resisting = actNow ? `<section class="card" style="text-align:center"><div class="muted small">Stai resistendo da</div><div class="stat-v" style="font-size:1.4rem">${esc(fumoClock(fumoNow() - actNow.start))}</div></section>` : "";
   const perDay = f.smokedDays || {};
   const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
   const smokedToday = perDay[todayKey()] || 0;
@@ -57,8 +59,9 @@ function renderFumo() {
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   return `
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
+    ${resisting}
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
-      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${f.active && f.active.end > fumoNow() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
+      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
       <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
     </div>
     <section class="card">
@@ -186,18 +189,32 @@ function fumoRiduzioni() {
 // Dialogo per le voglie: pensiero del giorno e conto alla rovescia.
 let fumoTimer = null;
 const FUMO_ROUND = "width:124px;height:124px;border-radius:50%;padding:8px;line-height:1.2;white-space:normal;font-size:0.95rem;";
+// Voglia in corso: resta registrata finché non la chiudi con "Ce l'ho fatta" o "Ho appena acceso". Dopo 12 ore decade.
+function fumoActive() {
+  const act = S.fumo && S.fumo.active;
+  if (!act) return null;
+  if (fumoNow() - act.start > 12 * 3600000) { S.fumo.active = null; save(); return null; }
+  return act;
+}
+
+function fumoClock(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), sec = total % 60;
+  if (h > 0) return `${h} ${h === 1 ? "ora" : "ore"} e ${m} ${m === 1 ? "minuto" : "minuti"}`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
 function fumoCravingDialog(minutes) {
-  const act = S.fumo.active;
-  if (act && act.end > fumoNow()) return fumoShowCraving(act.end, fumoPensieroById(act.tech), act.mins);
+  const act = fumoActive();
+  if (act) return fumoShowCraving(act);
   if (!minutes) return fumoOpenPicker();
   const tec = fumoPensieroDiOggi();
-  const mins = minutes;
-  const end = fumoNow() + mins * 60 * 1000;
+  const start = fumoNow();
   S.fumo.cravings = S.fumo.cravings || [];
-  S.fumo.cravings.push(new Date().toISOString());
-  S.fumo.active = { end, tech: tec.id, mins };
+  S.fumo.cravings.push(new Date(start).toISOString());
+  S.fumo.active = { start, end: start + minutes * 60000, mins: minutes, tech: tec.id };
   save();
-  fumoShowCraving(end, tec, mins);
+  fumoShowCraving(S.fumo.active);
 }
 
 // Rotella per scegliere i minuti: parte da 1 e li sceglie l'utente scorrendo.
@@ -224,11 +241,11 @@ function fumoSelectedMinutes() {
   return Math.min(60, Math.max(1, Math.round(w.scrollTop / FUMO_ITEM_H)));
 }
 
-function fumoShowCraving(end, tec, mins) {
-  const total = mins * 60 * 1000;
+function fumoShowCraving(act) {
+  const tec = fumoPensieroById(act.tech);
   openDialog(`
-    <h3>Resisti ${mins} minuti</h3>
-    <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center">${mins}:00</div>
+    <h3 id="fumo-title">Resisti ${act.mins} minuti</h3>
+    <div class="stat-v" id="fumo-count" style="font-size:2.4rem;text-align:center"></div>
     <p id="fumo-breath" style="text-align:center;font-weight:600"></p>
     <p>${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
@@ -238,12 +255,17 @@ function fumoShowCraving(end, tec, mins) {
   const tick = () => {
     const c = $("#fumo-count");
     if (!c || !dlg().open) { clearInterval(fumoTimer); return; }
-    const left = Math.max(0, end - fumoNow());
-    c.textContent = `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, "0")}`;
-    // ciclo di 12 secondi: inspira 4, trattieni 2, espira 6
-    const s = Math.floor((total - left) / 1000) % 12;
-    $("#fumo-breath").textContent = s < 4 ? "Inspira dal naso" : s < 6 ? "Trattieni" : "Espira lentamente";
-    if (left === 0) { clearInterval(fumoTimer); c.textContent = "Fatto"; }
+    const now = fumoNow();
+    const left = act.end - now;
+    if (left > 0) {
+      c.textContent = fumoClock(left);
+      const s = Math.floor((now - act.start) / 1000) % 12;
+      $("#fumo-breath").textContent = s < 4 ? "Inspira dal naso" : s < 6 ? "Trattieni" : "Espira lentamente";
+    } else {
+      c.textContent = fumoClock(now - act.start);
+      $("#fumo-title").textContent = `Hai superato i ${act.mins} minuti`;
+      $("#fumo-breath").textContent = "Continua così. Il conto va avanti.";
+    }
   };
   tick();
   fumoTimer = setInterval(tick, 500);
@@ -272,7 +294,7 @@ function fumoAct(a, el) {
       const act = S.fumo.active;
       clearInterval(fumoTimer);
       const now = fumoNow();
-      const started = act ? act.end - act.mins * 60000 : new Date(S.fumo.start).getTime();
+      const started = act ? act.start : new Date(S.fumo.start).getTime();
       const elapsed = Math.max(0, now - started);
       const m = Math.floor(elapsed / 60000), sec = Math.floor((elapsed % 60000) / 1000);
       S.fumo.attempts = S.fumo.attempts || [];
