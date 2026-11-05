@@ -2882,7 +2882,6 @@ ensureMomCutlet();
 ensureBarcodeSources();
 ensureDishParts();
 ensureMcdMacros();
-setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
