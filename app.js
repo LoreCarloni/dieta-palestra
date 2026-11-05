@@ -1439,7 +1439,7 @@ function dayComment(k) {
   if (plan && plan.count >= 2) lines.push({ lvl: "warn", text: `Recupero: dal ${shortDay(startKey)} ci sono ${plan.count} sgarri. Il target resta ridotto per ${plan.span} giorni, fino al ${shortDay(plan.endKey)}.` });
   // alimento proteico che non compare nei pasti recenti: lo proponiamo quando mancano proteine
   let newFood = null;
-  if (t.p + pl.p < tg.protein * 0.85 && !overPlanned) {
+  if (t.p + pl.p < tg.protein * 0.85 && !overPlanned && tg.kcal - t.kcal > 0) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
     const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
