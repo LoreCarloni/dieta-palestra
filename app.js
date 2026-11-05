@@ -856,6 +856,8 @@ function favoriteFoods(k) {
       if (!m.name || !m.g || !(m.kcal > 0)) return;
       const key = foodGroup(m.name);
       if (todayGroups.has(key)) return; // gia mangiato oggi, anche con un nome diverso
+      // il tacchino generico non entra tra i preferiti: resta solo la cotoletta di famiglia
+      if (/tacchino/i.test(m.name) && !/come la fa mamma/i.test(m.name)) return;
       const c = count.get(key) || { name: m.name, gs: [], n: 0, per: [0, 0, 0, 0], w: 0 };
       c.n++; c.gs.push(m.g);
       // valori per 100 g presi dal pasto registrato stesso, cosi non serve che il nome sia nel database
