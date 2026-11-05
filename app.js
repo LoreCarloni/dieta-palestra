@@ -904,18 +904,11 @@ function renderPvList(q) {
   const list = q.trim() ? searchFoods(q.trim()).slice(0, 8) : [];
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
-// Righe della previsione con un titolo per ogni pasto: colazione, pranzo, spuntino, cena.
-const MEAL_TITLES = ["Colazione", "Pranzo", "Spuntino", "Cena"];
+// Righe della previsione in ordine di giornata: colazione, pranzo, spuntino, cena (senza titoli).
 function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
-  let last = -1;
-  return lines.map((x, i) => {
-    const r = mealRank(x);
-    const head = r !== last ? `<div class="meal-h">${MEAL_TITLES[r]}</div>` : "";
-    last = r;
-    return `${head}<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
-  }).join("");
+  return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
   return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
