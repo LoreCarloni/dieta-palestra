@@ -2026,7 +2026,7 @@ function act(a, el) {
       if (!f.src) return toast("Scegli da dove vengono i valori");
       const oldV = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
       // non sostituisco un alimento verificato con una stima: resta quello verificato
-      if (oldV && isVerified(oldV) && !isVerified(f)) return toast("Esiste già la versione verificata: non la sostituisco con una stima.");
+      if (oldV && isVerified(oldV) && !isVerified(f)) return qtyDialog({ ...oldV, cat: "I miei alimenti" }, dlg().dataset.slot);
 
       // regola fissa: per le stime l'app alza kcal, carboidrati e grassi del 15%, le proteine restano uguali
       const prud = /stima/i.test(f.src) ? 15 : 0;
@@ -2039,7 +2039,7 @@ function act(a, el) {
       // valori presi dall'etichetta della confezione: verificati
       if (/etichetta/i.test(f.src) && !prud) f.verified = true;
       const twin = sameValuesFood(f);
-      if (twin) return toast(`Ha gli stessi valori di "${twin.name}": non serve aggiungerlo, usa quello.`);
+      if (twin) return qtyDialog({ ...twin, cat: "I miei alimenti" }, dlg().dataset.slot); // stessi valori: uso l'alimento gia esistente
       S.customFoods = S.customFoods.filter((x) => x.name !== f.name).concat(f);
       save();
       return qtyDialog({ ...f, cat: "I miei alimenti" }, dlg().dataset.slot);
