@@ -944,7 +944,7 @@ function planItemsHtml() {
     const fd = allFoods().find((f) => norm(f.name).trim().toLowerCase() === key);
     const badge = fd ? sourceBadge(fd) : "";
     const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
-    return `<div class="plan-item">${esc(shown)} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+    return `<div class="plan-item">${esc(shown)} ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2097,6 +2097,19 @@ function act(a, el) {
     case "fv-add": {
       S.plannedDinner = [S.plannedDinner, `${el.dataset.name}, ${el.dataset.g} g`].filter((x) => x && x.trim()).join("\n");
       closeDialog(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
+    }
+    case "plan-fav": {
+      // segna o toglie il preferito direttamente dalla previsione
+      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      if (!line) break;
+      const k2 = foodKey(line).replace(/:.*$/, "").trim();
+      const f = allFoods().find((x) => norm(x.name).trim().toLowerCase() === k2);
+      if (!f) return toast("Prima inserisci l'alimento con valori");
+      const mine = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
+      if (mine) { mine.fav = !mine.fav; }
+      else { S.customFoods.push({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion || 100, src: f.src || "Database", fav: true }); }
+      save(); toast(mine && !mine.fav ? "Tolto dai preferiti" : "Aggiunto ai preferiti");
+      break;
     }
     case "plan-values": {
       // apre il modulo con il nome dell'alimento: si inseriscono i macro corretti (etichetta, codice a barre o foto)
