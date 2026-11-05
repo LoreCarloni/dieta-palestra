@@ -918,7 +918,7 @@ function planItemsHtml() {
   return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-dinner">Aggiungi la mia cena abituale</button><button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -2063,6 +2063,27 @@ function act(a, el) {
       S.autoAll = gen; S.autoLines = gen;
       S.plannedDinner = [...kept, ...gen].join("\n");
       toast("Proposte automatiche aggiornate");
+      break;
+    }
+    case "plan-add-dinner": {
+      // la cena che mangi piu spesso negli ultimi 30 giorni (solo i pasti registrati come cena)
+      const count = new Map();
+      for (let i = 1; i <= 30; i++) {
+        const d = S.days[addDays(view.date, -i)];
+        (d && d.meals || []).forEach((m) => {
+          if (m.slot !== "cena" || !m.g) return;
+          const key = norm(m.name).trim();
+          const c = count.get(key) || { name: m.name, n: 0, gs: [] };
+          c.n++; c.gs.push(m.g); count.set(key, c);
+        });
+      }
+      const cur = new Set(sortPlanLines(S.plannedDinner).map((l) => foodKey(l).replace(/:.*$/, "").trim()));
+      const best = [...count.values()].filter((c) => !cur.has(foodKey(c.name))).sort((a, b) => b.n - a.n)[0];
+      if (!best) return toast("Non trovo una cena abituale nei giorni passati");
+      const gs = best.gs.slice().sort((a, b) => a - b);
+      const g = Math.round(gs[Math.floor(gs.length / 2)] / 5) * 5;
+      S.plannedDinner = [S.plannedDinner, `${best.name}, ${g} g`].filter((x) => x && x.trim()).join("\n");
+      toast(`Aggiunta la cena abituale: ${best.name}`);
       break;
     }
     case "plan-add-fav": {
