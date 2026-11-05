@@ -829,6 +829,30 @@ const dlg = () => $("#dlg");
 const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /pollo|tacchino|carne|pesce/i];
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 // Crea la previsione: tiene i pasti fissi e completa il resto con alimenti magri, pasta e verdura, fino al target.
+// I cibi che mangi piu spesso negli ultimi 30 giorni, con la porzione tipica (mediana dei grammi).
+function favoriteFoods(k) {
+  const count = new Map();
+  for (let i = 1; i <= 30; i++) {
+    const d = S.days[addDays(k, -i)];
+    if (!d || !d.meals) continue;
+    d.meals.forEach((m) => {
+      if (!m.name || !m.g || !(m.kcal > 0)) return;
+      const key = norm(m.name).trim();
+      const c = count.get(key) || { name: m.name, gs: [], n: 0 };
+      c.n++; c.gs.push(m.g); count.set(key, c);
+    });
+  }
+  const foods = allFoods();
+  const out = [];
+  [...count.values()].filter((c) => c.n >= 2).sort((a, b) => b.n - a.n).forEach((c) => {
+    const f = foods.find((x) => norm(x.name).trim() === norm(c.name).trim());
+    if (!f || !(f.kcal >= 0)) return;
+    const gs = c.gs.slice().sort((a, b) => a - b);
+    const g = Math.round(gs[Math.floor(gs.length / 2)] / 5) * 5;
+    if (g > 0) out.push({ name: f.name, g, per: [f.kcal, f.p, f.c, f.f] });
+  });
+  return out.slice(0, 3);
+}
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
   const src = [...blockedText.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato"), ...planText.split("\n").filter((x) => x.trim())];
@@ -846,6 +870,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   };
   const ALB = [45, 10.7, 0.8, 0.2], YOG = [57, 10, 3.6, 0.2], TAC = [135, 29, 0, 2], PAS = [340, 13.5, 64, 2.5];
   // proteine: yogurt greco 0% con 10 g di proteine in polvere (valori dal database e dall'alimento personale), poi albume e tacchino
+  // prima i cibi che mangi di solito (ultimi 30 giorni), con la porzione che usi di solito
+  const eatenToday = new Set(((S.days[k] || {}).meals || []).map((m) => norm(m.name).trim()));
+  favoriteFoods(k).forEach((fv) => {
+    if (eatenToday.has(norm(fv.name).trim())) return;
+    if (needK - fv.per[0] * fv.g / 100 < -150) return; // non far superare troppo le calorie
+    add(fv.name, fv.g, fv.per);
+  });
   if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); add("Proteine in polvere", 10, [380, 78, 6, 5]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
   if (needP > 5) { const tg2 = Math.min(150, Math.round(needP / 0.29 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
