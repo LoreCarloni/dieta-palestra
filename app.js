@@ -2312,7 +2312,10 @@ function act(a, el) {
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
-      const gen = autoPlan(S.blockedToday || "", kept.join("\n"), view.date).split("\n").filter((x) => x.trim());
+      // se le righe scritte superano gia le calorie rimaste, non propongo altro
+      const plannedK = parseDiary(kept.join("\n")).reduce((a, x) => a + x.kcal, 0);
+      const leftK = targets(view.date).kcal - totals(view.date).kcal;
+      const gen = plannedK > leftK ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), view.date).split("\n").filter((x) => x.trim());
       S.autoAll = gen; S.autoLines = gen;
       S.plannedDinner = [...kept, ...gen].join("\n");
       toast("Proposte automatiche aggiornate");
