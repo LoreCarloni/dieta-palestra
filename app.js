@@ -2166,7 +2166,7 @@ function act(a, el) {
       const parts = [];
       // piatto gia salvato senza lista ingredienti: parto dai suoi totali e aggiungo quello che scrivo ora
       const old = S.customFoods.find((x) => norm(x.name).trim() === norm(name).trim());
-      if (old && !old.parts && old.portion > 0) {
+      if (old && !old.parts && old.portion > 0 && old.kcal > 0) {
         tg = old.portion; tk = old.kcal * old.portion / 100; tp = old.p * old.portion / 100; tc = old.c * old.portion / 100; tf = old.f * old.portion / 100;
       }
       rows.forEach((r) => {
