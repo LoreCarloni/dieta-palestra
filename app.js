@@ -430,7 +430,7 @@ function renderToday() {
     </div>` : ""}
     ${recalcChanges(k).length ? `<button class="btn wide" data-act="recalc">Ricalcola ${recalcChanges(k).length} ${recalcChanges(k).length === 1 ? "alimento" : "alimenti"} con i valori aggiornati</button>` : ""}
     ${mealsHtml}
-    ${d.meals.length > 0 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Chiudi" : `Mostra ${d.meals.length}`}</button>` : ""}
+    ${d.meals.length > 0 ? `<button class="btn ghost wide" data-act="toggle-foods">${view.foodsOpen ? "Chiudi" : `<span class="big-count">${d.meals.length}</span>`}</button>` : ""}
   </section>
 
   ${myPlanCard()}
@@ -844,14 +844,18 @@ const PLAN_ORDER = [/yogurt/i, /polvere|whey/i, /pasta|riso|pane/i, /albume/i, /
 const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.findIndex((re) => re.test(x.name)) + 1 || 50));
 // Crea la previsione: tiene i pasti fissi e completa il resto con alimenti magri, pasta e verdura, fino al target.
 // I cibi che mangi piu spesso negli ultimi 30 giorni, con la porzione tipica (mediana dei grammi).
+// chiave dell'alimento: le prime due parole significative (fiocchi d'avena = fiocchi di avena integrali)
+const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.length > 2).slice(0, 2).join(" ");
 function favoriteFoods(k) {
   const count = new Map();
+  const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
     if (!d || !d.meals) continue;
     d.meals.forEach((m) => {
       if (!m.name || !m.g || !(m.kcal > 0)) return;
-      const key = norm(m.name).trim();
+      const key = foodGroup(m.name);
+      if (todayGroups.has(key)) return; // gia mangiato oggi, anche con un nome diverso
       const c = count.get(key) || { name: m.name, gs: [], n: 0, per: [0, 0, 0, 0], w: 0 };
       c.n++; c.gs.push(m.g);
       // valori per 100 g presi dal pasto registrato stesso, cosi non serve che il nome sia nel database
@@ -1204,6 +1208,8 @@ const shortDay = (k) => fmtDate(k, { weekday: "short", day: "numeric" });
 function dayComment(k) {
   const d = day(k), t = totals(k), tg = targets(k);
   if (!d.meals.length) return null;
+  // il consiglio parte da quanto hai mangiato piu quanto e gia previsto: non suggerisce cio che c'e gia
+  const pl = (k >= todayKey() && S.plannedDinner ? parseDiary(S.plannedDinner) : []).reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { kcal: 0, p: 0, c: 0, f: 0 });
   const clean = (n) => String(n).replace(/\s*\(.*$/, "").replace(/\s+/g, " ").trim();
   const merged = {};
   d.meals.forEach((m) => { const key = clean(m.name).toLowerCase(); const x = merged[key] || { name: clean(m.name), kcal: 0, p: 0, c: 0, f: 0, g: 0 }; x.kcal += m.kcal; x.p += m.p; x.c += m.c; x.f += m.f; x.g += m.g || 0; merged[key] = x; });
@@ -1295,7 +1301,7 @@ function dayComment(k) {
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
   }
-  const remCarb = tg.carbs - t.c;
+  const remCarb = tg.carbs - t.c - pl.c;
   if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
@@ -1328,12 +1334,12 @@ function dayComment(k) {
   if (plan && plan.count >= 2) lines.push({ lvl: "bad", text: `Recupero non chiuso: da ${shortDay(startKey)} hai fatto ${plan.count} sgarri. La pancia non scende finché non li recuperi: servono circa ${plan.span} giorni, fino al ${shortDay(plan.endKey)}. Ogni sgarro in più allunga il percorso di altri giorni.` });
   // alimento proteico che non compare nei pasti recenti: lo proponiamo quando mancano proteine
   let newFood = null;
-  if (t.p < tg.protein * 0.85 && !overPlanned) {
+  if (t.p + pl.p < tg.protein * 0.85 && !overPlanned) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
     const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
     if (pick) {
-      const gap = Math.round(tg.protein - t.p);
+      const gap = Math.round(tg.protein - t.p - pl.p);
       const n = Math.min(3, Math.ceil(gap / pick.p));
       newFood = { name: pick.name, gap, n, covered: Math.round(n * pick.p), rest: Math.max(0, gap - Math.round(n * pick.p)) };
     }
@@ -1375,7 +1381,7 @@ function dayComment(k) {
   if (cutG > 0) tips.unshift(`dallo sgarro di ${shortDay(startKey)}, giorno ${dayNo} di ${plan ? plan.span : 7}: riduci i carboidrati di circa ${cutG} g al giorno per ${daysLeft} giorni, per esempio un po' meno pane o pasta a pranzo e a cena, senza saltare i pasti`);
   if (wkOk && wk.kcal > tg.kcal * 1.05) tips.push("la settimana è sopra il target: domani scegli cibi a bassa densità, verdura e proteine, e lascia il pane fuori");
   lines.push({ lvl: "tip", text: tips.length ? `Recupero: ${tips.join("; ")}.` : "Recupero: resta sul target." });
-  return { verdict, lines, journey, newFood, overPlanned, remCarb: tg.carbs - t.c, lunchOpen: pranzoLibero, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
+  return { verdict, lines, journey, newFood, overPlanned, remCarb: tg.carbs - t.c - pl.c, lunchOpen: pranzoLibero, isToday: k === todayKey(), cut: cutG, from: startKey ? shortDay(startKey) : "", until: plan ? fmtDate(plan.endKey, { day: "numeric", month: "long" }) : "", count: plan ? plan.count : 0, of: plan ? plan.span : 7, dayNo, daysLeft };
 }
 function commentHtml(k) {
   const c = dayComment(k);
