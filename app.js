@@ -274,7 +274,7 @@ function refreshForecast() {
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
   const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
   const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
-  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x) && !autoRe.test(x.trim()));
+  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x) && !(autoRe.test(x.trim()) && !/bloccato/i.test(x)));
   const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), k).split("\n").filter((x) => x.trim());
   S.autoAll = [...new Set([...(S.autoAll || []), ...gen])].slice(-300);
   S.autoLines = gen;
@@ -2145,7 +2145,7 @@ function act(a, el) {
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
-      const kept = sortPlanLines(S.plannedDinner).filter((l) => !(autoRe.test(l.trim()) || known.has(l)));
+      const kept = sortPlanLines(S.plannedDinner).filter((l) => !((autoRe.test(l.trim()) && !/bloccato/i.test(l)) || known.has(l)));
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
