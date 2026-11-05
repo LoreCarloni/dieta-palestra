@@ -983,7 +983,7 @@ function foodDialog() {
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
 // Un alimento e verificato solo se la fonte e una tabella ufficiale o un'etichetta, non una stima o un valore dichiarato.
-const isVerified = (f) => /CREA|tabella|etichetta/i.test(f.src || "") && !/stima|dichiarat|calcolat/i.test(f.src || "");
+const isVerified = (f) => !!(f.barcode || f.verified) || (/CREA|tabella|etichetta/i.test(f.src || "") && !/stima|dichiarat|calcolat/i.test(f.src || ""));
 const sourceBadge = (f) => isVerified(f) ? `<span class="badge ok">verificato</span>` : `<span class="badge warn">stima</span>`;
 const foodItem = (f) => {
   const item = `<button class="item" data-act="pick-food" data-food="${esc(JSON.stringify(f))}"><span>${esc(f.name)} ${sourceBadge(f)}</span><span class="muted small">${r0(f.kcal)} kcal ${f.perServing ? "per porzione" : "per 100 g"}</span></button>`;
@@ -1981,6 +1981,8 @@ function act(a, el) {
         f.kcal = Math.round(f.kcal * (1 + prud / 100)); f.c = up(f.c); f.f = up(f.f);
         f.src = `Stima prudente, +${prud}% su kcal, carboidrati e grassi (proteine invariate). Fonte di partenza: ${f.src}`;
       }
+      // valori presi dall'etichetta della confezione: verificati
+      if (/etichetta/i.test(f.src) && !prud) f.verified = true;
       const twin = sameValuesFood(f);
       if (twin) return toast(`Ha gli stessi valori di "${twin.name}": non serve aggiungerlo, usa quello.`);
       S.customFoods = S.customFoods.filter((x) => x.name !== f.name).concat(f);
