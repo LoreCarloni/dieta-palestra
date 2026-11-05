@@ -915,7 +915,7 @@ function renderPvList(q) {
 function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
-  return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
+  return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
   return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
@@ -2009,6 +2009,14 @@ function act(a, el) {
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
       break;
+    }
+    case "plan-values": {
+      // apre il modulo con il nome dell'alimento: si inseriscono i macro corretti (etichetta, codice a barre o foto)
+      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      if (!line) break;
+      const nm = line.replace(/,?\s*bloccato\b/ig, "").replace(/:.*$/, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, "").replace(/,\s*$/, "").trim();
+      dlg().dataset.slot = "giorno";
+      return customFoodDialog(nm);
     }
     case "plan-regen": {
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
