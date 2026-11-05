@@ -918,7 +918,7 @@ function planItemsHtml() {
   return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1998,6 +1998,20 @@ function act(a, el) {
       unblock([line]);
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
+      break;
+    }
+    case "plan-regen": {
+      // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
+      const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+      const known = new Set(S.autoAll || []);
+      const kept = sortPlanLines(S.plannedDinner).filter((l) => !(autoRe.test(l.trim()) || known.has(l)));
+      S.autoLines = []; S.autoAll = [];
+      S.plannedDinner = kept.join("\n");
+      S.forecastSnap = null; S.autoForecast = true;
+      const gen = autoPlan(S.blockedToday || "", "", view.date).split("\n").filter((x) => x.trim());
+      S.autoAll = gen; S.autoLines = gen;
+      S.plannedDinner = [...kept, ...gen].join("\n");
+      toast("Proposte automatiche aggiornate");
       break;
     }
     case "plan-add-fav": {
