@@ -1812,6 +1812,8 @@ function sameValuesFood(f) {
   return allFoods().find((x) => norm(x.name).trim() !== norm(f.name).trim() && near(x.kcal, f.kcal) && near(x.p, f.p) && near(x.c, f.c) && near(x.f, f.f)) || null;
 }
 function customFoodDialog(prefill = "") {
+  const dishSaved = prefill && S.customFoods.find((x) => x.parts && norm(x.name).trim() === norm(prefill).trim());
+  if (dishSaved) return dishDialog(dishSaved.name);
   openDialog(`
     <h3>Nuovo alimento</h3>
     <p class="muted small">Copia i valori per 100 g dall'etichetta. Lo trovi poi tra "I miei alimenti".</p>
@@ -2118,16 +2120,7 @@ function act(a, el) {
         <button class="btn ghost wide" data-act="dish-open">Piatto composto (es. pasta e zucca)</button>
         <button class="btn ghost wide" data-act="custom-food">Nuovo alimento</button>`);
     }
-    case "dish-open": {
-      return openDialog(`
-        <h3>Piatto composto</h3>
-        <p class="muted small">Parti dalle domande facili: il peso di ogni ingrediente, o quanti cucchiai e quanto pesa un cucchiaio. Se non lo sai, lascia vuoto: resta una stima.</p>
-        <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" autofocus><div id="dish-sugg" class="chips"></div></div>
-        <div id="dish-rows"></div>
-        <button class="btn ghost wide" data-act="dish-load">Carica il piatto salvato con questo nome</button>
-        <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
-        <button class="btn primary wide" data-act="dish-save">Salva il piatto</button>`);
-    }
+    case "dish-open": return dishDialog("");
     case "dish-pick": {
       const inp = $("#dish-name"); if (inp) inp.value = el.dataset.name;
       $("#dish-sugg").innerHTML = "";
@@ -2729,6 +2722,18 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
 });
+// editor del piatto composto: con il nome di un piatto gia salvato carica i suoi ingredienti, da modificare uno per uno
+function dishDialog(name) {
+  openDialog(`
+    <h3>Piatto composto</h3>
+    <p class="muted small">Puoi cambiare ogni ingrediente: grammi, cucchiai o peso del cucchiaio. Se non sai una quantità, lascia vuoto: resta una stima.</p>
+    <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" value="${esc(name)}" autofocus><div id="dish-sugg" class="chips"></div></div>
+    <div id="dish-rows"></div>
+    <button class="btn ghost wide" data-act="dish-load">Carica il piatto salvato con questo nome</button>
+    <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
+    <button class="btn primary wide" data-act="dish-save">Salva il piatto</button>`);
+  if (name) document.querySelector('[data-act=dish-load]').click();
+}
 // suggerimenti mentre scrivi: i piatti salvati e la ricerca in previsione
 document.addEventListener("input", (e) => {
   if (e.target.id === "dish-name") {
