@@ -1382,7 +1382,8 @@ function dayComment(k) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
-    if (rem < 250) parts.push(`${rem <= 0 ? "Hai già finito il budget della giornata" : `Mangiato finora: restano solo ${r0(rem)} kcal`}: per ${meal} resta leggero, verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti. Non compensare saltando i pasti di domani.`);
+    if (rem <= 0) parts.push(`Il budget di oggi è già coperto dai pasti registrati: non serve aggiungere altro. Se mangi ancora, scegli solo verdura.`);
+    else if (rem < 250) parts.push(`Mangiato finora: restano solo ${r0(rem)} kcal per ${meal}. Verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti.`);
     else {
       const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
       parts.push(`Mangiato finora: restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. A cena` : `Per ${meal}`}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
