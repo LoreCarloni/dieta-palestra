@@ -918,7 +918,7 @@ function planItemsHtml() {
   return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -2009,6 +2009,25 @@ function act(a, el) {
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
       break;
+    }
+    case "fv-open": {
+      return openDialog(`
+        <h3>Aggiungi o correggi un alimento</h3>
+        <p class="muted small">Scrivi il nome: puoi aggiungerlo alla previsione oppure aggiornare i suoi valori con la fotocamera.</p>
+        <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
+        <button class="btn primary wide" data-act="fv-search">Cerca</button>
+        <div id="fv-res"></div>
+        <button class="btn ghost wide" data-act="custom-food">Nuovo alimento</button>`);
+    }
+    case "fv-search": {
+      const q = val("#fv-q").trim();
+      const res = q ? searchFoods(q).slice(0, 8) : [];
+      $("#fv-res").innerHTML = res.length ? res.map((f) => `<div class="row"><span>${esc(f.name)}</span><span class="row-r"><button class="btn small-btn primary" data-act="fv-add" data-name="${esc(f.name)}" data-g="${f.portion || f.piece || 100}">Aggiungi</button><button class="btn small-btn ghost" data-act="habit-add" data-name="${esc(f.name)}">Valori</button></span></div>`).join("") : `<p class="muted small">Nessun risultato: usa "Nuovo alimento".</p>`;
+      break;
+    }
+    case "fv-add": {
+      S.plannedDinner = [S.plannedDinner, `${el.dataset.name}, ${el.dataset.g} g`].filter((x) => x && x.trim()).join("\n");
+      closeDialog(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
     }
     case "plan-values": {
       // apre il modulo con il nome dell'alimento: si inseriscono i macro corretti (etichetta, codice a barre o foto)
