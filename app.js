@@ -381,9 +381,17 @@ function unblock(lines) {
 }
 
 // Riepilogo della settimana, in evidenza in cima a Oggi: il conto conta sulla settimana, non sul singolo giorno.
+// scostamento totale dei giorni registrati in una settimana che finisce a endKey
+function weekDiff(endKey) {
+  const ps = periodStats(endKey, 7);
+  const tr = ps.rows.filter((r) => r.d.meals.length > 0);
+  if (!tr.length) return null;
+  return Math.round(tr.reduce((a, r) => a + r.t.kcal - r.tg.kcal, 0));
+}
 function weekCard() {
   const ps = periodStats(todayKey(), 7);
   const tr = ps.rows.filter((r) => r.d.meals.length > 0);
+  const prev = weekDiff(addDays(todayKey(), -7));
   if (!tr.length) return `<section class="card week-card"><h2>Questa settimana</h2><p class="muted small">Nessun giorno registrato ancora.</p></section>`;
   const sumK = tr.reduce((a, r) => a + r.t.kcal, 0), sumT = tr.reduce((a, r) => a + r.tg.kcal, 0);
   const diffTot = Math.round(sumK - sumT);
@@ -392,7 +400,7 @@ function weekCard() {
   const cls = diffTot > 0.05 * sumT ? "bad" : "good";
   const word = diffDay > 0 ? "sopra" : "sotto";
   return `<section class="card week-card"><h2>Questa settimana <span class="muted small">${tr.length} ${tr.length === 1 ? "giorno registrato" : "giorni registrati"} su 7</span></h2>
-    <div class="week-big ${cls}">${r0(Math.abs(diffTot))} kcal</div>
+    <div class="week-big ${cls}">${r0(Math.abs(diffTot))} kcal${prev !== null ? ` <span class="muted small">(settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)})</span>` : ""}</div>
     <div class="muted small">nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.</div>
     <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g in totale.</div></section>`;
 }
