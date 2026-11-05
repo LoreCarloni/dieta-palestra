@@ -1041,6 +1041,24 @@ const valuesOk = (f) => {
   const calc = 4 * p + 4 * c + 9 * fat;
   return k <= 0 || Math.abs(calc - k) <= Math.max(25, k * 0.25);
 };
+// Stime per gli ingredienti comuni non presenti nel database. Sono stime (per 100 g), e il piatto le dichiara come tali.
+const STIMA_INGREDIENTI = {
+  "pancetta": [400, 15, 0, 36],
+  "carne macinata": [175, 20, 0, 10],
+  "macinato di manzo": [175, 20, 0, 10],
+  "besciamella": [125, 3.5, 9, 8],
+  "pasta fresca": [340, 12, 66, 4],
+  "pasta all'uovo": [340, 12, 66, 4],
+  "passata di pomodoro": [25, 1.2, 4, 0.2],
+  "cipolla": [40, 1.1, 9, 0.1],
+  "carota": [41, 0.9, 9.6, 0.2],
+  "sedano": [16, 0.7, 3, 0.2],
+  "burro": [758, 0.8, 1.1, 83.4],
+  "vino rosso": [85, 0.1, 2.6, 0],
+  "brodo": [5, 0.5, 0.5, 0.2],
+  "spinaci": [23, 2.9, 3.6, 0.4],
+};
+const stimaIngrediente = (nome) => { const n = norm(nome).trim(); const k = Object.keys(STIMA_INGREDIENTI).find((x) => n === x || n.startsWith(x)); return k ? { name: k, v: STIMA_INGREDIENTI[k] } : null; };
 // tra alimenti con lo stesso nome vince quello verificato
 const byName = (name) => { const n = norm(name).trim(); const all = allFoods().filter((f) => norm(f.name).trim() === n); return all.find((f) => isVerified(f) && valuesOk(f)) || all[0] || null; };
 // segno piccolo: spunta verde per i verificati, testo discreto per stime e valori da controllare
@@ -2176,6 +2194,7 @@ function act(a, el) {
       if (!name || !rows.length) return toast("Scrivi il nome e almeno un ingrediente");
       let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0, missing = 0;
       const parts = [];
+      const stimati = [];
       // piatto gia salvato senza lista ingredienti: parto dai suoi totali e aggiungo quello che scrivo ora
       const old = S.customFoods.find((x) => norm(x.name).trim() === norm(name).trim());
       if (old && !old.parts && old.portion > 0 && old.kcal > 0) {
@@ -2187,7 +2206,8 @@ function act(a, el) {
         let g = num1(r.querySelector(".dish-g").value);
         if (!g) g = num1(r.querySelector(".dish-n").value) * num1(r.querySelector(".dish-w").value);
         if (!ing) return;
-        const f = byName(ing) || searchFoods(ing)[0];
+        let f = byName(ing) || searchFoods(ing)[0];
+        if (!f) { const st = stimaIngrediente(ing); if (st) { f = { name: ing, kcal: st.v[0], p: st.v[1], c: st.v[2], f: st.v[3], stimato: true }; stimati.push(ing); } }
         if (!g) { missing++; return; }
         parts.push({ name: ing, g });
         if (!f) { missing++; tg += g; return; } // ingrediente sconosciuto: pesa nel piatto ma senza valori, il piatto resta incompleto
@@ -2195,7 +2215,7 @@ function act(a, el) {
       });
       if (!(tg > 0)) return toast("Serve almeno un ingrediente con il peso");
       const complete = old && !old.parts ? 100 : Math.round(((rows.length - missing) / rows.length) * 100);
-      const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${missing ? ", mancano alcuni ingredienti" : ""}`, parts };
+      const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${stimati.length ? `, ingredienti stimati: ${stimati.join(", ")}` : ""}${missing ? ", mancano alcuni ingredienti" : ""}`, parts };
       S.customFoods = S.customFoods.filter((x) => norm(x.name).trim() !== norm(name).trim()).concat(dish);
       save();
       return qtyDialog({ ...dish, cat: "I miei alimenti" }, "giorno");
