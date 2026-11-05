@@ -955,7 +955,10 @@ function planItemsHtml() {
     const fd = allFoods().find((f) => norm(f.name).trim().toLowerCase() === key);
     const badge = fd ? sourceBadge(fd) : "";
     const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
-    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+    // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
+    const it = parseDiary(x)[0];
+    const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal · ${Math.round(it.c)} g carb</span>` : `<span class="muted small">valori mancanti</span>`;
+    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
   }).join("");
 }
 function myPlanCard() {
