@@ -253,8 +253,16 @@ const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim())
 function refreshForecast() {
   const k = view.date, future = k > todayKey();
   // niente righe doppie: le ripetizioni accumulate in passato vengono tolte
-  const uniq = [...new Set((S.plannedDinner || "").split("\n").filter((x) => x.trim()))];
-  if (uniq.join("\n") !== (S.plannedDinner || "").split("\n").filter((x) => x.trim()).join("\n")) { S.plannedDinner = uniq.join("\n"); save(); }
+  // stesso nome = stesso cibo: se c'e due volte (anche con grammi diversi) resta la prima riga
+  const seenNames = new Set();
+  const uniq = (S.plannedDinner || "").split("\n").filter((x) => {
+    if (!x.trim()) return false;
+    const key = foodKey(x).replace(/:.*$/, "").trim();
+    if (seenNames.has(key)) return false;
+    seenNames.add(key); return true;
+  });
+  const before = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
+  if (uniq.length !== before.length) { S.plannedDinner = uniq.join("\n"); save(); }
   if (future) {
     // giorno futuro senza previsione: l'app propone subito cosa mangiare; se c'e gia una previsione la lascia com'e
     // rigenera se la previsione e vuota o era solo quella generata in automatico
