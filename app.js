@@ -838,18 +838,20 @@ function favoriteFoods(k) {
     d.meals.forEach((m) => {
       if (!m.name || !m.g || !(m.kcal > 0)) return;
       const key = norm(m.name).trim();
-      const c = count.get(key) || { name: m.name, gs: [], n: 0 };
-      c.n++; c.gs.push(m.g); count.set(key, c);
+      const c = count.get(key) || { name: m.name, gs: [], n: 0, per: [0, 0, 0, 0], w: 0 };
+      c.n++; c.gs.push(m.g);
+      // valori per 100 g presi dal pasto registrato stesso, cosi non serve che il nome sia nel database
+      const per = [m.kcal, m.p || 0, m.c || 0, m.f || 0].map((x) => x * 100 / m.g);
+      c.per = per.map((x, i) => c.per[i] + x); c.w++;
+      count.set(key, c);
     });
   }
-  const foods = allFoods();
   const out = [];
   [...count.values()].filter((c) => c.n >= 1).sort((a, b) => b.n - a.n).forEach((c) => {
-    const f = foods.find((x) => norm(x.name).trim() === norm(c.name).trim());
-    if (!f || !(f.kcal >= 0)) return;
     const gs = c.gs.slice().sort((a, b) => a - b);
     const g = Math.round(gs[Math.floor(gs.length / 2)] / 5) * 5;
-    if (g > 0) out.push({ name: f.name, g, per: [f.kcal, f.p, f.c, f.f] });
+    const per = c.per.map((x) => Math.round((x / c.w) * 10) / 10);
+    if (g > 0 && per[0] > 0) out.push({ name: c.name, g, per });
   });
   return out.slice(0, 3);
 }
