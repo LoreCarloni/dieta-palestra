@@ -2118,11 +2118,17 @@ function act(a, el) {
       return openDialog(`
         <h3>Piatto composto</h3>
         <p class="muted small">Parti dalle domande facili: il peso di ogni ingrediente, o quanti cucchiai e quanto pesa un cucchiaio. Se non lo sai, lascia vuoto: resta una stima.</p>
-        <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" autofocus></div>
+        <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" autofocus><div id="dish-sugg" class="chips"></div></div>
         <div id="dish-rows"></div>
         <button class="btn ghost wide" data-act="dish-load">Carica il piatto salvato con questo nome</button>
         <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
         <button class="btn primary wide" data-act="dish-save">Salva il piatto</button>`);
+    }
+    case "dish-pick": {
+      const inp = $("#dish-name"); if (inp) inp.value = el.dataset.name;
+      $("#dish-sugg").innerHTML = "";
+      document.querySelector('[data-act=dish-load]').click();
+      break;
     }
     case "dish-load": {
       const nm = val("#dish-name").trim();
@@ -2717,6 +2723,16 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
+});
+// suggerimenti mentre scrivi: i piatti salvati e la ricerca in previsione
+document.addEventListener("input", (e) => {
+  if (e.target.id === "dish-name") {
+    const box = $("#dish-sugg"); if (!box) return;
+    const q = norm(e.target.value).trim();
+    const hits = q ? S.customFoods.filter((x) => x.parts || x.src && /piatto composto/i.test(x.src)).filter((x) => norm(x.name).split(/[^a-z0-9]+/).some((w) => w.length > 1 && q.split(/[^a-z0-9]+/).some((t) => t.length > 1 && w.startsWith(t)))).slice(0, 6) : [];
+    box.innerHTML = hits.map((x) => `<button class="chip" data-act="dish-pick" data-name="${esc(x.name)}">${esc(x.name)}</button>`).join("");
+  }
+  if (e.target.id === "fv-q") { const btn = document.querySelector('[data-act=fv-search]'); if (btn && e.target.value.trim().length >= 2) btn.click(); }
 });
 document.addEventListener("change", (e) => {
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
