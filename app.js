@@ -2191,8 +2191,14 @@ function act(a, el) {
     }
     case "plan-del-one": {
       const lines = sortPlanLines(S.plannedDinner);
-      if (lines[+el.dataset.i]) { unblock([lines[+el.dataset.i]]); lines.splice(+el.dataset.i, 1); }
-      S.plannedDinner = lines.join("\n");
+      const target = lines[+el.dataset.i];
+      if (target) {
+        // tolgo la riga e le sue copie (stesso cibo, anche con grammi o nome scritti in modo diverso)
+        const grp = foodGroup(foodKey(target));
+        unblock([target]);
+        S.plannedDinner = lines.filter((l) => foodGroup(foodKey(l)) !== grp).join("\n");
+        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodGroup(foodKey(l)) !== grp);
+      } else S.plannedDinner = lines.join("\n");
       break;
     }
     case "plan-clear": {
