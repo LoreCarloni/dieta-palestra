@@ -2022,6 +2022,8 @@ function act(a, el) {
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
       const oldV = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
+      // non sostituisco un alimento verificato con una stima: resta quello verificato
+      if (oldV && isVerified(oldV) && !isVerified(f)) return toast("Esiste già la versione verificata: non la sostituisco con una stima.");
 
       // regola fissa: per le stime l'app alza kcal, carboidrati e grassi del 15%, le proteine restano uguali
       const prud = /stima/i.test(f.src) ? 15 : 0;
