@@ -350,3 +350,6 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 
 /* numero degli alimenti del giorno, in evidenza */
 .big-count { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* nome della riga della previsione: tocca per vedere e modificare i valori */
+.plan-name { padding: 0; text-align: left; font-weight: inherit; color: var(--text); cursor: pointer; }
