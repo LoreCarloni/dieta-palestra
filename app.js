@@ -1765,6 +1765,14 @@ function customFoodDialog(prefill = "") {
     </div>
     <button class="btn primary wide" data-act="save-custom">Salva e continua</button>`);
   dlg().dataset.src = "";
+  // se l'alimento esiste gia, riprendo i suoi valori e la sua fonte: basta salvare
+  const ex = prefill && S.customFoods.find((x) => norm(x.name).trim() === norm(prefill).trim());
+  if (ex) {
+    const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
+    set("#c-kcal", ex.kcal); set("#c-p", ex.p); set("#c-c", ex.c); set("#c-f", ex.f); set("#c-portion", ex.portion || 100);
+    dlg().dataset.src = ex.src || "";
+    document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b.dataset.v === dlg().dataset.src));
+  }
 }
 
 function quickKcalDialog() {
