@@ -349,4 +349,4 @@ h2 .link { white-space: nowrap; font-size: 0.9rem; padding: 0 0 0 8px; }
 .meal-h:first-child { margin-top: 0; }
 
 /* numero degli alimenti del giorno, in evidenza */
-.big-count { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.big-count { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
