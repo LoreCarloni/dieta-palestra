@@ -1992,7 +1992,13 @@ function act(a, el) {
       const line = lines[+el.dataset.i];
       if (!line) break;
       const items = parseDiary(line.replace(/,?\s*bloccato\b/i, ""));
-      if (!items.length) return toast("Questo alimento non è nel database: inseriscilo prima con Alimento non in lista, poi riprova.");
+      if (!items.length) {
+        // non riconosciuto: apro subito il modulo per inserirlo, con il nome gia scritto
+        const nm = line.replace(/,?\s*bloccato\b/ig, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, "").trim();
+        dlg().dataset.slot = "giorno";
+        toast("Questo alimento non è nel database: inseriscilo e poi segnalo come mangiato");
+        return customFoodDialog(nm);
+      }
       const d = day(k, true);
       items.forEach((it) => d.meals.push({ id: uid(), slot: slotFor("giorno", it.name), name: it.name, g: it.g || null, kcal: it.kcal, p: it.p, c: it.c, f: it.f }));
       unblock([line]);
