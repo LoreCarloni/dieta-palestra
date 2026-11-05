@@ -32,15 +32,14 @@ S.dailyAuto = S.dailyAuto || [];
 S.plans = S.plans || [];
 S.planMin = S.planMin || {};
 // Quantità fisse della giornata, modificabili dalla scheda Oggi.
-S.myPlan = S.myPlan || [
+// I valori di partenza valgono solo per chi ha gia un profilo: un nuovo utente parte da una lista vuota.
+S.myPlan = S.myPlan || (S.profile ? [
   { name: "Yogurt greco", qty: "2 vasetti da 150 g" },
   { name: "Proteine in polvere", qty: "30 g in tutto, 15 g per yogurt" },
   { name: "Albume", qty: "2 bicchieri da 100 g" },
   { name: "Pollo", qty: "300 g crudi a sera" },
-];
-if (!S.myPlan.some((x) => x.name === "Target kcal (medico)")) S.myPlan.push({ name: "Target kcal (medico)", qty: "1250 kcal" });
+] : []);
 // Recupero: il target medico scende a 1250 kcal (una volta sola, senza toccare altri valori scelti dall'utente).
-if (!S.medKcal1250) { const row = S.myPlan.find((x) => x.name === "Target kcal (medico)"); if (row) row.qty = "1250 kcal"; S.medKcal1250 = true; }
 S.plannedDinner = S.plannedDinner || "";
 // piano aggiornato: 10 g di polvere per ogni yogurt e ogni albume
 S.myPlan.forEach((x) => {
