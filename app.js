@@ -911,7 +911,7 @@ function planItemsHtml() {
   return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-add-fav">Aggiungi i miei cibi abituali</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1991,6 +1991,16 @@ function act(a, el) {
       unblock([line]);
       lines.splice(+el.dataset.i, 1);
       S.plannedDinner = lines.join("\n");
+      break;
+    }
+    case "plan-add-fav": {
+      // aggiunge in fondo i cibi abituali che non sono gia in previsione e non sono gia stati mangiati oggi
+      const cur = new Set(sortPlanLines(S.plannedDinner).map((l) => norm(l.split(/[,:(]/)[0]).trim()));
+      const eaten = new Set(((S.days[view.date] || {}).meals || []).map((m) => norm(m.name).trim()));
+      const add = favoriteFoods(view.date).filter((f) => !cur.has(norm(f.name).trim()) && !eaten.has(norm(f.name).trim()));
+      if (!add.length) return toast("Nessun cibo abituale da aggiungere");
+      S.plannedDinner = [S.plannedDinner, ...add.map((f) => `${f.name}, ${f.g} g`)].filter((x) => x && x.trim()).join("\n");
+      toast(`Aggiunto: ${add.map((f) => f.name).join(", ")}`);
       break;
     }
     case "plan-del-one": {
