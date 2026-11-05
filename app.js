@@ -370,6 +370,25 @@ function ensureBarcodeSources() {
 function ensureProteinPowder() {
   if (!S.customFoods.some((x) => x.name === PROTEIN_POWDER.name)) S.customFoods.push({ ...PROTEIN_POWDER });
 }
+// Voci McDonald's inserite solo con le calorie: una volta sola completo i macro dai valori ufficiali (per porzione).
+const MCD_MACROS = [
+  { re: /^big mac/i, p: 27, c: 42, f: 29 },
+  { re: /^patatine grandi/i, p: 5.6, c: 51, f: 21 },
+  { re: /^mcchicken/i, p: 21, c: 46, f: 19 },
+  { re: /^cheeseburger/i, p: 16, c: 30, f: 13 },
+  { re: /^chicken mcnuggets/i, p: 11, c: 14, f: 8.3 },
+  { re: /^salsa agrodolce mcdonald/i, p: 0.2, c: 11, f: 0.3 },
+];
+function ensureMcdMacros() {
+  if (S.mcdMacrosFixed) return;
+  let n = 0;
+  Object.values(S.days).forEach((d) => (d.meals || []).forEach((m) => {
+    const hit = MCD_MACROS.find((x) => x.re.test(String(m.name)));
+    if (hit && !(m.p || m.c || m.f) && m.kcal > 0) { m.p = hit.p; m.c = hit.c; m.f = hit.f; n++; }
+  }));
+  S.mcdMacrosFixed = true;
+  if (n) save();
+}
 function ensureMomCutlet() {
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   if (S.momCutletAdded) return;
@@ -2863,6 +2882,7 @@ checkUpdate();
 ensureMomCutlet();
 ensureBarcodeSources();
 ensureDishParts();
+ensureMcdMacros();
 setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
