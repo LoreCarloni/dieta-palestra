@@ -844,7 +844,7 @@ function favoriteFoods(k) {
   }
   const foods = allFoods();
   const out = [];
-  [...count.values()].filter((c) => c.n >= 2).sort((a, b) => b.n - a.n).forEach((c) => {
+  [...count.values()].filter((c) => c.n >= 1).sort((a, b) => b.n - a.n).forEach((c) => {
     const f = foods.find((x) => norm(x.name).trim() === norm(c.name).trim());
     if (!f || !(f.kcal >= 0)) return;
     const gs = c.gs.slice().sort((a, b) => a - b);
