@@ -252,6 +252,9 @@ const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim())
 
 function refreshForecast() {
   const k = view.date, future = k > todayKey();
+  // niente righe doppie: le ripetizioni accumulate in passato vengono tolte
+  const uniq = [...new Set((S.plannedDinner || "").split("\n").filter((x) => x.trim()))];
+  if (uniq.join("\n") !== (S.plannedDinner || "").split("\n").filter((x) => x.trim()).join("\n")) { S.plannedDinner = uniq.join("\n"); save(); }
   if (future) {
     // giorno futuro senza previsione: l'app propone subito cosa mangiare; se c'e gia una previsione la lascia com'e
     // rigenera se la previsione e vuota o era solo quella generata in automatico
@@ -266,9 +269,10 @@ function refreshForecast() {
   if (snap === S.forecastSnap) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
-  const prev = S.autoLines || [];
-  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.includes(x));
+  const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
+  const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x));
   const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", "", k).split("\n").filter((x) => x.trim());
+  S.autoAll = [...new Set([...(S.autoAll || []), ...gen])].slice(-300);
   S.autoLines = gen;
   S.plannedDinner = [...kept, ...gen].join("\n");
   save();
