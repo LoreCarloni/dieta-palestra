@@ -1000,7 +1000,7 @@ function myPlanCard() {
   const k = view.date, left = targets(k).kcal - totals(k).kcal;
   const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
   const over = planned - left;
-  const warn = over > 0 ? `<p class="warn-line">La previsione supera le calorie rimaste di ${r0(over)} kcal. Togli qualche riga con × oppure mangia meno.</p>` : "";
+  const warn = over > 0 ? `<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${planItemsHtml()}<div class="btns"><button class="btn ghost small-btn" data-act="fv-open">Aggiungi</button>${S.plannedDinner ? `<button class="btn ghost small-btn" data-act="plan-regen">Rigenera</button><button class="btn ghost small-btn" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
@@ -1355,12 +1355,12 @@ function dayComment(k) {
   }
   const cOver = t.c - tg.carbs;
   if (cOver > tg.carbs * 0.1) lines.push({ lvl: "warn", text: `Troppi carboidrati: ${r0(t.c)} g su ${r0(tg.carbs)}, ${r0(cOver)} g in più, circa ${r0(cOver * 4)} kcal. Vengono soprattutto da ${list(top("c"), "c", "g")}.` });
-  if (t.p < tg.protein * 0.85 && !overPlanned) {
+  if (t.p < tg.protein * 0.85) {
     // mancano grammi di proteine: suggerisco due alimenti magri del database, con la quantità che li copre
     const gap = tg.protein - t.p;
     const lean = allFoods().filter((f) => !f.perServing && f.p >= 18 && f.kcal > 0 && f.kcal <= 250).sort((a, b) => b.p / b.kcal - a.p / a.kcal).slice(0, 2);
     const hints = lean.map((f) => `${shortName(f.name).toLowerCase()} circa ${Math.min(250, Math.round(gap / (f.p / 100) / 10) * 10)} g`).join(", oppure ");
-    lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}, mancano circa ${r0(gap)} g. Per arrivarci con cibo vero: ${hints || "aggiungi una fonte magra a ogni pasto"}.` });
+    lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}, mancano circa ${r0(gap)} g. ${overPlanned ? "La previsione è già piena: per aggiungere proteine conviene sostituire qualcosa di previsto con una fonte proteica." : `Per arrivarci con cibo vero: ${hints || "aggiungi una fonte magra a ogni pasto"}.`}` });
   }
   else lines.push({ lvl: "good", text: `Proteine a posto: ${r0(t.p)} g su ${r0(tg.protein)}.` });
   const sweet = items.filter((x) => SWEET_RE.test(x.name));
@@ -1382,10 +1382,10 @@ function dayComment(k) {
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
     if (rem <= 0) parts.push(`Il budget di oggi è già coperto dai pasti registrati: non serve aggiungere altro. Se mangi ancora, scegli solo verdura.`);
-    else if (rem < 250) parts.push(`Mangiato finora: restano solo ${r0(rem)} kcal. Verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti.`);
+    else if (rem < 250) parts.push(`Restano solo ${r0(rem)} kcal. Verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti.`);
     else {
       const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
-      parts.push(`Mangiato finora: restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. Per il resto della giornata` : "Per il resto della giornata"}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
+      parts.push(`Restano circa ${r0(rem)} kcal${remP > 0 ? ` e ${r0(remP)} g di proteine` : ""}. ${pranzoLibero ? `A pranzo ${lunchCarbText(Math.min(Math.max(0, remC - 20) * 0.6, 63))} con verdura, senza secondo, tenendo 20 g di carboidrati per un dolce o uno spuntino. Per il resto della giornata` : "Per il resto della giornata"}: ${prot}, verdura abbondante${remC > 25 ? " e una piccola porzione di carboidrati" : ", senza pane o pasta"}${remF < 12 ? ", niente formaggi, fritti o olio in eccesso" : ", con olio misurato"}.`);
     }
     if (salumi.length >= 2) parts.push("Hai già mangiato più salumi: tanto sale, evita altri salumi e bevi acqua abbondante per non gonfiarti.");
     lines.push({ lvl: "tip", text: parts.join(" ") });
@@ -1394,11 +1394,11 @@ function dayComment(k) {
   if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
-      lines.push({ lvl: "tip", text: `Mangiato finora: restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
+      lines.push({ lvl: "tip", text: `Restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
     } else {
       const pastaG = Math.round(remCarb / 0.79 / 5) * 5;
       const legumiG = Math.min(250, Math.round(remCarb / 0.163 / 5) * 5);
-      lines.push({ lvl: "tip", text: `Mangiato finora: restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
+      lines.push({ lvl: "tip", text: `Restano circa ${r0(remCarb)} g di carboidrati. Per esempio ${pastaG} g di pasta a secco, oppure ${legumiG} g di legumi cotti, oppure una fetta di pane da 30 g.` });
     }
   }
   const st7 = periodStats(k, 7);
