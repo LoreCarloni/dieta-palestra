@@ -1750,6 +1750,10 @@ function customFoodDialog(prefill = "") {
     <div class="field"><label>Da dove vengono i valori</label>
       <div class="seg" id="c-src"><button type="button" data-act="c-src" data-v="Valori dall'etichetta del prodotto">Etichetta</button><button type="button" data-act="c-src" data-v="Tabella ufficiale">Tabella ufficiale</button><button type="button" data-act="c-src" data-v="Stima, non verificata">Stima</button></div>
     </div>
+    <div class="btns">
+      <button class="btn wide" data-act="scan-barcode">Scansiona il codice a barre</button>
+      <label class="btn ghost wide label-file">Fotografa l'etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label>
+    </div>
     <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}" autofocus></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
