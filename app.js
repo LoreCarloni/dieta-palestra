@@ -849,6 +849,9 @@ const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.lengt
 function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
+  // i preferiti scelti da te entrano sempre per primi, senza aspettare la cronologia
+  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)))
+    .map((x) => ({ name: x.name, g: x.portion || 100, per: [x.kcal, x.p, x.c, x.f] }));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
     if (!d || !d.meals) continue;
@@ -873,7 +876,7 @@ function favoriteFoods(k) {
     const per = c.per.map((x) => Math.round((x / c.w) * 10) / 10);
     if (g > 0 && per[0] > 0) out.push({ name: c.name, g, per });
   });
-  return out.slice(0, 12);
+  return [...pref, ...out.filter((o) => !pref.some((x) => foodGroup(x.name) === foodGroup(o.name)))].slice(0, 12);
 }
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
@@ -1787,6 +1790,7 @@ function customFoodDialog(prefill = "") {
       <button class="btn wide" data-act="scan-barcode">Scansiona il codice a barre</button>
       <label class="btn ghost wide label-file">Fotografa l'etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label>
     </div>
+    <div class="field"><label>Preferito: lo propone sempre nella previsione</label><select id="c-fav"><option value="0">No</option><option value="1">Sì</option></select></div>
     <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}" autofocus></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
@@ -1808,6 +1812,7 @@ function customFoodDialog(prefill = "") {
     const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
     set("#c-kcal", ex.kcal); set("#c-p", ex.p); set("#c-c", ex.c); set("#c-f", ex.f); set("#c-portion", ex.portion || 100);
     dlg().dataset.src = ex.src || "";
+    const fv = $("#c-fav"); if (fv) fv.value = ex.fav ? "1" : "0";
     document.querySelectorAll("#c-src button").forEach((b) => b.classList.toggle("active", b.dataset.v === dlg().dataset.src));
   }
 }
@@ -1983,7 +1988,7 @@ function act(a, el) {
       dlg().dataset.src = el.dataset.v; break;
     }
     case "save-custom": {
-      const f = { name: val("#c-name").trim(), kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
+      const f = { name: val("#c-name").trim(), fav: val("#c-fav") === "1", kcal: num("#c-kcal"), p: num("#c-p") || 0, c: num("#c-c") || 0, f: num("#c-f") || 0, portion: num("#c-portion") || 100, src: dlg().dataset.src || "" };
       if (!f.name || !(f.kcal >= 0)) return toast("Nome e kcal sono obbligatori");
       if (!f.src) return toast("Scegli da dove vengono i valori");
       const oldV = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
