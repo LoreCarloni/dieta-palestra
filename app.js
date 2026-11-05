@@ -328,6 +328,11 @@ function habitDialog() {
 const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 230, src: "Stima, non verificata (ricetta di famiglia)" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
+function ensureBarcodeSources() {
+  let n = 0;
+  S.customFoods.forEach((f) => { if (f.barcode && !f.src) { f.src = "Etichetta: codice a barre"; n++; } });
+  if (n) save();
+}
 function ensureProteinPowder() {
   if (!S.customFoods.some((x) => x.name === PROTEIN_POWDER.name)) S.customFoods.push({ ...PROTEIN_POWDER });
 }
@@ -1672,7 +1677,7 @@ function offProduct(p, code) {
   if (!p.product_name || kcal == null || !Number.isFinite(+kcal)) return null;
   const brand = p.brands ? ` (${p.brands.split(",")[0].trim()})` : "";
   const missing = ["proteins_100g", "carbohydrates_100g", "fat_100g"].some((k) => n[k] == null);
-  return { name: p.product_name + brand, kcal: Math.round(kcal), p: r1(+n.proteins_100g || 0), c: r1(+n.carbohydrates_100g || 0), f: r1(+n.fat_100g || 0), portion: Math.round(+p.serving_quantity) || 100, cat: "I miei alimenti", barcode: code, missing };
+  return { name: p.product_name + brand, kcal: Math.round(kcal), p: r1(+n.proteins_100g || 0), c: r1(+n.carbohydrates_100g || 0), f: r1(+n.fat_100g || 0), portion: Math.round(+p.serving_quantity) || 100, cat: "I miei alimenti", barcode: code, missing, src: "Etichetta: codice a barre" };
 }
 
 async function lookupBarcode(raw) {
@@ -2631,6 +2636,7 @@ setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }
 checkUpdate();
 ensureMomCutlet();
 ensureProteinPowder();
+ensureBarcodeSources();
 setTimeout(maybeHabitDialog, 700);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
