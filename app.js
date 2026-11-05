@@ -271,7 +271,7 @@ function refreshForecast() {
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
   const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x));
-  const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", "", k).split("\n").filter((x) => x.trim());
+  const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), k).split("\n").filter((x) => x.trim());
   S.autoAll = [...new Set([...(S.autoAll || []), ...gen])].slice(-300);
   S.autoLines = gen;
   S.plannedDinner = [...kept, ...gen].join("\n");
@@ -863,7 +863,7 @@ function favoriteFoods(k) {
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
   const src = [...blockedText.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato"), ...planText.split("\n").filter((x) => x.trim())];
-  const each = src.map((l) => ({ line: l, fixed: /\b(fisso|bloccato)\b/i.test(l), items: parseDiary(l.replace(/,?\s*(fisso|bloccato)\b/i, "")) }));
+  const each = src.map((l) => ({ line: l, fixed: /\b(fisso|bloccato)\b/i.test(l) || planText.includes(l), items: parseDiary(l.replace(/,?\s*(fisso|bloccato)\b/i, "")) }));
   const fixed = each.filter((x) => x.fixed);
   const fk = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.kcal, 0), 0);
   const fp = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.p, 0), 0);
@@ -919,7 +919,11 @@ function planItemsHtml() {
   return lines.map((x, i) => `<div class="plan-item">${esc(x)} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-values" data-i="${i}">valori</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`).join("");
 }
 function myPlanCard() {
-  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
+  const k = view.date, left = targets(k).kcal - totals(k).kcal;
+  const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+  const over = planned - left;
+  const warn = over > 0 ? `<p class="warn-line">La previsione supera le calorie rimaste di ${r0(over)} kcal. Togli qualche riga con × oppure mangia meno.</p>` : "";
+  return `<section class="card"><h2>Previsione della giornata <button class="link" data-act="myplan-edit">Modifica</button></h2>${warn}${planItemsHtml()}<button class="btn ghost wide" data-act="fv-open">Aggiungi o correggi un alimento</button>${S.plannedDinner ? `<button class="btn ghost wide" data-act="plan-regen">Rigenera le proposte automatiche</button><button class="btn primary wide" data-act="plan-eat">Segna come mangiati</button><button class="btn ghost wide" data-act="plan-clear">Cancella tutta la previsione</button>` : ""}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -2068,7 +2072,7 @@ function act(a, el) {
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
-      const gen = autoPlan(S.blockedToday || "", "", view.date).split("\n").filter((x) => x.trim());
+      const gen = autoPlan(S.blockedToday || "", kept.join("\n"), view.date).split("\n").filter((x) => x.trim());
       S.autoAll = gen; S.autoLines = gen;
       S.plannedDinner = [...kept, ...gen].join("\n");
       toast("Proposte automatiche aggiornate");
