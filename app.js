@@ -1053,10 +1053,10 @@ const STIMA_INGREDIENTI = {
   // stime dichiarate (nessuna voce CREA trovata)
   "carne macinata": { v: [175, 20, 0, 10], fonte: "stima" },
   "macinato di manzo": { v: [175, 20, 0, 10], fonte: "stima" },
-  "besciamella": { v: [125, 3.5, 9, 8], fonte: "stima" },
+  "besciamella": { v: [218, 5.1, 13.6, 15.9], fonte: "media di 2 fonti (Coop, Cookidoo)" },
   "pasta fresca": { v: [340, 12, 66, 4], fonte: "stima" },
   "pasta all'uovo": { v: [340, 12, 66, 4], fonte: "stima" },
-  "vino rosso": { v: [85, 0.1, 2.6, 0], fonte: "stima" },
+  "vino rosso": { v: [73, 0.1, 2.6, 0], fonte: "media di 3 fonti sulle calorie (carboidrati stimati)" },
   "brodo": { v: [5, 0.5, 0.5, 0.2], fonte: "stima" },
   "burro": { v: [758, 0.8, 1.1, 83.4], fonte: "CREA: burro" },
 };
