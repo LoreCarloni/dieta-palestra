@@ -898,7 +898,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (needK - fv.per[0] * fv.g / 100 < -150) return; // non far superare troppo le calorie
     add(fv.name, fv.g, fv.per); picked++;
   });
-  if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); add("Proteine in polvere", 10, [380, 78, 6, 5]); }
+  // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
+  const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
+  if (needP > 5) { add("Yogurt greco 0%", 150, [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
   if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
   if (needP > 5) { const tg2 = Math.min(150, Math.round(needP / 0.29 / 10) * 10); if (tg2 > 0) add("Petto di tacchino cotto", tg2, TAC); }
   // carboidrati: pasta solo se entra e se servono
@@ -2643,7 +2645,6 @@ window.addEventListener("focus", checkUpdate);
 setInterval(() => { if (document.visibilityState === "visible") checkUpdate(); }, 60000);
 checkUpdate();
 ensureMomCutlet();
-ensureProteinPowder();
 ensureBarcodeSources();
 setTimeout(maybeHabitDialog, 700);
 
