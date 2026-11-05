@@ -2157,6 +2157,11 @@ function act(a, el) {
       if (!name || !rows.length) return toast("Scrivi il nome e almeno un ingrediente");
       let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0, missing = 0;
       const parts = [];
+      // piatto gia salvato senza lista ingredienti: parto dai suoi totali e aggiungo quello che scrivo ora
+      const old = S.customFoods.find((x) => norm(x.name).trim() === norm(name).trim());
+      if (old && !old.parts && old.portion > 0) {
+        tg = old.portion; tk = old.kcal * old.portion / 100; tp = old.p * old.portion / 100; tc = old.c * old.portion / 100; tf = old.f * old.portion / 100;
+      }
       rows.forEach((r) => {
         const ing = r.querySelector(".dish-name").value.trim();
         const num1 = (x) => parseFloat(String(x).replace(",", ".")) || 0;
@@ -2170,7 +2175,7 @@ function act(a, el) {
         tg += g; tk += f.kcal * g / 100; tp += (f.p || 0) * g / 100; tc += (f.c || 0) * g / 100; tf += (f.f || 0) * g / 100;
       });
       if (!(tg > 0)) return toast("Serve almeno un ingrediente con il peso");
-      const complete = Math.round(((rows.length - missing) / rows.length) * 100);
+      const complete = old && !old.parts ? 100 : Math.round(((rows.length - missing) / rows.length) * 100);
       const dish = { name, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: `Piatto composto, completo al ${complete}%: stima${missing ? ", mancano alcuni ingredienti" : ""}`, parts };
       S.customFoods = S.customFoods.filter((x) => norm(x.name).trim() !== norm(name).trim()).concat(dish);
       save();
