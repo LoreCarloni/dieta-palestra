@@ -890,6 +890,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
+    // stesso alimento gia proposto: non lo raddoppio
+    if (out.some((l) => l.startsWith(name + ","))) return;
     out.push(`${name}, ${g} g`);
     needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
   };
