@@ -36,6 +36,35 @@ function fumoDuration(ms) {
   return `${mm} minuti`;
 }
 
+// Cose concrete da fare invece di fumare. Ad ogni apertura se ne scelgono tre, in base all'ora.
+const FUMO_AZIONI = [
+  { t: "Bevi un sorso d'acqua e posa il bicchiere lontano dal pacchetto.", when: "sempre" },
+  { t: "Fai due passi, anche solo fino alla finestra o in corridoio.", when: "sempre" },
+  { t: "Sistema una cosa in camera: il letto, la scrivania, il tavolo.", when: "sempre" },
+  { t: "Lavati le mani e il viso con acqua fredda.", when: "sempre" },
+  { t: "Scrivi su un foglio tre cose che farai nell'ora successiva, senza sigaretta.", when: "sempre" },
+  { t: "Metti le sigarette in un cassetto lontano e chiudilo.", when: "sempre" },
+  { t: "Scrivi o chiama una persona e raccontale come stai andando.", when: "sempre" },
+  { t: "Guarda fuori dalla finestra per un minuto e respira piano.", when: "sempre" },
+  { t: "Buongiorno: fatti una doccia e cambia la maglietta.", when: "mattina" },
+  { t: "Apri la finestra, fai entrare aria e prepara la colazione.", when: "mattina" },
+  { t: "Prepara la borsa o la giornata di oggi, una cosa alla volta.", when: "mattina" },
+  { t: "Lava i denti e mettiti il pigiama.", when: "sera" },
+  { t: "Prepara il letto e posa tutto quello che hai in mano.", when: "sera" },
+  { t: "Pianifica la mattina: sveglia, bagno, denti, colazione, senza sigaretta.", when: "sera" },
+];
+let fumoAzioniAperte = null;
+function fumoAzioniDiOggi() {
+  if (!fumoAzioniAperte) {
+    const h = new Date().getHours();
+    const fascia = h < 11 ? "mattina" : h >= 20 ? "sera" : null;
+    const pool = FUMO_AZIONI.filter((a) => a.when === "sempre" || a.when === fascia);
+    const mixed = [...pool].sort(() => Math.random() - 0.5);
+    fumoAzioniAperte = mixed.slice(0, 3);
+  }
+  return fumoAzioniAperte;
+}
+
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
@@ -77,6 +106,10 @@ function renderFumo() {
       <div class="muted small">Senza fumare da</div>
       <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
+    </section>
+    <section class="card">
+      <p class="stat-v" style="text-align:center;font-size:1.6rem;margin:0 0 8px">Resisti!</p>
+      <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(a.t)}</li>`).join("")}</ul>
     </section>
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     ${resisting}
