@@ -2142,6 +2142,7 @@ function act(a, el) {
         <h3>Quantità</h3>
         <p class="muted small">${esc(line.replace(/,?\s*bloccato\b/ig, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, ""))}</p>
         <div class="field"><label for="pg-g">Grammi</label><input id="pg-g" type="text" inputmode="decimal" value="${esc(cur)}" autofocus></div>
+        <p class="muted small">Per pesarlo: metti il piatto sulla bilancia, premi azzera (tara), aggiungi il cibo e leggi il peso. Senza bilancia, un cucchiaio da tavola di zucca cotta pesa circa 15 o 20 grammi.</p>
         <button class="btn primary wide" data-act="plan-grams-save" data-i="${el.dataset.i}">Salva</button>`);
     }
     case "plan-grams-save": {
