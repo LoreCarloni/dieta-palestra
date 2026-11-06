@@ -341,7 +341,7 @@ function fumoComando(frase) {
   m = low.match(/(?:^|\s)(?:ho\s+)?finit[oa]\b\s*(?:di\s+|a\s+)?(.*)$/);
   if (m) return { type: "stop", hint: pulisci(m[1]).toLowerCase(), time };
   m = low.match(/^vado\s+(?:a\s+|in\s+|al\s+|alla\s+|allo\s+|ai\s+|agli\s+|nel\s+|nella\s+|da\s+)?(.*)$/);
-  if (m) { const text = pulisci(m[1]); return text ? { type: "start", text, time } : null; }
+  if (m) { const text = pulisci(m[1]); return text ? { type: "switch", text, time } : null; }
   return null;
 }
 
@@ -835,6 +835,14 @@ document.addEventListener("submit", (e) => {
         return;
       }
       const nome = cmd.text.charAt(0).toUpperCase() + cmd.text.slice(1);
+      if (cmd.type === "switch" && run.length) {
+        // "vado in bagno": chiude l'attività più recente e ne inizia una nuova.
+        const last = run[run.length - 1];
+        const min = Math.round((at.getTime() - last.start) / 60000);
+        if (min < 1) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return; }
+        S.giornata.log = [...(S.giornata.log || []), { at: new Date(last.start).toISOString(), text: last.text, min }];
+        run.pop();
+      }
       run.push({ text: nome, start: at.getTime() });
       save(); render(); toast(`Iniziato: ${nome}`);
       return;
