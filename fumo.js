@@ -442,9 +442,7 @@ function parseFrase(frase, day) {
 function gChiudiPausa() {
   const p = S.giornata && S.giornata.pausa;
   if (!p) return;
-  // Una sigaretta dura 5 minuti: la registro sempre così, anche se l'attività dopo arriva più tardi.
-  const min = 5;
-  S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Sigaretta", kind: "pausa", min }];
+  // La sigarette si registrano nella scheda Fumo e compaiono da lì anche nella Giornata: qui non si duplicano.
   S.giornata.pausa = null;
 }
 
