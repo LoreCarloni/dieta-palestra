@@ -84,11 +84,11 @@ function fumoPrevisione() {
 function fumoDiaryCard() {
   const day = view.fumoDay || todayKey();
   const log = (S.fumo && S.fumo.log) || [];
-  const rows = log.filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
+  const rows = log.map((e, idx) => ({ ...e, idx })).filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
   const acts = rows.filter((e) => e.kind === "act").length;
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="row"><div class="muted small" style="min-width:48px">${esc(hhmm(e.at))}</div><div style="flex:1">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div></div>`).join("");
+  const lines = rows.map((e) => `<div class="row" style="align-items:center;padding:6px 0"><div class="muted small" style="min-width:48px">${esc(hhmm(e.at))}</div><div style="flex:1">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button> <button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>`).join("");
   return `
     <section class="card">
       <div class="row" style="align-items:center">
@@ -151,7 +151,7 @@ function renderFumo() {
     <section class="card">
       <h2>Previsione della giornata</h2>
       <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
-      ${fumoPrevisione().map((a, i) => `<div class="row" style="align-items:center;padding:6px 0"><div style="flex:1">${esc(a)}</div><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button></div>`).join("")}
+      ${fumoPrevisione().map((a, i) => `<div class="row" style="align-items:center;padding:6px 0"><div style="flex:1">${esc(a)}</div><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button> <button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button> <button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div>`).join("")}
       <form id="fumo-acts-form" class="form" style="margin-top:10px">
         <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
         <button class="btn ghost wide" type="submit">Aggiungi</button>
@@ -376,6 +376,55 @@ function fumoAct(a, el) {
       fumoCravingDialog(fumoSelectedMinutes());
       return true;
     }
+    case "fumo-plan-edit": {
+      const i = parseInt(el.dataset.i);
+      const text = fumoPrevisione()[i] || "";
+      openDialog(`
+        <h3>Modifica l'azione</h3>
+        <form id="fumo-item-form" class="form" data-kind="plan" data-idx="${i}">
+          <input name="text" maxlength="80" value="${esc(text)}" autofocus>
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
+    case "fumo-plan-del": {
+      const i = parseInt(el.dataset.i);
+      if (!confirm("Eliminare questa azione dalla previsione?")) return true;
+      S.fumo.acts = fumoPrevisione().filter((_, k) => k !== i);
+      save(); render(); toast("Azione eliminata");
+      return true;
+    }
+    case "fumo-log-edit": {
+      const idx = parseInt(el.dataset.idx);
+      const e = (S.fumo.log || [])[idx];
+      if (!e) return true;
+      const field = e.kind === "act"
+        ? `<input name="text" maxlength="80" value="${esc(e.text)}" autofocus>`
+        : `<input name="n" type="number" min="1" max="100" step="1" value="${e.n || 1}" autofocus>`;
+      openDialog(`
+        <h3>${e.kind === "act" ? "Modifica l'azione" : "Modifica le sigarette"}</h3>
+        <form id="fumo-item-form" class="form" data-kind="log" data-idx="${idx}">
+          ${field}
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
+    case "fumo-log-del": {
+      const idx = parseInt(el.dataset.idx);
+      const e = (S.fumo.log || [])[idx];
+      if (!e || !confirm("Eliminare questa voce del registro?")) return true;
+      S.fumo.log = S.fumo.log.filter((_, k) => k !== idx);
+      if (e.kind === "act") S.fumo.actCount = Math.max(0, (S.fumo.actCount || 0) - 1);
+      if (e.kind === "smoke") {
+        const n = e.n || 1, day = keyOf(new Date(e.at));
+        S.fumo.smoked = Math.max(0, (S.fumo.smoked || 0) - n);
+        if (S.fumo.smokedDays && S.fumo.smokedDays[day]) S.fumo.smokedDays[day] = Math.max(0, S.fumo.smokedDays[day] - n);
+      }
+      save(); render(); toast("Voce eliminata");
+      return true;
+    }
     case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
     case "fumo-day-next": { const d = addDays(view.fumoDay || todayKey(), 1); view.fumoDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-act": {
@@ -428,6 +477,33 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "fumo-item-form") {
+    e.preventDefault();
+    const f = e.target, fd = new FormData(f);
+    const idx = parseInt(f.dataset.idx);
+    if (f.dataset.kind === "plan") {
+      const text = String(fd.get("text") || "").trim();
+      if (!text) return;
+      S.fumo.acts = fumoPrevisione().map((a, k) => (k === idx ? text : a));
+    } else {
+      const entry = (S.fumo.log || [])[idx];
+      if (!entry) return;
+      if (entry.kind === "act") {
+        const text = String(fd.get("text") || "").trim();
+        if (!text) return;
+        entry.text = text;
+      } else {
+        const n = Math.max(1, parseInt(fd.get("n")) || 1);
+        const diff = n - (entry.n || 1), day = keyOf(new Date(entry.at));
+        entry.n = n;
+        S.fumo.smoked = Math.max(0, (S.fumo.smoked || 0) + diff);
+        S.fumo.smokedDays = S.fumo.smokedDays || {};
+        S.fumo.smokedDays[day] = Math.max(0, (S.fumo.smokedDays[day] || 0) + diff);
+      }
+    }
+    closeDialog(); save(); render(); toast("Modifica salvata");
+    return;
+  }
   if (e.target.id === "fumo-acts-form") {
     e.preventDefault();
     const text = String(new FormData(e.target).get("act") || "").trim();
