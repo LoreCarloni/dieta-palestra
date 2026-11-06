@@ -65,6 +65,13 @@ function fumoAzioniDiOggi() {
   return fumoAzioniAperte;
 }
 
+// Durata in parole: ore e minuti se supera l'ora, altrimenti minuti e secondi.
+function fumoDurataParlata(seconds) {
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), sec = seconds % 60;
+  if (h > 0) return `${h} ${h === 1 ? "ora" : "ore"} e ${m} ${m === 1 ? "minuto" : "minuti"}`;
+  return `${m} ${m === 1 ? "minuto" : "minuti"} e ${sec} ${sec === 1 ? "secondo" : "secondi"}`;
+}
+
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
@@ -118,7 +125,7 @@ function renderFumo() {
       <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
     </div>
     <section class="card">
-      ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${Math.floor(f.attempts[f.attempts.length - 1].seconds / 60)} minuti e ${f.attempts[f.attempts.length - 1].seconds % 60} secondi</div>` : ""}
+      ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${esc(fumoDurataParlata(f.attempts[f.attempts.length - 1].seconds))}</div>` : ""}
     </section>
     <section class="card">
       <div class="stats">
@@ -343,7 +350,6 @@ function fumoAct(a, el) {
       const now = fumoNow();
       const started = act ? act.start : new Date(S.fumo.start).getTime();
       const elapsed = Math.max(0, now - started);
-      const m = Math.floor(elapsed / 60000), sec = Math.floor((elapsed % 60000) / 1000);
       S.fumo.attempts = S.fumo.attempts || [];
       S.fumo.attempts.push({ at: new Date(now).toISOString(), seconds: Math.round(elapsed / 1000) });
       S.fumo.active = null;
@@ -354,7 +360,7 @@ function fumoAct(a, el) {
       S.fumo.start = new Date(now).toISOString();
       save(); resetScroll = true;
       openDialog(`
-        <h3>Hai resistito ${m} ${m === 1 ? "minuto" : "minuti"} e ${sec} ${sec === 1 ? "secondo" : "secondi"}</h3>
+        <h3>Hai resistito ${esc(fumoDurataParlata(Math.floor(elapsed / 1000)))}</h3>
         <p class="muted small">Il conto del tempo senza fumare riparte da adesso. Puoi ricominciare quando vuoi.</p>
         <p>${esc(fumoPensieroDiOggi().t)}</p>
         <button class="btn primary wide" data-act="dlg-close">Ok</button>`);
