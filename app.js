@@ -328,7 +328,7 @@ function kcalBar(v, target) {
 
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
 // Cibi che non vanno suggeriti in una dieta: dolci, snack, fritti, pizza, salumi. Non entrano nei suggerimenti automatici.
-const NOT_FOR_DIET = /cioccolat|nutella|kinder|gelato|patatine|pringles|merendin|torta|tiramis|brioche|croissant|cornetto|biscott|frollin|dolc|snack|caramell|barretta|galletta|fritt|crocchett|pizza|salame|wurstel|salsicc|mortadella/i;
+const NOT_FOR_DIET = /cioccolat|\b(lindt|ferrero|milka|perugina|baci|ritter|bounty|snickers|twix|kit ?kat|oreo|haribo|magnum|algida|nesquik|pan di stelle|mulino bianco|mars|tuc|nutella|kinder)\b|excellence|gelato|patatine|pringles|merendin|torta|tiramis|brioche|croissant|cornetto|biscott|frollin|dolc|snack|caramell|barretta|galletta|fritt|crocchett|pizza|salame|wurstel|salsicc|mortadella/i;
 const HABIT_FOODS = ["Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
 function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
