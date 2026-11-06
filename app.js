@@ -2883,6 +2883,45 @@ ensureBarcodeSources();
 ensureDishParts();
 ensureMcdMacros();
 
+// Pizzico con due dita sulle card: ingrandisce solo quella card (da 1x a 2,5x), si riporta a 1x tornando indietro.
+(function pinchCards() {
+  const MIN = 1, MAX = 2.5;
+  let g = null;
+  const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  const cardOf = (t) => (t && t.closest ? t.closest(".card") : null);
+  document.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 2) return;
+    const el = cardOf(e.target);
+    if (!el) return;
+    const [a, b] = e.touches;
+    const r = el.getBoundingClientRect();
+    const ox = ((a.clientX + b.clientX) / 2 - r.left) / r.width * 100;
+    const oy = ((a.clientY + b.clientY) / 2 - r.top) / r.height * 100;
+    g = { el, d0: dist(a, b) || 1, s0: parseFloat(el.dataset.zoom || "1") || 1 };
+    el.style.transformOrigin = `${ox}% ${oy}%`;
+    el.style.position = "relative";
+    el.style.zIndex = "5";
+  }, { passive: true });
+  document.addEventListener("touchmove", (e) => {
+    if (!g || e.touches.length !== 2) return;
+    e.preventDefault();
+    const s = Math.min(MAX, Math.max(MIN, g.s0 * dist(e.touches[0], e.touches[1]) / g.d0));
+    g.el.dataset.zoom = String(s);
+    g.el.style.transform = s <= 1.01 ? "" : `scale(${s})`;
+  }, { passive: false });
+  const end = (e) => {
+    if (!g || e.touches.length >= 2) return;
+    const s = parseFloat(g.el.dataset.zoom || "1");
+    if (s <= 1.01) {
+      g.el.style.transform = ""; g.el.style.zIndex = ""; g.el.style.position = ""; g.el.style.transformOrigin = "";
+      delete g.el.dataset.zoom;
+    }
+    g = null;
+  };
+  document.addEventListener("touchend", end, { passive: true });
+  document.addEventListener("touchcancel", end, { passive: true });
+})();
+
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
