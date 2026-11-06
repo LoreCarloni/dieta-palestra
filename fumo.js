@@ -182,24 +182,10 @@ function renderGiornata() {
       <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${fumoDurataMin(minTot)})` : ""} · Sigarette fumate: ${nSmoke}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
       <form id="giornata-add-form" class="form" style="margin-top:12px">
-        <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
-        <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
-        <input name="time" type="text" inputmode="numeric" maxlength="5" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5).replace(":", ".") : "12.00"}" placeholder="Ora di inizio, es. 6.50" required>
-        <input name="end" type="text" inputmode="numeric" maxlength="5" placeholder="Fino alle, es. 9.50 (facoltativo)">
-        <input name="min" type="number" min="1" max="1440" step="1" placeholder="Oppure durata in minuti (facoltativo)">
-        <button class="btn ghost wide" type="button" data-act="giornata-from-last">Dall'ultima sigaretta fino a adesso</button>
-        <input name="text" list="giornata-suggest" maxlength="80" placeholder="Cosa hai fatto, per esempio studiare o fare la doccia">
-        <datalist id="giornata-suggest">
-          <option value="Ho studiato"></option>
-          <option value="Ho lavorato all'app"></option>
-          <option value="Ho preparato una email"></option>
-          <option value="Ho fatto la doccia"></option>
-          <option value="Ho fatto meditazione"></option>
-          <option value="Mi sono rilassato"></option>
-          <option value="Ho letto"></option>
-          <option value="Ho fatto una passeggiata"></option>
-        </datalist>
+        <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Scrivilo come una frase, anche con la tastiera che detta. Per esempio: "ho lavorato all'app dalle 6.50 alle 9.50" oppure "ho fumato 2 sigarette alle 7".</p>
+        <input name="frase" maxlength="160" placeholder="Scrivi o detta la frase" required>
         <button class="btn ghost wide" type="submit">Aggiungi</button>
+        <datalist id="giornata-suggest"></datalist>
       </form>
     </section>`;
 }
@@ -257,6 +243,44 @@ document.addEventListener("input", (e) => {
   const h = $("#fumo-hits");
   if (h) h.innerHTML = fumoHitsHtml(e.target.value);
 });
+
+// Legge una frase tipo "ho lavorato all'app dalle 6.50 alle 9.50" o "ho fumato 2 sigarette alle 7".
+const NUMERI_PAROLE = { un: 1, una: 1, uno: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9, dieci: 10 };
+function parseFrase(frase, day) {
+  const s = String(frase || "").trim();
+  const low = s.toLowerCase();
+  const isoDay = parseKey(day);
+  const oraIn = (str) => { const o = parseOra(str); if (!o) return null; const d = new Date(isoDay); d.setHours(o[0], o[1], 0, 0); return d; };
+  const range = low.match(/dalle\s+([\d.:]+)\s+alle\s+([\d.:]+)/);
+  const single = low.match(/alle\s+([\d.:]+)/);
+  const fumo = /\bfumat[oa]\b|sigaret/.test(low);
+  if (fumo) {
+    const m = low.match(/(\d+|un|una|uno|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+sigaret/);
+    const n = m ? (parseInt(m[1]) || NUMERI_PAROLE[m[1]] || 1) : 1;
+    const t = single ? oraIn(single[1]) : null;
+    const at = t || (day === todayKey() ? new Date() : new Date(new Date(isoDay).setHours(12, 0, 0, 0)));
+    if (!at) return { error: "Scrivi l'ora, per esempio alle 7" };
+    if (at > new Date()) return { error: "L'ora è nel futuro" };
+    return { kind: "smoke", n, at: at.toISOString() };
+  }
+  let text = s.replace(/dalle\s+[\d.:]+\s+alle\s+[\d.:]+/i, "").replace(/alle\s+[\d.:]+/i, "").replace(/dalle\s+[\d.:]+/i, "")
+    .replace(/^\s*ho\s+/i, "").replace(/\s+/g, " ").trim();
+  if (!text) return { error: "Scrivi cosa hai fatto" };
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  let start = range ? oraIn(range[1]) : single ? oraIn(single[1]) : null;
+  if (range || single) { if (!start) return { error: "Ora non valida: prova 6.50" }; }
+  else start = day === todayKey() ? new Date() : new Date(new Date(isoDay).setHours(12, 0, 0, 0));
+  if (start > new Date()) return { error: "L'ora di inizio è nel futuro" };
+  let min = 0;
+  if (range) {
+    const end = oraIn(range[2]);
+    if (!end) return { error: "Ora di fine non valida: prova 9.50" };
+    if (end <= start) return { error: "L'ora di fine deve essere dopo l'inizio" };
+    if (end > new Date()) return { error: "L'ora di fine è nel futuro" };
+    min = Math.round((end - start) / 60000);
+  }
+  return { kind: "act", text, at: start.toISOString(), min };
+}
 
 // Ora scritta a mano: 6.50, 6:50, 6 50, 650, 6 oppure 1050. Restituisce [ore, minuti] o null.
 function parseOra(str) {
@@ -720,41 +744,20 @@ function fumoAct(a, el) {
 document.addEventListener("submit", (e) => {
   if (e.target.id === "giornata-add-form") {
     e.preventDefault();
-    const fd = new FormData(e.target);
     const day = view.giornataDay || todayKey();
-    const ora = parseOra(fd.get("time"));
-    if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return; }
-    const [hh, mm] = ora;
-    const when = parseKey(day);
-    when.setHours(hh || 0, mm || 0, 0, 0);
-    if (when > new Date()) { toast("L'ora è nel futuro"); return; }
-    const at = when.toISOString();
-    const text = String(fd.get("text") || "").trim();
-    if (fd.get("kind") === "smoke") {
+    const r = parseFrase(new FormData(e.target).get("frase"), day);
+    if (r.error) { toast(r.error); return; }
+    if (r.kind === "smoke") {
       if (!S.fumo) { toast("Imposta prima la data di inizio nella scheda Fumo"); return; }
-      const n = Math.max(1, parseInt(text) || 1);
-      S.fumo.log = [...(S.fumo.log || []), { at, kind: "smoke", n }];
-      S.fumo.smoked = (S.fumo.smoked || 0) + n;
+      S.fumo.log = [...(S.fumo.log || []), { at: r.at, kind: "smoke", n: r.n }];
+      S.fumo.smoked = (S.fumo.smoked || 0) + r.n;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
-      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + n;
+      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + r.n;
     } else {
-      if (!text) { toast("Scrivi cosa hai fatto"); return; }
       S.giornata = S.giornata || { log: [] };
-      let min = Math.max(0, parseInt(fd.get("min")) || 0);
-      const endStr = String(fd.get("end") || "");
-      if (endStr) {
-        const fine = parseOra(endStr);
-        if (!fine) { toast("Scrivi l'ora di fine, per esempio 9.50"); return; }
-        const [eh, em] = fine;
-        const end = parseKey(day);
-        end.setHours(eh || 0, em || 0, 0, 0);
-        if (end <= when) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
-        if (end > new Date()) { toast("L'ora di fine è nel futuro"); return; }
-        min = Math.round((end - when) / 60000);
-      }
-      S.giornata.log = [...S.giornata.log, min ? { at, text, min } : { at, text }];
+      S.giornata.log = [...S.giornata.log, r.min ? { at: r.at, text: r.text, min: r.min } : { at: r.at, text: r.text }];
     }
-    save(); render(); toast("Aggiunto");
+    save(); render(); toast("Aggiunto al registro");
     return;
   }
   if (e.target.id === "fumo-add-form") {
