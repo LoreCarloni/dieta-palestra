@@ -327,6 +327,20 @@ function gRun() {
   return S.giornata.running;
 }
 
+// Trasforma "mi metto a lavorare all'auto" in "Lavorando all'auto".
+const GERUNDI_IRREGOLARI = { fare: "facendo", bere: "bevendo", dire: "dicendo", porre: "ponendo", tradurre: "traducendo" };
+function attivitaGerundio(testo) {
+  let t = String(testo || "").trim().toLowerCase()
+    .replace(/^(?:mi\s+metto\s+a\s+|mi\s+metto\s+in\s+|mi\s+metto\s+|sto\s+|sono\s+a\s+|ho\s+iniziato\s+a\s+|inizio\s+a\s+|comincio\s+a\s+|vado\s+a\s+|vado\s+in\s+)/, "");
+  const m = t.match(/^([a-zàèéìòù]+?)(are|ere|ire|rre)\b(.*)$/);
+  if (!m) return t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+  const verbo = m[1] + m[2];
+  const base = GERUNDI_IRREGOLARI[verbo] || (m[2] === "are" ? m[1] + "ando" : m[1] + "endo");
+  const resto = m[3].trim();
+  const frase = resto ? `${base} ${resto}` : base;
+  return frase.charAt(0).toUpperCase() + frase.slice(1);
+}
+
 // Frasi come: "ho iniziato a lavorare all'app alle 6.50", "vado a fare la doccia", "ho finito di lavorare alle 9.50".
 function fumoComando(frase) {
   const raw = normOre(String(frase || "").trim());
@@ -605,7 +619,9 @@ function fumoSuggBox() {
   if (!list.length) return "";
   if (view.fumoSugg == null || view.fumoSugg >= list.length) view.fumoSugg = Math.floor(Math.random() * list.length);
   const i = view.fumoSugg;
-  return `<p style="margin:0 0 6px">Prova a fare: <strong>${esc(list[i])}</strong></p>
+  const run = gRun();
+  const stai = run.length ? `<p style="margin:0 0 6px">Stai facendo: <strong>${esc(run[run.length - 1].text)}</strong>. Continua così.</p>` : "";
+  return `${stai}<p style="margin:0 0 6px">Prova a fare: <strong>${esc(list[i])}</strong></p>
     <button class="btn primary" data-act="fumo-act" data-i="${i}">La faccio</button>
     <button class="link" data-act="fumo-sugg-next">Un'altra</button>`;
 }
@@ -719,7 +735,7 @@ function fumoAct(a, el) {
         S.giornata.log = [...(S.giornata.log || []), { at: new Date(last.start).toISOString(), text: last.text, min }];
         run.pop();
       }
-      run.push({ text: text.charAt(0).toUpperCase() + text.slice(1), start });
+      run.push({ text: attivitaGerundio(text), start });
       save(); render(); toast("Attività iniziata");
       return true;
     }
@@ -873,7 +889,7 @@ document.addEventListener("submit", (e) => {
         save(); render(); toast(`Registrato: ${r.text}, ${fumoDurataMin(min)}`);
         return;
       }
-      const nome = cmd.text.charAt(0).toUpperCase() + cmd.text.slice(1);
+      const nome = attivitaGerundio(cmd.text);
       if (cmd.type === "switch" && run.length) {
         // "vado in bagno": chiude l'attività più recente e ne inizia una nuova.
         const last = run[run.length - 1];
