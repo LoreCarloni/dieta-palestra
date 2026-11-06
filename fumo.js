@@ -116,9 +116,18 @@ function fumoCandidati() {
   return [...new Set([...fumoPrevisione(), ...past])];
 }
 
+// Ricerca per radice: "respirando" trova "respira" e "respiri", "cam" trova "cammina".
+function fumoMatch(candidate, query) {
+  if (!query) return true;
+  const words = candidate.toLowerCase().split(/[^a-zàèéìòù]+/).filter(Boolean);
+  const tokens = query.split(/\s+/).filter(Boolean);
+  return tokens.every((t) => words.some((w) =>
+    w.startsWith(t) || t.startsWith(w) || (t.length >= 5 && w.length >= 5 && w.slice(0, 5) === t.slice(0, 5))));
+}
+
 function fumoHitsHtml(q) {
   const norm = (q || "").trim().toLowerCase();
-  const list = fumoCandidati().filter((x) => !norm || x.toLowerCase().includes(norm));
+  const list = fumoCandidati().filter((x) => fumoMatch(x, norm));
   const rows = list.slice(0, 8).map((t) => `<div class="fumo-item"><div class="fumo-text">${esc(t)}</div><div class="fumo-tools"><button class="link" data-act="fumo-log-text" data-t="${esc(t)}">Fatto</button></div></div>`).join("");
   const exact = list.some((x) => x.toLowerCase() === norm);
   const fresh = norm && !exact ? `<div class="fumo-item"><div class="fumo-text">Nuova azione: ${esc(q.trim())}</div><div class="fumo-tools"><button class="link" data-act="fumo-log-text" data-t="${esc(q.trim())}">Registra</button></div></div>` : "";
