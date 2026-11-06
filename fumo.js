@@ -101,6 +101,36 @@ function fumoDiaryCard() {
     </section>`;
 }
 
+// Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
+function fumoCandidati() {
+  const past = (S.fumo.log || []).filter((e) => e.kind === "act").map((e) => e.text);
+  return [...new Set([...fumoPrevisione(), ...past])];
+}
+
+function fumoHitsHtml(q) {
+  const norm = (q || "").trim().toLowerCase();
+  const list = fumoCandidati().filter((x) => !norm || x.toLowerCase().includes(norm));
+  const rows = list.slice(0, 8).map((t) => `<div class="fumo-item"><div class="fumo-text">${esc(t)}</div><div class="fumo-tools"><button class="btn primary small-btn" data-act="fumo-log-text" data-t="${esc(t)}">Fatto</button></div></div>`).join("");
+  const exact = list.some((x) => x.toLowerCase() === norm);
+  const fresh = norm && !exact ? `<div class="fumo-item"><div class="fumo-text">Nuova azione: ${esc(q.trim())}</div><div class="fumo-tools"><button class="btn primary small-btn" data-act="fumo-log-text" data-t="${esc(q.trim())}">Registra</button></div></div>` : "";
+  return rows + fresh || `<p class="muted small">Scrivi qualcosa: per esempio "bevi", "passeggiata", "doccia".</p>`;
+}
+
+function fumoSearchCard() {
+  return `
+    <section class="card">
+      <h2>Cosa stai facendo al posto di fumare?</h2>
+      <input id="fumo-q" maxlength="80" placeholder="Scrivi o cerca un'azione" autocomplete="off">
+      <div id="fumo-hits" style="margin-top:8px">${fumoHitsHtml("")}</div>
+    </section>`;
+}
+
+document.addEventListener("input", (e) => {
+  if (e.target.id !== "fumo-q") return;
+  const h = $("#fumo-hits");
+  if (h) h.innerHTML = fumoHitsHtml(e.target.value);
+});
+
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
@@ -144,6 +174,7 @@ function renderFumo() {
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
     ${fumoDiaryCard()}
+    ${fumoSearchCard()}
     <section class="card">
       <p class="stat-v" style="text-align:center;font-size:1.6rem;margin:0 0 8px">Resisti!</p>
       <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(a.t)}</li>`).join("")}</ul>
@@ -427,6 +458,17 @@ function fumoAct(a, el) {
     }
     case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
     case "fumo-day-next": { const d = addDays(view.fumoDay || todayKey(), 1); view.fumoDay = d > todayKey() ? todayKey() : d; render(); return true; }
+    case "fumo-log-text": {
+      const text = String(el.dataset.t || "").trim();
+      if (!text) return true;
+      const now = new Date(fumoNow()).toISOString();
+      S.fumo.actCount = (S.fumo.actCount || 0) + 1;
+      S.fumo.log = [...(S.fumo.log || []), { at: now, kind: "act", text }];
+      if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
+      save(); toast(`Fatto: ${text}`);
+      if (!dlg().open) render();
+      return true;
+    }
     case "fumo-act": {
       const list = fumoPrevisione();
       const text = list[parseInt(el && el.dataset.i)] || "";
