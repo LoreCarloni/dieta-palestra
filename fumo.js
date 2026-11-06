@@ -257,12 +257,17 @@ function giornataReportHtml() {
       .map((e) => `<div class="muted small">${esc(hm(e.at))}–${esc(hm(new Date(e.at).getTime() + e.min * 60000))} · ${esc(gruppoDi(e.text))} (${esc(fumoDurataMin(e.min))})</div>`).join("");
     return `<div class="row"><div style="flex:1">${esc(fmtDate(d.g, { weekday: "short", day: "numeric", month: "short", year: "numeric" }))}</div><div>${d.min ? esc(fumoDurataMin(d.min)) : "nessuna attività"} · ${d.sigarette} ${d.sigarette === 1 ? "sigaretta" : "sigarette"}</div></div>${dettagli}`;
   }).join("");
+  // frase di riepilogo per il periodo scelto
+  const pLabel = { giorno: "Oggi", settimana: "Questa settimana", mese: "Questo mese", anno: "Quest'anno", tutto: "In totale" }[periodo] || "In questo periodo";
+  const righeAtt = Object.values(perAtt).sort((x, y) => y.min - x.min).map((a) => `${a.text.toLowerCase()} per ${fumoDurataMin(a.min)}`);
+  const frase = `${pLabel} hai dedicato ${righeAtt.length ? righeAtt.join(", ") : "nessuna attività registrata"}${totSig ? `, e ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}` : ""}.`;
   const bottoni = Object.entries(GIORNATA_PERIODI).map(([k, v]) => `<button class="btn ${k === periodo ? "primary" : "ghost"} small-btn" data-act="giornata-periodo" data-p="${k}">${esc(v)}</button>`).join(" ");
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Torna al registro</button></div>
     <section class="card">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${bottoni}</div>
       <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
+      <p style="margin:8px 0 0">${esc(frase)}</p>
     </section>
     ${(() => {
       const nonClass = [...new Map(acts.filter((e) => !haGruppo(e.text)).map((e) => [parolaChiave(e.text).toLowerCase(), parolaChiave(e.text)])).values()];
@@ -447,14 +452,15 @@ function parseFrase(frase, day) {
   else start = day === todayKey() ? new Date() : new Date(new Date(isoDay).setHours(12, 0, 0, 0));
   if (start > new Date()) return { error: "L'ora di inizio è nel futuro" };
   let min = 0;
-  const dur = low.match(/per\s+(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))/);
+  // durata passata: "per 20 minuti", "negli ultimi 20 minuti", "20 minuti", "per un'ora"
+  const dur = low.match(/(?:\bper\s+|\bnegli\s+ultimi\s+|\bultimi\s+)?(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))\b/);
   if (dur && !range && !single) {
     const q = dur[1];
     const mins = q.startsWith("mezz") ? 30 : q.startsWith("un quarto") ? 15 : q.startsWith("un") && q.includes("ora") ? 60 : (parseInt(dur[2]) * (dur[3].startsWith("or") ? 60 : 1)) || 0;
     if (mins > 0) {
       const now = new Date();
       const st = new Date(now.getTime() - mins * 60000);
-      return { kind: "act", text: text.replace(/\s*per\s+.*$/i, "").replace(/^sono stato\s+/i, "").replace(/^(?:sono|ho)\s+/i, "").replace(/^./, (c) => c.toUpperCase()) || "Attività", at: st.toISOString(), min: mins };
+      return { kind: "act", text: text.replace(/\s*(?:per\s+|negli\s+ultimi\s+|ultimi\s+)?(?:mezz['’]ora|un['’]ora|un quarto d['’]ora|\d+\s*(?:minuti|minuto|ore|ora))\b.*$/i, "").replace(/^sono stato\s+/i, "").replace(/^(?:sono|ho)\s+/i, "").replace(/^./, (c) => c.toUpperCase()) || "Attività", at: st.toISOString(), min: mins };
     }
   }
   if (range) {
