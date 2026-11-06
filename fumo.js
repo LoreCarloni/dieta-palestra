@@ -124,7 +124,7 @@ function fumoDiaryCard() {
       <form id="fumo-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="smoke">Ho fumato</option><option value="act">Ho fatto un'azione</option></select>
-        <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
+        <input name="time" type="text" inputmode="numeric" maxlength="5" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5).replace(":", ".") : "12.00"}" placeholder="Ora di inizio, es. 6.50" required>
         <input name="text" maxlength="80" placeholder="Quante sigarette (1 se non scrivi nulla), oppure cosa hai fatto">
         <button class="btn ghost wide" type="submit">Aggiungi al registro</button>
       </form>
@@ -182,8 +182,8 @@ function renderGiornata() {
       <form id="giornata-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
-        <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
-        <label>Fino alle (facoltativo)<input name="end" type="time"></label>
+        <input name="time" type="text" inputmode="numeric" maxlength="5" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5).replace(":", ".") : "12.00"}" placeholder="Ora di inizio, es. 6.50" required>
+        <input name="end" type="text" inputmode="numeric" maxlength="5" placeholder="Fino alle, es. 9.50 (facoltativo)">
         <input name="min" type="number" min="1" max="1440" step="1" placeholder="Oppure durata in minuti (facoltativo)">
         <button class="btn ghost wide" type="button" data-act="giornata-from-last">Dall'ultima sigaretta fino a adesso</button>
         <input name="text" list="giornata-suggest" maxlength="80" placeholder="Cosa hai fatto, per esempio studiare o fare la doccia">
@@ -255,6 +255,16 @@ document.addEventListener("input", (e) => {
   const h = $("#fumo-hits");
   if (h) h.innerHTML = fumoHitsHtml(e.target.value);
 });
+
+// Ora scritta a mano: 6.50, 6:50, 6 50, 650, 6 oppure 1050. Restituisce [ore, minuti] o null.
+function parseOra(str) {
+  const t = String(str || "").trim();
+  let m = t.match(/^(\d{1,2})[.:\s]?(\d{2})$/);
+  if (m) return [parseInt(m[1]), parseInt(m[2])].every((x, i) => i === 0 ? x < 24 : x < 60) ? [parseInt(m[1]), parseInt(m[2])] : null;
+  m = t.match(/^(\d{1,2})$/);
+  if (m && parseInt(m[1]) < 24) return [parseInt(m[1]), 0];
+  return null;
+}
 
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
@@ -680,7 +690,9 @@ document.addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const day = view.giornataDay || todayKey();
-    const [hh, mm] = String(fd.get("time") || "").split(":").map(Number);
+    const ora = parseOra(fd.get("time"));
+    if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return; }
+    const [hh, mm] = ora;
     const when = parseKey(day);
     when.setHours(hh || 0, mm || 0, 0, 0);
     if (when > new Date()) { toast("L'ora è nel futuro"); return; }
@@ -699,7 +711,9 @@ document.addEventListener("submit", (e) => {
       let min = Math.max(0, parseInt(fd.get("min")) || 0);
       const endStr = String(fd.get("end") || "");
       if (endStr) {
-        const [eh, em] = endStr.split(":").map(Number);
+        const fine = parseOra(endStr);
+        if (!fine) { toast("Scrivi l'ora di fine, per esempio 9.50"); return; }
+        const [eh, em] = fine;
         const end = parseKey(day);
         end.setHours(eh || 0, em || 0, 0, 0);
         if (end <= when) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
@@ -715,7 +729,9 @@ document.addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const day = view.fumoDay || todayKey();
-    const [hh, mm] = String(fd.get("time") || "").split(":").map(Number);
+    const ora = parseOra(fd.get("time"));
+    if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return; }
+    const [hh, mm] = ora;
     const when = parseKey(day);
     when.setHours(hh || 0, mm || 0, 0, 0);
     if (when > new Date()) { toast("L'ora è nel futuro"); return; }
