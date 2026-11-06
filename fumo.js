@@ -293,15 +293,7 @@ function renderGiornata() {
       <input id="giornata-start-time" maxlength="5" placeholder="Dalle, es. 6.50 (facoltativo, altrimenti adesso)" style="margin-top:8px">
       <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
     </section>`;
-  const pausa = S.giornata && S.giornata.pausa;
-  const pausaHtml = pausa ? `
-    <section class="card" style="text-align:center">
-      <div class="muted small">In pausa dalle ${esc(new Date(pausa.start).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div>
-      <div style="font-size:1.1rem;font-weight:700">Sigaretta</div>
-      <div class="muted small">Quando inizi una nuova attività la pausa si chiude da sola.</div>
-      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-torno">Ho finito la pausa</button></div>
-    </section>` : "";
-  const runningHtml = pausaHtml + (running.length ? running.map((r, i) => `
+  const runningHtml = (running.length ? running.map((r, i) => `
     <section class="card" style="text-align:center">
       <div class="muted small">In corso</div>
       <div style="font-weight:700;font-size:1.1rem">${esc(r.text)}</div>
@@ -1103,7 +1095,7 @@ function fumoAct(a, el) {
       { const run = gRun(); const now = fumoNow();
         run.forEach((r) => { const min = Math.round((now - r.start) / 60000); if (min >= 1) S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }]; });
         if (run.length) S.giornata.running = [];
-        if (!S.giornata.pausa) S.giornata.pausa = { start: now }; }
+      }
       const now = fumoNow();
       // Il tempo resistito è quello dall'ultima sigaretta, cioè lo stesso conteggio di "Senza fumare da".
       const started = new Date(S.fumo.start).getTime();
