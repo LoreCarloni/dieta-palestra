@@ -1033,7 +1033,7 @@ function planItemsHtml() {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const it = parseDiary(x)[0];
     const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
+    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums} <button class="chip" data-act="plan-eat-one" data-i="${i}">mangiato</button> <button class="chip" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button> <button class="chip${/bloccato/i.test(x) ? " done-chip" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "sblocca" : "blocca"}</button> <button class="chip" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "✓ preferito" : "preferito"; })()}</button> <button class="x mini" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2304,6 +2304,15 @@ function act(a, el) {
       lines[idx] = lines[idx].replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${g}$2g`);
       S.plannedDinner = lines.join("\n");
       closeDialog(); toast("Grammi aggiornati"); break;
+    }
+    case "plan-block-one": {
+      // blocca: il cibo resta nella previsione e non viene ridotto dal ricalcolo, ma non passa tra i mangiati
+      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      if (!line) break;
+      const next = /bloccato/i.test(line) ? line.replace(/,?\s*bloccato\b/ig, "").trim() : line.trim() + ", bloccato";
+      S.plannedDinner = S.plannedDinner.split("\n").map((x) => (x === line ? next : x)).join("\n");
+      save(); render();
+      break;
     }
     case "plan-fav": {
       // segna o toglie il preferito direttamente dalla previsione
