@@ -65,6 +65,21 @@ function fumoAzioniDiOggi() {
   return fumoAzioniAperte;
 }
 
+// Azioni piccole da fare al posto di fumare. Si possono aggiungere dalla scheda Fumo.
+const FUMO_PREVISIONE_BASE = [
+  "Bevi un bicchiere d'acqua",
+  "Alzati e cammina per due minuti",
+  "Esci in balcone e respira",
+  "Siediti e chiudi gli occhi per un minuto",
+  "Fai cinque respiri lenti",
+  "Torna al lavoro su una piccola cosa",
+  "Sistema una cosa sul tavolo",
+  "Lavati il viso con acqua fredda",
+];
+function fumoPrevisione() {
+  return (S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE;
+}
+
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
@@ -111,6 +126,15 @@ function renderFumo() {
       <p class="stat-v" style="text-align:center;font-size:1.6rem;margin:0 0 8px">Resisti!</p>
       <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(a.t)}</li>`).join("")}</ul>
     </section>
+    <section class="card">
+      <h2>Previsione della giornata</h2>
+      <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
+      <ul style="margin:0;padding-left:20px">${fumoPrevisione().map((a) => `<li style="margin:4px 0">${esc(a)}</li>`).join("")}</ul>
+      <form id="fumo-acts-form" class="form" style="margin-top:10px">
+        <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
+        <button class="btn ghost wide" type="submit">Aggiungi</button>
+      </form>
+    </section>
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
     ${resisting}
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
@@ -122,6 +146,7 @@ function renderFumo() {
     </section>
     <section class="card">
       <div class="stats">
+        <div class="stat"><div class="muted small">Azioni fatte al posto di fumare</div><div class="stat-v">${(S.fumo && S.fumo.actCount) || 0}</div></div>
         <div class="stat"><div class="muted small">Sigarette evitate</div><div class="stat-v">${r0(st.avoided)}</div></div>
         <div class="stat"><div class="muted small">Sigarette fumate oggi</div><div class="stat-v">${smokedToday}</div></div>
         <div class="stat"><div class="muted small">Sigarette fumate in totale</div><div class="stat-v">${f.smoked || 0}</div></div>
@@ -300,6 +325,8 @@ function fumoShowCraving(act) {
     <p id="fumo-breath" class="small" style="text-align:center"></p>
     <p>${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
+    <p class="small" style="margin:12px 0 6px;font-weight:600">Fai una di queste al posto della sigaretta:</p>
+    ${fumoPrevisione().map((a, i) => `<button class="btn ghost wide" data-act="fumo-act" data-i="${i}" style="margin-top:6px">${esc(a)}</button>`).join("")}
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
     <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
   clearInterval(fumoTimer);
@@ -325,6 +352,14 @@ function fumoAct(a, el) {
     case "tab-fumo": view.tab = "fumo"; resetScroll = true; render(); return true;
     case "fumo-wait": {
       fumoCravingDialog(fumoSelectedMinutes());
+      return true;
+    }
+    case "fumo-act": {
+      const list = fumoPrevisione();
+      const text = list[parseInt(el && el.dataset.i)] || "";
+      S.fumo.actCount = (S.fumo.actCount || 0) + 1;
+      S.fumo.actLog = [...(S.fumo.actLog || []), { at: new Date(fumoNow()).toISOString(), text }];
+      save(); toast(`Fatto: ${text}`);
       return true;
     }
     case "fumo-done":
@@ -366,6 +401,14 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "fumo-acts-form") {
+    e.preventDefault();
+    const text = String(new FormData(e.target).get("act") || "").trim();
+    if (!text) return;
+    S.fumo.acts = [...fumoPrevisione(), text];
+    save(); render(); toast("Azione aggiunta");
+    return;
+  }
   if (e.target.id !== "fumo-form") return;
   e.preventDefault();
   const fd = new FormData(e.target);
