@@ -2883,6 +2883,34 @@ ensureBarcodeSources();
 ensureDishParts();
 ensureMcdMacros();
 
+// Scorrimento orizzontale con un dito: passa al giorno precedente o successivo (come le frecce ‹ ›).
+(function swipeDays() {
+  let s = null;
+  const ignored = (t) => t && t.closest && t.closest("input, textarea, select, dialog, [data-noswipe]");
+  document.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1 || ignored(e.target) || document.querySelector("dialog[open]")) { s = null; return; }
+    s = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+  }, { passive: true });
+  document.addEventListener("touchcancel", () => { s = null; }, { passive: true });
+  // gesto orizzontale: il browser non deve usarlo per tornare indietro nella cronologia
+  document.addEventListener("touchmove", (e) => {
+    if (!s || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - s.x, dy = e.touches[0].clientY - s.y;
+    if (Math.abs(dx) > 12 && Math.abs(dx) > 1.5 * Math.abs(dy) && e.cancelable) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchend", (e) => {
+    if (!s || e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - s.x, dy = e.changedTouches[0].clientY - s.y;
+    const quick = Date.now() - s.t < 600;
+    s = null;
+    if (!quick || Math.abs(dx) < 70 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+    if (view.tab !== "oggi") return;
+    view.date = addDays(view.date, dx < 0 ? 1 : -1);
+    resetScroll = true;
+    render();
+  }, { passive: true });
+})();
+
 // Pizzico con due dita sulle card: ingrandisce solo quella card (da 1x a 2,5x), si riporta a 1x tornando indietro.
 (function pinchCards() {
   const MIN = 1, MAX = 2.5;
