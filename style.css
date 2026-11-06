@@ -375,3 +375,6 @@ main > .card, main > section.card { margin-left: -16px; margin-right: -16px; max
 .chip { background: #f2f2f7; color: var(--text); border: 1px solid rgba(60, 60, 67, 0.16); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip { background: #2c2c2e; border-color: rgba(255, 255, 255, 0.12); } }
 :root[data-theme="dark"] .chip { background: #2c2c2e; border-color: rgba(255, 255, 255, 0.12); }
+
+/* in un titolo: il conteggio kcal resta su una riga, in minuscolo e piu piccolo */
+h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-size: 0.8rem; letter-spacing: 0; }
