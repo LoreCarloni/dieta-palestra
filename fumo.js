@@ -156,8 +156,6 @@ function renderFumo() {
   if (view.fumoEdit) return renderFumoSetup(true);
   const f = S.fumo, st = fumoStats();
   const tecOggi = fumoPensieroDiOggi();
-  const actNow = fumoActive();
-  const resisting = actNow ? `<section class="card" style="text-align:center"><div class="muted small">Stai resistendo da</div><div class="stat-v" style="font-size:1.4rem">${esc(fumoClock(fumoNow() - actNow.start))}</div></section>` : "";
   const perDay = f.smokedDays || {};
   const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
   const smokedToday = perDay[todayKey()] || 0;
@@ -189,7 +187,6 @@ function renderFumo() {
       </form>
     </section>
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
-    ${resisting}
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
       <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
