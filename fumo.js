@@ -114,7 +114,13 @@ function fumoDiaryCard() {
   const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   if (!view.fumoRegistroOpen) return `
     <section class="card">
-      <button class="btn ghost wide" data-act="fumo-registro-toggle">Registro di oggi (${acts} azioni, ${smoked} sigarette) · Mostra</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-weight:600">Registro di oggi</div>
+          <div class="muted small">${acts} ${acts === 1 ? "azione" : "azioni"} · ${smoked} ${smoked === 1 ? "sigaretta" : "sigarette"}</div>
+        </div>
+        <button class="link" data-act="fumo-registro-toggle">Mostra</button>
+      </div>
     </section>`;
   return `
     <section class="card">
