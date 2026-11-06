@@ -2901,6 +2901,7 @@ ensureMcdMacros();
     el.style.transformOrigin = `${ox}% ${oy}%`;
     el.style.position = "relative";
     el.style.zIndex = "5";
+    el.style.transition = "none";
   }, { passive: true });
   document.addEventListener("touchmove", (e) => {
     if (!g || e.touches.length !== 2) return;
@@ -2909,14 +2910,16 @@ ensureMcdMacros();
     g.el.dataset.zoom = String(s);
     g.el.style.transform = s <= 1.01 ? "" : `scale(${s})`;
   }, { passive: false });
+  // al rilascio la card torna da sola alla dimensione normale, come le foto nei post
   const end = (e) => {
     if (!g || e.touches.length >= 2) return;
-    const s = parseFloat(g.el.dataset.zoom || "1");
-    if (s <= 1.01) {
-      g.el.style.transform = ""; g.el.style.zIndex = ""; g.el.style.position = ""; g.el.style.transformOrigin = "";
-      delete g.el.dataset.zoom;
-    }
+    const el = g.el;
     g = null;
+    if (!el.dataset.zoom) return;
+    el.style.transition = "transform 0.25s ease";
+    el.style.transform = "";
+    delete el.dataset.zoom;
+    setTimeout(() => { el.style.transition = ""; el.style.transformOrigin = ""; el.style.zIndex = ""; el.style.position = ""; }, 260);
   };
   document.addEventListener("touchend", end, { passive: true });
   document.addEventListener("touchcancel", end, { passive: true });
