@@ -1225,10 +1225,7 @@ function fumoAct(a, el) {
       const act = S.fumo.active;
       clearInterval(fumoTimer);
       // Le attività in corso si fermano mentre fumi: si riprendono con "Torno".
-      { const run = gRun(); const now = fumoNow();
-        run.forEach((r) => { const min = Math.round((now - r.start) / 60000); if (min >= 1) S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }]; });
-        if (run.length) S.giornata.running = [];
-      }
+      // "Sto fumando" registra solo la sigaretta: le attività in corso restano aperte finché non le chiudi tu.
       const now = fumoNow();
       // Il tempo resistito è quello dall'ultima sigaretta, cioè lo stesso conteggio di "Senza fumare da".
       const started = new Date(S.fumo.start).getTime();
