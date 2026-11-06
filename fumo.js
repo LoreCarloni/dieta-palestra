@@ -132,7 +132,7 @@ function fumoDiaryCard() {
     ".fumo-text{width:100%;min-width:0;overflow-wrap:anywhere;white-space:normal}" +
     ".fumo-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}" +
     ".fumo-timed{display:grid;grid-template-columns:50px 1fr;column-gap:10px;row-gap:4px;align-items:start}" +
-    ".fumo-timed > :nth-child(1){grid-column:1;grid-row:1 / span 2;padding-top:2px}" +
+    ".fumo-timed > :nth-child(1){grid-column:1;grid-row:1 / span 2;align-self:center}" +
     ".fumo-timed > .fumo-text{grid-column:2}" +
     ".fumo-timed > .fumo-tools{grid-column:2}";
   document.head.appendChild(st);
