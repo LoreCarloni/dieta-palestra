@@ -255,10 +255,25 @@ document.addEventListener("input", (e) => {
   if (h) h.innerHTML = fumoHitsHtml(e.target.value);
 });
 
+// Ore scritte come le detta la voce: "dalle sei e mezza", "alle 9 e 50", "alle nove e un quarto".
+function normOre(testo) {
+  const H = { una: 1, uno: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9, dieci: 10, undici: 11, dodici: 12 };
+  const M = { cinque: 5, dieci: 10, quindici: 15, venti: 20, venticinque: 25, trenta: 30, quaranta: 40, cinquanta: 50 };
+  let t = String(testo || "");
+  t = t.replace(/\b(alle|dalle|sono le|verso le)\s+(una|uno|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici)\b/gi,
+    (_, p1, w) => `${p1} ${H[w.toLowerCase()]}`);
+  t = t.replace(/(\d{1,2})\s+e\s+(mezza|mezzo)\b/gi, "$1.30");
+  t = t.replace(/(\d{1,2})\s+e\s+un\s+quarto\b/gi, "$1.15");
+  t = t.replace(/(\d{1,2})\s+e\s+tre\s+quarti\b/gi, "$1.45");
+  t = t.replace(/(\d{1,2})\s+e\s+(quindici|venti|venticinque|trenta|quaranta|cinquanta|cinque|dieci)\b/gi, (_, h, w) => `${h}.${String(M[w.toLowerCase()]).padStart(2, "0")}`);
+  t = t.replace(/(\d{1,2})\s+e\s+(\d{1,2})\b/gi, (_, h, m) => `${h}.${m.padStart(2, "0")}`);
+  return t;
+}
+
 // Legge una frase tipo "ho lavorato all'app dalle 6.50 alle 9.50" o "ho fumato 2 sigarette alle 7".
 const NUMERI_PAROLE = { un: 1, una: 1, uno: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9, dieci: 10 };
 function parseFrase(frase, day) {
-  const s = String(frase || "").trim();
+  const s = normOre(String(frase || "").trim());
   const low = s.toLowerCase();
   const isoDay = parseKey(day);
   const oraIn = (str) => { const o = parseOra(str); if (!o) return null; const d = new Date(isoDay); d.setHours(o[0], o[1], 0, 0); return d; };
@@ -313,7 +328,7 @@ function gRun() {
 
 // Frasi come: "ho iniziato a lavorare all'app alle 6.50", "vado a fare la doccia", "ho finito di lavorare alle 9.50".
 function fumoComando(frase) {
-  const raw = String(frase || "").trim();
+  const raw = normOre(String(frase || "").trim());
   const low = raw.toLowerCase();
   if (/fumat[oa]|sigaret/.test(low)) return null;
   const time = (low.match(/(?:alle|sono le|verso le)\s+([\d.:]+)/) || [])[1] || null;
