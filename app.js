@@ -368,6 +368,18 @@ function ensureDishParts() {
   }
   S.dishPartsFixed = true; save();
 }
+// Ragu di vitellone e suino fatto da mamma: una sola volta, con le carni al 50 e 50 e un soffritto stimato di 150 g (modificabile)
+function ensureRagu() {
+  if (S.raguAdded) return;
+  if (!S.customFoods.some((x) => norm(x.name).trim() === "ragu di vitellone e suino")) {
+    const parts = [{ name: "Vitellone per ragù, tagli anteriori (crudo)", g: 250 }, { name: "Maiale per ragù, spalla (crudo)", g: 250 }, { name: "Olio extravergine d'oliva", g: 20 }, { name: "Cipolla", g: 50 }, { name: "Carota", g: 50 }, { name: "Sedano", g: 50 }];
+    const per = { "vitellone per ragu, tagli anteriori (crudo)": [145, 20.5, 0, 7], "maiale per ragu, spalla (crudo)": [133, 19, 0, 6.3], "olio extravergine d'oliva": [899, 0, 0, 99.9], "cipolla": [28, 1, 5.7, 0.1], "carota": [41, 1.1, 7.6, 0.2], "sedano": [23, 2.3, 2.4, 0.2] };
+    let tg = 0, tk = 0, tp = 0, tc = 0, tf = 0;
+    parts.forEach((pt) => { const v = per[norm(pt.name).trim()]; tg += pt.g; if (v) { tk += v[0] * pt.g / 100; tp += v[1] * pt.g / 100; tc += v[2] * pt.g / 100; tf += v[3] * pt.g / 100; } });
+    S.customFoods.push({ name: "Ragù di vitellone e suino", parts, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: "Piatto composto, ricetta di mamma: carni 50 e 50, soffritto stimato" });
+  }
+  S.raguAdded = true; save();
+}
 function ensureBarcodeSources() {
   let n = 0;
   S.customFoods.forEach((f) => { if (f.barcode && !f.src) { f.src = "Etichetta: codice a barre"; n++; } });
@@ -2906,6 +2918,7 @@ ensureMomCutlet();
 ensureBarcodeSources();
 ensureDishParts();
 ensureMcdMacros();
+ensureRagu();
 
 // Scorrimento orizzontale con un dito: passa al giorno precedente o successivo (come le frecce ‹ ›).
 (function swipeDays() {
