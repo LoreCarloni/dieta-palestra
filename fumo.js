@@ -147,16 +147,14 @@ function fumoDiaryCard() {
 // Sezione Giornata: attività della giornata e sigarette, con possibilità di aggiungere ciò che si è dimenticato.
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
-  const cur = S.giornata && S.giornata.current;
-  const running = cur ? `
+  const running = gRun();
+  const runningHtml = running.length ? running.map((r, i) => `
     <section class="card" style="text-align:center">
       <div class="muted small">In corso</div>
-      <div style="font-weight:700;font-size:1.1rem">${esc(cur.text)}</div>
-      <div id="giornata-live" style="font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - cur.start))}</div>
-      <p class="muted small">Puoi fumare nel frattempo: l'attività continua.</p>
-      <button class="btn primary wide" data-act="giornata-stop">Finisci</button>
-      <div class="btns" style="justify-content:center;margin-top:8px"><button class="link" data-act="giornata-rename">Cambia nome</button> <button class="link" data-act="giornata-cancel">Annulla, non registrare</button></div>
-    </section>` : `
+      <div style="font-weight:700;font-size:1.1rem">${esc(r.text)}</div>
+      <div class="giornata-live" data-start="${r.start}" style="font-size:2.2rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - r.start))}</div>
+      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-stop" data-i="${i}">Finisci</button><button class="link" data-act="giornata-rename" data-i="${i}">Cambia nome</button><button class="link" data-act="giornata-cancel" data-i="${i}">Annulla</button></div>
+    </section>`).join("") : `
     <section class="card">
       <h2>Inizia un'attività</h2>
       <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
@@ -169,10 +167,16 @@ function renderGiornata() {
   const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
   const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const minTot = rows.filter((e) => e.kind === "act").reduce((a, e) => a + (e.min || 0), 0);
+  const gOver = (iso) => {
+    const t = new Date(iso).getTime();
+    const names = acts.filter((a) => keyOf(new Date(a.at)) === day && new Date(a.at).getTime() <= t && t <= new Date(a.at).getTime() + (a.min || 0) * 60000).map((a) => a.text);
+    gRun().forEach((r) => { if (r.start <= t && keyOf(new Date(r.start)) === day) names.push(r.text); });
+    return names.join(", ");
+  };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   return `
-    ${running}
+    ${runningHtml}
     <section class="card">
       <div class="row" style="align-items:center">
         <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
@@ -292,17 +296,30 @@ function parseFrase(frase, day) {
   return { kind: "act", text, at: start.toISOString(), min };
 }
 
-// Comandi per l'attività in corso: "ho iniziato a lavorare all'app alle 6.50", "ho finito di lavorare", "vado a fare la doccia".
+// Attività in corso: più di una alla volta. Le sigarette si registrano a parte e possono cadere dentro un'attività.
+function gRun() {
+  S.giornata = S.giornata || { log: [] };
+  if (S.giornata.current && !S.giornata.running) { S.giornata.running = [S.giornata.current]; S.giornata.current = null; }
+  S.giornata.running = S.giornata.running || [];
+  return S.giornata.running;
+}
+
+// Frasi come: "ho iniziato a lavorare all'app alle 6.50", "vado a fare la doccia", "ho finito di lavorare alle 9.50".
 function fumoComando(frase) {
-  const low = String(frase || "").trim().toLowerCase();
+  const raw = String(frase || "").trim();
+  const low = raw.toLowerCase();
   if (/fumat[oa]|sigaret/.test(low)) return null;
-  const ora = (x) => (x ? x : null);
-  let m = low.match(/^(?:ho\s+)?(?:iniziato|cominciato|inizio|comincio)\s+(?:a\s+|di\s+)?(.+?)(?:\s+alle\s+([\d.:]+))?$/);
-  if (m) return { type: "start", text: m[1], time: ora(m[2]) };
-  m = low.match(/^(?:ho\s+)?finit[oa]\b(?:\s+di\s+\S+(?:\s+\S+)*?)?(?:\s+alle\s+([\d.:]+))?$/);
-  if (m) return { type: "stop", time: ora(m[1]) };
-  m = low.match(/^vado\s+(?:a\s+|in\s+|al\s+|alla\s+|allo\s+|ai\s+|agli\s+|nel\s+|nella\s+|da\s+)?(.+?)(?:\s+alle\s+([\d.:]+))?$/);
-  if (m) return { type: "switch", text: m[1], time: ora(m[2]) };
+  const time = (low.match(/(?:alle|sono le|verso le)\s+([\d.:]+)/) || [])[1] || null;
+  const pulisci = (x) => x
+    .replace(/(?:alle|sono le|verso le)\s+[\d.:]+.*$/, "")
+    .replace(/\b(?:ci sto|sto ancora|ancora|sono ancora|ci sono ancora)\b.*$/, "")
+    .replace(/\s+/g, " ").trim();
+  let m = low.match(/(?:^|\s)(?:ho\s+|sono\s+)?(?:iniziato|cominciato|inizio|comincio|iniziando|cominciando)\b\s*(?:a\s+|di\s+|con\s+)?(.*)$/);
+  if (m) { const text = pulisci(m[1]); return text ? { type: "start", text, time } : null; }
+  m = low.match(/(?:^|\s)(?:ho\s+)?finit[oa]\b\s*(?:di\s+|a\s+)?(.*)$/);
+  if (m) return { type: "stop", hint: pulisci(m[1]).toLowerCase(), time };
+  m = low.match(/^vado\s+(?:a\s+|in\s+|al\s+|alla\s+|allo\s+|ai\s+|agli\s+|nel\s+|nella\s+|da\s+)?(.*)$/);
+  if (m) { const text = pulisci(m[1]); return text ? { type: "start", text, time } : null; }
   return null;
 }
 
@@ -335,8 +352,7 @@ if (!window.fumoLiveStarted) {
   setInterval(() => {
     const el = document.getElementById("fumo-live");
     if (el && S.fumo) el.textContent = fumoHMS(fumoNow() - new Date(S.fumo.start).getTime());
-    const gl = document.getElementById("giornata-live");
-    if (gl && S.giornata && S.giornata.current) gl.textContent = fumoHMS(fumoNow() - S.giornata.current.start);
+    document.querySelectorAll(".giornata-live").forEach((el) => { el.textContent = fumoHMS(fumoNow() - Number(el.dataset.start)); });
   }, 1000);
 }
 
@@ -655,36 +671,34 @@ function fumoAct(a, el) {
       if (dalle) {
         const ora = parseOra(dalle);
         if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return true; }
-        const d = new Date();
-        d.setHours(ora[0], ora[1], 0, 0);
+        const d = new Date(); d.setHours(ora[0], ora[1], 0, 0);
         if (d > new Date()) { toast("L'ora di inizio è nel futuro"); return true; }
         start = d.getTime();
       }
-      S.giornata = S.giornata || { log: [] };
-      S.giornata.current = { text, start };
+      gRun().push({ text: text.charAt(0).toUpperCase() + text.slice(1), start });
       save(); render(); toast("Attività iniziata");
       return true;
     }
     case "giornata-stop": {
-      const cur = S.giornata && S.giornata.current;
-      if (!cur) return true;
-      const min = Math.max(1, Math.round((fumoNow() - cur.start) / 60000));
-      S.giornata.log = [...(S.giornata.log || []), { at: new Date(cur.start).toISOString(), text: cur.text, min }];
-      S.giornata.current = null;
-      save(); render(); toast(`Registrato: ${cur.text}, ${min} minuti`);
+      const run = gRun(); const i = parseInt(el.dataset.i);
+      const r = run[i]; if (!r) return true;
+      const min = Math.max(1, Math.round((fumoNow() - r.start) / 60000));
+      S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }];
+      run.splice(i, 1);
+      save(); render(); toast(`Registrato: ${r.text}, ${fumoDurataMin(min)}`);
       return true;
     }
     case "giornata-rename": {
-      const cur = S.giornata && S.giornata.current;
-      if (!cur) return true;
-      const nuovo = prompt("Cosa stai facendo?", cur.text);
-      if (nuovo && nuovo.trim()) { cur.text = nuovo.trim().slice(0, 80); save(); render(); toast("Nome cambiato, l'orario di inizio resta"); }
+      const r = gRun()[parseInt(el.dataset.i)]; if (!r) return true;
+      const nuovo = prompt("Cosa stai facendo?", r.text);
+      if (nuovo && nuovo.trim()) { r.text = nuovo.trim().slice(0, 80); save(); render(); toast("Nome cambiato, l'orario di inizio resta"); }
       return true;
     }
     case "giornata-cancel": {
-      if (!S.giornata || !S.giornata.current) return true;
-      if (!confirm("Annullare l'attività in corso senza registrarla?")) return true;
-      S.giornata.current = null; save(); render(); toast("Attività annullata");
+      const run = gRun(); const i = parseInt(el.dataset.i);
+      if (!run[i]) return true;
+      if (!confirm("Annullare questa attività senza registrarla?")) return true;
+      run.splice(i, 1); save(); render(); toast("Attività annullata");
       return true;
     }
     case "giornata-from-last": {
@@ -772,32 +786,27 @@ document.addEventListener("submit", (e) => {
     const frase = new FormData(e.target).get("frase");
     const cmd = day === todayKey() ? fumoComando(frase) : null;
     if (cmd) {
-      const cur = S.giornata && S.giornata.current;
+      const run = gRun();
       const oraCmd = cmd.time ? parseOra(cmd.time) : null;
       if (cmd.time && !oraCmd) { toast("Scrivi l'ora, per esempio 6.50"); return; }
       const at = new Date(); if (oraCmd) at.setHours(oraCmd[0], oraCmd[1], 0, 0);
       if (at > new Date()) { toast("L'ora è nel futuro"); return; }
-      const chiudi = (c, fine) => {
-        const min = Math.round((fine - c.start) / 60000);
-        if (min < 1) return false;
-        S.giornata.log = [...(S.giornata.log || []), { at: new Date(c.start).toISOString(), text: c.text, min }];
-        return true;
-      };
-      S.giornata = S.giornata || { log: [] };
       if (cmd.type === "stop") {
-        if (!cur) { toast("Nessuna attività in corso"); return; }
-        if (!chiudi(cur, at.getTime())) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
-        S.giornata.current = null;
-        save(); render(); toast(`Registrato: ${cur.text}`);
+        let idx = -1;
+        if (cmd.hint) { const h = cmd.hint; idx = run.map((r) => r.text.toLowerCase()).reduce((acc, t, i) => (h.split(/\s+/).some((w) => w.length > 3 && t.includes(w)) ? i : acc), -1); }
+        if (idx < 0 && run.length === 1) idx = 0;
+        if (idx < 0) { toast(run.length ? "Quale attività? Scrivi il nome, per esempio: ho finito di lavorare" : "Nessuna attività in corso"); return; }
+        const r = run[idx];
+        const min = Math.round((at.getTime() - r.start) / 60000);
+        if (min < 1) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
+        S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }];
+        run.splice(idx, 1);
+        save(); render(); toast(`Registrato: ${r.text}, ${fumoDurataMin(min)}`);
         return;
       }
-      if (cur) {
-        if (at.getTime() <= cur.start) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return; }
-        if (!chiudi(cur, at.getTime())) { toast("Attività precedente troppo breve"); return; }
-      }
-      const text = cmd.text.replace(/^./, (c) => c.toUpperCase());
-      S.giornata.current = { text, start: at.getTime() };
-      save(); render(); toast(`Iniziato: ${text}`);
+      const nome = cmd.text.charAt(0).toUpperCase() + cmd.text.slice(1);
+      run.push({ text: nome, start: at.getTime() });
+      save(); render(); toast(`Iniziato: ${nome}`);
       return;
     }
     const r = parseFrase(frase, day);
