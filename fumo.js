@@ -173,9 +173,16 @@ function fumoSearchCard() {
     <section class="card">
       <h2>Cosa stai facendo al posto di fumare?</h2>
       <input id="fumo-q" maxlength="80" placeholder="Scrivi o cerca un'azione" autocomplete="off">
-      <div id="fumo-hits" style="margin-top:8px">${fumoHitsHtml("")}</div>
+      <div id="fumo-hits" style="margin-top:8px"></div>
     </section>`;
 }
+
+// Le azioni compaiono solo quando si tocca la casella o si scrive.
+document.addEventListener("focusin", (e) => {
+  if (e.target.id !== "fumo-q") return;
+  const h = $("#fumo-hits");
+  if (h) h.innerHTML = fumoHitsHtml(e.target.value);
+});
 
 document.addEventListener("input", (e) => {
   if (e.target.id !== "fumo-q") return;
