@@ -615,7 +615,17 @@ function renderFumo() {
   const today = new Date().toDateString();
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
+  const sigOggi = (f.smokedDays || {})[todayKey()] || 0;
+  const commento = sigOggi === 0
+    ? { titolo: "Nessuna sigaretta oggi.", testo: "Continua così: ogni ora senza fumo conta." }
+    : { titolo: "Complimenti, stai rovinando la tua salute.", testo: sigOggi >= 5 ? "Oggi sei già a " + sigOggi + ": prova a fermarti alla prossima voglia e fai una delle azioni sotto." : "Prova a fermarti alla prossima voglia: scegli una delle azioni sotto e aspetta il cronometro." };
   return `
+    <section class="card" style="text-align:center;padding:14px 10px">
+      <div style="font-size:3.2rem;font-weight:800;line-height:1">${sigOggi}</div>
+      <div class="muted small">sigarette oggi</div>
+      <div style="font-size:1.4rem;font-weight:800;line-height:1.2;margin-top:10px">${esc(commento.titolo)}</div>
+      <div class="small" style="margin-top:6px">${esc(commento.testo)}</div>
+    </section>
     <section class="card" style="text-align:center;padding:18px 10px">
       <div class="muted small">Senza fumare da</div>
       <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
@@ -1330,72 +1340,3 @@ document.addEventListener("submit", (e) => {
   view.fumoEdit = false;
   save(); resetScroll = true; render(); toast("Dati salvati");
 });
-
-// Microfono dentro le caselle di testo: l'icona compare quando tocchi la casella.
-// Non sposta la casella (così la tastiera non si chiude) e non osserva tutta la pagina.
-// Dove il telefono non supporta il riconoscimento vocale, non compare nulla.
-(function () {
-  const Riconoscimento = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Riconoscimento) return;
-  const ICONA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
-  const posiziona = (input, b) => {
-    // Dentro il bordo destro della casella, centrato in verticale, misurato sul contenitore.
-    const pr = b.parentNode.getBoundingClientRect();
-    const ir = input.getBoundingClientRect();
-    b.style.left = (ir.right - pr.left - 40) + "px";
-    b.style.top = (ir.top - pr.top + (ir.height - 34) / 2) + "px";
-  };
-  const micro = (input) => {
-    const esistente = input.nextElementSibling && input.nextElementSibling.dataset.micro ? input.nextElementSibling : null;
-    if (esistente) { posiziona(input, esistente); return; }
-    const parent = input.parentNode;
-    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
-    const b = document.createElement("button");
-    b.type = "button";
-    b.dataset.micro = "1";
-    b.setAttribute("aria-label", "Detta");
-    b.innerHTML = ICONA;
-    b.style.cssText = "position:absolute;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2";
-    b.addEventListener("click", (e) => {
-      e.preventDefault();
-      const r = new Riconoscimento();
-      r.lang = "it-IT";
-      r.interimResults = false;
-      r.maxAlternatives = 1;
-      b.style.color = "#c0392b";
-      r.onresult = (ev) => {
-        const testo = ev.results[0][0].transcript;
-        input.value = (input.value ? input.value + " " : "") + testo;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        // Riporta il testo a vista: il telefono lo mostra solo dopo un nuovo tocco senza questo passo.
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
-        input.scrollIntoView({ block: "nearest" });
-      };
-      r.onend = () => { b.style.color = "var(--accent)"; };
-      r.onerror = () => { b.style.color = "var(--accent)"; toast("Non ho sentito, riprova"); };
-      r.start();
-    });
-    input.style.paddingRight = "44px";
-    input.insertAdjacentElement("afterend", b);
-    posiziona(input, b);
-  };
-  // Il microfono solo nelle caselle di testo delle schede Fumo e Giornata, non per i valori numerici.
-  const ammesso = (t) => {
-    if (t.tagName !== "INPUT" || /^(number|time|file|checkbox|radio|hidden)$/.test(t.type)) return false;
-    if (!(view.tab === "fumo" || view.tab === "giornata")) return false;
-    if (t.id === "giornata-start-time" || t.name === "end" || t.name === "min" || t.name === "time") return false;
-    return true;
-  };
-  document.addEventListener("focusin", (e) => {
-    const t = e.target;
-    if (ammesso(t)) { micro(t); return; }
-    const b = t.nextElementSibling;
-    if (b && b.dataset && b.dataset.micro) b.remove();
-  });
-  // Quando la casella riceve il testo dettato, il microfono resta al suo posto.
-  document.addEventListener("input", (e) => {
-    const t = e.target;
-    if (t.tagName === "INPUT" && t.nextElementSibling && t.nextElementSibling.dataset.micro) posiziona(t, t.nextElementSibling);
-  });
-})();
