@@ -111,7 +111,7 @@ function fumoDiaryCard() {
   const acts = rows.filter((e) => e.kind === "act").length;
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item"><div class="muted small">${esc(hhmm(e.at))}</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   return `
     <section class="card">
       <div class="row" style="align-items:center">
@@ -130,7 +130,11 @@ function fumoDiaryCard() {
   st.textContent = ".fumo-item{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 0;border-bottom:1px solid var(--line)}" +
     ".fumo-item .muted{font-size:0.8rem}" +
     ".fumo-text{width:100%;min-width:0;overflow-wrap:anywhere;white-space:normal}" +
-    ".fumo-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}";
+    ".fumo-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}" +
+    ".fumo-timed{display:grid;grid-template-columns:50px 1fr;column-gap:10px;row-gap:4px;align-items:start}" +
+    ".fumo-timed > :nth-child(1){grid-column:1;grid-row:1 / span 2;padding-top:2px}" +
+    ".fumo-timed > .fumo-text{grid-column:2}" +
+    ".fumo-timed > .fumo-tools{grid-column:2}";
   document.head.appendChild(st);
 })();
 // Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
