@@ -367,8 +367,8 @@ h2.plan-h2 { white-space: nowrap; font-size: 0.9rem; letter-spacing: 0.03em; gap
 h2.plan-h2 .link { font-size: 0.9rem; }
 .plan-edit { display: block; margin: -4px 0 6px; font-size: 0.85rem; padding: 0; }
 
-/* testo piu grande su tutta l'app: base circa 19px invece di 16px */
-html { font-size: 118%; }
+/* testo piu grande su tutta l'app: base 17px invece di 16px */
+html { font-size: 106.25%; }
 
 /* le card occupano tutta la larghezza dello schermo, senza margine laterale */
 main > .card, main > section.card { margin-left: -16px; margin-right: -16px; max-width: none; width: auto; border-radius: 0; border-left: 0; border-right: 0; }
