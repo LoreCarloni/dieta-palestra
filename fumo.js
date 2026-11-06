@@ -306,7 +306,7 @@ function renderGiornata() {
   const attFumo = ((S.fumo && S.fumo.log) || []).map((e) => ({ ...e })).filter((e) => e.kind === "act").map((e) => ({ ...e, kind: "act", fumo: true, idx: -1 }));
   acts.push(...attFumo);
   const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
-  const rows = [...acts, ...smokes, ...pause].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
+  const rows = [...acts, ...smokes, ...pause].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => b.at.localeCompare(a.at));
   const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
   const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   // Totale del tempo: le attività sovrapposte contano una volta sola.
