@@ -168,7 +168,7 @@ function renderGiornata() {
   const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const minTot = rows.filter((e) => e.kind === "act").reduce((a, e) => a + (e.min || 0), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${e.min} min` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   return `
     ${running}
     <section class="card">
@@ -177,7 +177,7 @@ function renderGiornata() {
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
         <button class="btn ghost small-btn" data-act="giornata-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
       </div>
-      <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${minTot} min)` : ""} · Sigarette fumate: ${nSmoke}</p>
+      <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${fumoDurataMin(minTot)})` : ""} · Sigarette fumate: ${nSmoke}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
       <form id="giornata-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
@@ -264,6 +264,13 @@ function parseOra(str) {
   m = t.match(/^(\d{1,2})$/);
   if (m && parseInt(m[1]) < 24) return [parseInt(m[1]), 0];
   return null;
+}
+
+// Durata di un'attività in ore e minuti: 3 ore, 3 ore e 20 minuti, 40 minuti.
+function fumoDurataMin(minutes) {
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  if (h === 0) return `${m} ${m === 1 ? "minuto" : "minuti"}`;
+  return `${h} ${h === 1 ? "ora" : "ore"}${m ? ` e ${m} ${m === 1 ? "minuto" : "minuti"}` : ""}`;
 }
 
 function fumoHMS(ms) {
