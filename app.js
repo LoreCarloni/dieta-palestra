@@ -115,7 +115,7 @@ function day(k, create = false) {
 
 function weightAt(k) {
   const ks = Object.keys(S.days).filter((x) => x <= k && S.days[x].weight).sort();
-  return ks.length ? S.days[ks[ks.length - 1]].weight : S.profile.weight;
+  return ks.length ? S.days[ks[ks.length - 1]].weight : (S.profile ? S.profile.weight : 0);
 }
 
 // ---------- Calcoli ----------
@@ -250,6 +250,7 @@ const mealRank = (line) => {
 const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
 
 function refreshForecast() {
+  if (!S.profile) return; // primo avvio: prima il profilo, poi la previsione
   const k = view.date, future = k > todayKey();
   // i cibi da non suggerire (dolci, snack, marche di cioccolato) vengono tolti anche dalle previsioni gia salvate
   if (S.plannedDinner && NOT_FOR_DIET.test(S.plannedDinner)) {
