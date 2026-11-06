@@ -147,6 +147,20 @@ function fumoDiaryCard() {
 // Sezione Giornata: attività della giornata e sigarette, con possibilità di aggiungere ciò che si è dimenticato.
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
+  const cur = S.giornata && S.giornata.current;
+  const running = cur ? `
+    <section class="card" style="text-align:center">
+      <div class="muted small">In corso</div>
+      <div style="font-weight:700;font-size:1.1rem">${esc(cur.text)}</div>
+      <div id="giornata-live" style="font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - cur.start))}</div>
+      <p class="muted small">Puoi fumare nel frattempo: l'attività continua.</p>
+      <button class="btn primary wide" data-act="giornata-stop">Finisci</button>
+    </section>` : `
+    <section class="card">
+      <h2>Inizia un'attività</h2>
+      <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
+      <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
+    </section>`;
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, kind: "act", idx }));
   const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
   const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
@@ -156,6 +170,7 @@ function renderGiornata() {
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${e.min} min` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   return `
+    ${running}
     <section class="card">
       <div class="row" style="align-items:center">
         <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
@@ -252,6 +267,8 @@ if (!window.fumoLiveStarted) {
   setInterval(() => {
     const el = document.getElementById("fumo-live");
     if (el && S.fumo) el.textContent = fumoHMS(fumoNow() - new Date(S.fumo.start).getTime());
+    const gl = document.getElementById("giornata-live");
+    if (gl && S.giornata && S.giornata.current) gl.textContent = fumoHMS(fumoNow() - S.giornata.current.start);
   }, 1000);
 }
 
@@ -560,6 +577,23 @@ function fumoAct(a, el) {
         if (S.fumo.smokedDays && S.fumo.smokedDays[day]) S.fumo.smokedDays[day] = Math.max(0, S.fumo.smokedDays[day] - n);
       }
       save(); render(); toast("Voce eliminata");
+      return true;
+    }
+    case "giornata-start": {
+      const text = String(($("#giornata-start-text") || {}).value || "").trim();
+      if (!text) { toast("Scrivi cosa stai facendo"); return true; }
+      S.giornata = S.giornata || { log: [] };
+      S.giornata.current = { text, start: fumoNow() };
+      save(); render(); toast("Attività iniziata");
+      return true;
+    }
+    case "giornata-stop": {
+      const cur = S.giornata && S.giornata.current;
+      if (!cur) return true;
+      const min = Math.max(1, Math.round((fumoNow() - cur.start) / 60000));
+      S.giornata.log = [...(S.giornata.log || []), { at: new Date(cur.start).toISOString(), text: cur.text, min }];
+      S.giornata.current = null;
+      save(); render(); toast(`Registrato: ${cur.text}, ${min} minuti`);
       return true;
     }
     case "giornata-from-last": {
