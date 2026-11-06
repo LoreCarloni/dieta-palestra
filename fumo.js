@@ -167,7 +167,17 @@ function renderGiornata() {
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
         <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
-        <input name="text" maxlength="80" placeholder="Cosa hai fatto, oppure quante sigarette (1 se non scrivi nulla)">
+        <input name="text" list="giornata-suggest" maxlength="80" placeholder="Cosa hai fatto, per esempio studiare o fare la doccia">
+        <datalist id="giornata-suggest">
+          <option value="Ho studiato"></option>
+          <option value="Ho lavorato all'app"></option>
+          <option value="Ho preparato una email"></option>
+          <option value="Ho fatto la doccia"></option>
+          <option value="Ho fatto meditazione"></option>
+          <option value="Mi sono rilassato"></option>
+          <option value="Ho letto"></option>
+          <option value="Ho fatto una passeggiata"></option>
+        </datalist>
         <button class="btn ghost wide" type="submit">Aggiungi</button>
       </form>
     </section>`;
