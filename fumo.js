@@ -88,9 +88,19 @@ const FUMO_PREVISIONE_VECCHIE = {
   "Sistema una cosa sul tavolo": "Sistemando una cosa sul tavolo",
   "Lavati il viso con acqua fredda": "Lavandoti il viso con acqua fredda",
 };
+// Le azioni fatte più spesso stanno in cima. A parità di uso resta l'ordine originale.
 function fumoPrevisione() {
-  const list = (S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE;
-  return list.map((x) => FUMO_PREVISIONE_VECCHIE[x] || x);
+  const list = ((S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE).map((x) => FUMO_PREVISIONE_VECCHIE[x] || x);
+  const counts = {};
+  ((S.fumo && S.fumo.log) || []).forEach((e) => {
+    if (e.kind !== "act") return;
+    const t = FUMO_PREVISIONE_VECCHIE[e.text] || e.text;
+    counts[t] = (counts[t] || 0) + 1;
+  });
+  return list
+    .map((text, i) => ({ text, i, n: counts[text] || 0 }))
+    .sort((a, b) => b.n - a.n || a.i - b.i)
+    .map((x) => x.text);
 }
 
 // Registro del giorno: azioni fatte e sigarette fumate, in ordine di ora.
