@@ -378,3 +378,6 @@ main > .card, main > section.card { margin-left: -16px; margin-right: -16px; max
 
 /* in un titolo: il conteggio kcal resta su una riga, in minuscolo e piu piccolo */
 h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-size: 0.8rem; letter-spacing: 0; }
+
+/* barra in basso: sette voci, testo piu piccolo e senza a capo, cosi si leggono tutte */
+.nav button { font-size: 0.72rem; padding: 14px 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: clip; min-width: 0; }
