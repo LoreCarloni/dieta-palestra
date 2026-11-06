@@ -152,8 +152,9 @@ function renderGiornata() {
   const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
   const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
   const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
+  const minTot = rows.filter((e) => e.kind === "act").reduce((a, e) => a + (e.min || 0), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${e.min} min` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   return `
     <section class="card">
       <div class="row" style="align-items:center">
@@ -161,12 +162,14 @@ function renderGiornata() {
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
         <button class="btn ghost small-btn" data-act="giornata-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
       </div>
-      <p class="muted small" style="text-align:center">Attività: ${nAct} · Sigarette fumate: ${nSmoke}</p>
+      <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${minTot} min)` : ""} · Sigarette fumate: ${nSmoke}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
       <form id="giornata-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
         <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
+        <input name="min" type="number" min="1" max="1440" step="1" placeholder="Durata in minuti (facoltativo)">
+        <button class="btn ghost wide" type="button" data-act="giornata-from-last">Dall'ultima sigaretta fino a adesso</button>
         <input name="text" list="giornata-suggest" maxlength="80" placeholder="Cosa hai fatto, per esempio studiare o fare la doccia">
         <datalist id="giornata-suggest">
           <option value="Ho studiato"></option>
@@ -559,6 +562,19 @@ function fumoAct(a, el) {
       save(); render(); toast("Voce eliminata");
       return true;
     }
+    case "giornata-from-last": {
+      const f = $("#giornata-add-form");
+      if (!f) return true;
+      const smokes = ((S.fumo && S.fumo.log) || []).filter((e) => e.kind === "smoke").map((e) => new Date(e.at).getTime()).filter((t) => t <= fumoNow());
+      const last = smokes.length ? Math.max(...smokes) : (S.fumo && S.fumo.start ? new Date(S.fumo.start).getTime() : null);
+      if (!last) { toast("Non c'è un'ultima sigaretta da cui partire"); return true; }
+      const d = new Date(last);
+      f.querySelector('[name=kind]').value = "act";
+      f.querySelector('[name=time]').value = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      f.querySelector('[name=min]').value = Math.max(1, Math.round((fumoNow() - last) / 60000));
+      toast("Compilato dall'ultima sigaretta: scrivi cosa hai fatto");
+      return true;
+    }
     case "giornata-prev": view.giornataDay = addDays(view.giornataDay || todayKey(), -1); render(); return true;
     case "giornata-next": { const d = addDays(view.giornataDay || todayKey(), 1); view.giornataDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
@@ -645,7 +661,8 @@ document.addEventListener("submit", (e) => {
     } else {
       if (!text) { toast("Scrivi cosa hai fatto"); return; }
       S.giornata = S.giornata || { log: [] };
-      S.giornata.log = [...S.giornata.log, { at, text }];
+      const min = Math.max(0, parseInt(fd.get("min")) || 0);
+      S.giornata.log = [...S.giornata.log, min ? { at, text, min } : { at, text }];
     }
     save(); render(); toast("Aggiunto");
     return;
