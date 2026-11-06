@@ -327,7 +327,9 @@ function kcalBar(v, target) {
 }
 
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
-const HABIT_FOODS = ["Pizza margherita", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
+// Cibi che non vanno suggeriti in una dieta: dolci, snack, fritti, pizza, salumi. Non entrano nei suggerimenti automatici.
+const NOT_FOR_DIET = /cioccolat|nutella|kinder|gelato|patatine|pringles|merendin|torta|tiramis|brioche|croissant|cornetto|biscott|frollin|dolc|snack|caramell|barretta|galletta|fritt|crocchett|pizza|salame|wurstel|salsicc|mortadella/i;
+const HABIT_FOODS = ["Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
 function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
   return HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
@@ -911,13 +913,13 @@ function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
   // i preferiti scelti da te entrano sempre per primi, senza aspettare la cronologia
-  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)))
+  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name))
     .map((x) => ({ name: x.name, g: x.portion || 100, per: [x.kcal, x.p, x.c, x.f] }));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
     if (!d || !d.meals) continue;
     d.meals.forEach((m) => {
-      if (!m.name || !m.g || !(m.kcal > 0)) return;
+      if (!m.name || !m.g || !(m.kcal > 0) || NOT_FOR_DIET.test(m.name)) return;
       const key = foodGroup(m.name);
       if (todayGroups.has(key)) return; // gia mangiato oggi, anche con un nome diverso
       // il tacchino generico non entra tra i preferiti: resta solo la cotoletta di famiglia
@@ -1376,7 +1378,7 @@ function dayComment(k) {
   if (t.p < tg.protein * 0.85) {
     // mancano grammi di proteine: suggerisco due alimenti magri del database, con la quantità che li copre
     const gap = tg.protein - t.p;
-    const lean = allFoods().filter((f) => !f.perServing && f.p >= 18 && f.kcal > 0 && f.kcal <= 250).sort((a, b) => b.p / b.kcal - a.p / a.kcal).slice(0, 2);
+    const lean = allFoods().filter((f) => !f.perServing && f.p >= 18 && f.kcal > 0 && f.kcal <= 250 && !NOT_FOR_DIET.test(f.name)).sort((a, b) => b.p / b.kcal - a.p / a.kcal).slice(0, 2);
     const hints = lean.map((f) => `${shortName(f.name).toLowerCase()} circa ${Math.min(250, Math.round(gap / (f.p / 100) / 10) * 10)} g`).join(", oppure ");
     lines.push({ lvl: "warn", text: `Proteine basse: ${r0(t.p)} g su ${r0(tg.protein)}, mancano circa ${r0(gap)} g. ${overPlanned ? "La previsione è già piena: per aggiungere proteine conviene sostituire qualcosa di previsto con una fonte proteica." : `Per arrivarci con cibo vero: ${hints || "aggiungi una fonte magra a ogni pasto"}.`}` });
   }
@@ -1442,7 +1444,7 @@ function dayComment(k) {
   if (t.p + pl.p < tg.protein * 0.85 && !overPlanned && tg.kcal - t.kcal > 0) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name))));
-    const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name))).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
+    const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name)) && !NOT_FOR_DIET.test(f.name)).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
     if (pick) {
       const gap = Math.round(tg.protein - t.p - pl.p);
       const n = Math.min(3, Math.ceil(gap / pick.p));
