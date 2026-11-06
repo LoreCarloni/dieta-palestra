@@ -155,6 +155,7 @@ function renderGiornata() {
       <div id="giornata-live" style="font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - cur.start))}</div>
       <p class="muted small">Puoi fumare nel frattempo: l'attività continua.</p>
       <button class="btn primary wide" data-act="giornata-stop">Finisci</button>
+      <div class="btns" style="justify-content:center;margin-top:8px"><button class="link" data-act="giornata-rename">Cambia nome</button> <button class="link" data-act="giornata-cancel">Annulla, non registrare</button></div>
     </section>` : `
     <section class="card">
       <h2>Inizia un'attività</h2>
@@ -612,6 +613,19 @@ function fumoAct(a, el) {
       S.giornata.log = [...(S.giornata.log || []), { at: new Date(cur.start).toISOString(), text: cur.text, min }];
       S.giornata.current = null;
       save(); render(); toast(`Registrato: ${cur.text}, ${min} minuti`);
+      return true;
+    }
+    case "giornata-rename": {
+      const cur = S.giornata && S.giornata.current;
+      if (!cur) return true;
+      const nuovo = prompt("Cosa stai facendo?", cur.text);
+      if (nuovo && nuovo.trim()) { cur.text = nuovo.trim().slice(0, 80); save(); render(); toast("Nome cambiato, l'orario di inizio resta"); }
+      return true;
+    }
+    case "giornata-cancel": {
+      if (!S.giornata || !S.giornata.current) return true;
+      if (!confirm("Annullare l'attività in corso senza registrarla?")) return true;
+      S.giornata.current = null; save(); render(); toast("Attività annullata");
       return true;
     }
     case "giornata-from-last": {
