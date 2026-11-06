@@ -378,6 +378,9 @@ function ensureRagu() {
     parts.forEach((pt) => { const v = per[norm(pt.name).trim()]; tg += pt.g; if (v) { tk += v[0] * pt.g / 100; tp += v[1] * pt.g / 100; tc += v[2] * pt.g / 100; tf += v[3] * pt.g / 100; } });
     S.customFoods.push({ name: "Ragù di vitellone e suino", parts, kcal: Math.round(tk / tg * 100), p: Math.round(tp / tg * 1000) / 10, c: Math.round(tc / tg * 1000) / 10, f: Math.round(tf / tg * 1000) / 10, portion: Math.round(tg), src: "Piatto composto, ricetta di mamma: carni 50 e 50, soffritto stimato" });
   }
+  // il ragu salvato prima risulta "stima": con i valori CREA di tutti gli ingredienti diventa verificato (i valori modificati restano)
+  const rg = S.customFoods.find((x) => norm(x.name).trim() === "ragu di vitellone e suino");
+  if (rg && /stima/i.test(rg.src || "")) rg.src = "CREA 2019: vitellone, suino, cipolla, carota, sedano; ricetta di mamma";
   S.raguAdded = true; save();
 }
 function ensureBarcodeSources() {
