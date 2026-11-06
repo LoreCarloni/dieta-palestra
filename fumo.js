@@ -261,8 +261,8 @@ function renderGiornata() {
     <section class="card" style="text-align:center">
       <div class="muted small">In pausa dalle ${esc(new Date(pausa.start).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div>
       <div style="font-size:1.1rem;font-weight:700">Sigaretta in corso</div>
-      <div class="muted small">Le attività in corso riprenderanno da dove erano.</div>
-      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-torno">Torno</button></div>
+      <div class="muted small">Quando inizi una nuova attività la pausa si chiude da sola.</div>
+      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-torno">Ho finito la pausa</button></div>
     </section>` : "";
   const runningHtml = pausaHtml + (running.length ? running.map((r, i) => `
     <section class="card" style="text-align:center">
@@ -433,6 +433,15 @@ function parseFrase(frase, day) {
     min = Math.round((end - start) / 60000);
   }
   return { kind: "act", text, at: start.toISOString(), min };
+}
+
+// Chiude la pausa per sigaretta e la registra con la sua durata.
+function gChiudiPausa() {
+  const p = S.giornata && S.giornata.pausa;
+  if (!p) return;
+  const min = Math.max(1, Math.round((fumoNow() - p.start) / 60000));
+  S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Pausa", kind: "pausa", min }];
+  S.giornata.pausa = null;
 }
 
 // Attività in corso: più di una alla volta. Le sigarette si registrano a parte e possono cadere dentro un'attività.
@@ -842,6 +851,7 @@ function fumoAct(a, el) {
         if (d > new Date()) { toast("L'ora di inizio è nel futuro"); return true; }
         start = d.getTime();
       }
+      gChiudiPausa();
       const run = gRun();
       if (run.length) {
         // Iniziare una nuova attività chiude quella più recente, all'ora di inizio della nuova.
@@ -887,14 +897,8 @@ function fumoAct(a, el) {
       return true;
     }
     case "giornata-torno": {
-      const p = S.giornata && S.giornata.pausa;
-      if (!p) return true;
-      const durata = fumoNow() - p.start;
-      const min = Math.max(1, Math.round(durata / 60000));
-      S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Pausa", kind: "pausa", min }];
-      S.giornata.running = p.items.map((r) => ({ ...r, start: r.start + durata }));
-      S.giornata.pausa = null;
-      save(); render(); toast(`Ripreso dopo ${fumoDurataMin(min)} di pausa`);
+      if (!(S.giornata && S.giornata.pausa)) return true;
+      gChiudiPausa(); save(); render(); toast("Pausa registrata");
       return true;
     }
     case "giornata-rename": {
@@ -996,7 +1000,10 @@ function fumoAct(a, el) {
       const act = S.fumo.active;
       clearInterval(fumoTimer);
       // Le attività in corso si fermano mentre fumi: si riprendono con "Torno".
-      { const run = gRun(); if (run.length && !S.giornata.pausa) { S.giornata.pausa = { start: fumoNow(), items: run.map((r) => ({ ...r })) }; S.giornata.running = []; } }
+      { const run = gRun(); const now = fumoNow();
+        run.forEach((r) => { const min = Math.round((now - r.start) / 60000); if (min >= 1) S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }]; });
+        if (run.length) S.giornata.running = [];
+        if (!S.giornata.pausa) S.giornata.pausa = { start: now }; }
       const now = fumoNow();
       // Il tempo resistito è quello dall'ultima sigaretta, cioè lo stesso conteggio di "Senza fumare da".
       const started = new Date(S.fumo.start).getTime();
@@ -1043,6 +1050,7 @@ document.addEventListener("submit", (e) => {
     const cmd = day === todayKey() ? fumoComando(frase) : null;
     if (cmd) {
       const run = gRun();
+      if (cmd.type !== "stop") gChiudiPausa();
       const oraCmd = cmd.time ? parseOra(cmd.time) : null;
       if (cmd.time && !oraCmd) { toast("Scrivi l'ora, per esempio 6.50"); return; }
       const at = new Date(); if (oraCmd) at.setHours(oraCmd[0], oraCmd[1], 0, 0);
