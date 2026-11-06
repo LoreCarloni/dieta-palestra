@@ -145,6 +145,15 @@ function fumoDiaryCard() {
   document.head.appendChild(st);
 })();
 // Sezione Giornata: attività della giornata e sigarette, con possibilità di aggiungere ciò che si è dimenticato.
+// Parola chiave di un'attività: "Lavorando all'auto" → "auto", "Facendo la doccia" → "doccia".
+function parolaChiave(testo) {
+  let t = String(testo || "").trim();
+  t = t.replace(/^\S+(ando|endo|ndo)\b\s*/i, "");
+  t = t.replace(/^(?:all['’]|dell['’]|nell['’]|dall['’]|sull['’]|all\s|al\s|alla\s|allo\s|ai\s|agli\s|alle\s|la\s|il\s|lo\s|le\s|gli\s|i\s|un\s|una\s|uno\s|di\s|del\s|della\s|per\s|con\s|a\s)/i, "");
+  t = t.trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : testo;
+}
+
 // Report degli ultimi sette giorni: ore per attività, ore per giorno, sigarette per giorno.
 function giornataReportHtml() {
   const oggi = todayKey();
@@ -162,13 +171,19 @@ function giornataReportHtml() {
   const totSig = perGiorno.reduce((x, d) => x + d.sigarette, 0);
   const perAtt = {};
   acts.filter((e) => giorni.includes(keyOf(new Date(e.at)))).forEach((e) => {
-    const k = e.text.toLowerCase();
-    perAtt[k] = perAtt[k] || { text: e.text, min: 0 };
+    const nome = parolaChiave(e.text);
+    const k = nome.toLowerCase();
+    perAtt[k] = perAtt[k] || { text: nome, min: 0 };
     perAtt[k].min += e.min;
   });
   const attRows = Object.values(perAtt).sort((a, b) => b.min - a.min)
     .map((a) => `<div class="row"><div style="flex:1">${esc(a.text)}</div><div>${esc(fumoDurataMin(a.min))}</div></div>`).join("");
-  const giorniRows = perGiorno.map((d) => `<div class="row"><div style="flex:1">${esc(fmtDate(d.g, { weekday: "long", day: "numeric", month: "long" }))}</div><div>${d.min ? esc(fumoDurataMin(d.min)) : "nessuna attività"} · ${d.sigarette} ${d.sigarette === 1 ? "sigaretta" : "sigarette"}</div></div>`).join("");
+  const hm = (t) => new Date(t).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  const giorniRows = perGiorno.map((d) => {
+    const dettagli = acts.filter((e) => keyOf(new Date(e.at)) === d.g).sort((a, b) => a.at.localeCompare(b.at))
+      .map((e) => `<div class="muted small">${esc(hm(e.at))}–${esc(hm(new Date(e.at).getTime() + e.min * 60000))} · ${esc(parolaChiave(e.text))} (${esc(fumoDurataMin(e.min))})</div>`).join("");
+    return `<div class="row"><div style="flex:1">${esc(fmtDate(d.g, { weekday: "long", day: "numeric", month: "long" }))}</div><div>${d.min ? esc(fumoDurataMin(d.min)) : "nessuna attività"} · ${d.sigarette} ${d.sigarette === 1 ? "sigaretta" : "sigarette"}</div></div>${dettagli}`;
+  }).join("");
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Torna al registro</button></div>
     <section class="card">
