@@ -121,6 +121,13 @@ function fumoDiaryCard() {
       </div>
       <p class="muted small" style="text-align:center">Azioni fatte: ${acts} · Sigarette fumate: ${smoked}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
+      <form id="fumo-add-form" class="form" style="margin-top:12px">
+        <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
+        <select name="kind"><option value="smoke">Ho fumato</option><option value="act">Ho fatto un'azione</option></select>
+        <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
+        <input name="text" maxlength="80" placeholder="Quante sigarette (1 se non scrivi nulla), oppure cosa hai fatto">
+        <button class="btn ghost wide" type="submit">Aggiungi al registro</button>
+      </form>
     </section>`;
 }
 
@@ -561,6 +568,32 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "fumo-add-form") {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const day = view.fumoDay || todayKey();
+    const [hh, mm] = String(fd.get("time") || "").split(":").map(Number);
+    const when = parseKey(day);
+    when.setHours(hh || 0, mm || 0, 0, 0);
+    if (when > new Date()) { toast("L'ora è nel futuro"); return; }
+    const at = when.toISOString();
+    const kind = fd.get("kind");
+    const text = String(fd.get("text") || "").trim();
+    if (kind === "smoke") {
+      const n = Math.max(1, parseInt(text) || 1);
+      S.fumo.log = [...(S.fumo.log || []), { at, kind: "smoke", n }];
+      S.fumo.smoked = (S.fumo.smoked || 0) + n;
+      S.fumo.smokedDays = S.fumo.smokedDays || {};
+      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + n;
+    } else {
+      if (!text) { toast("Scrivi cosa hai fatto"); return; }
+      S.fumo.log = [...(S.fumo.log || []), { at, kind: "act", text }];
+      S.fumo.actCount = (S.fumo.actCount || 0) + 1;
+      if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
+    }
+    save(); render(); toast("Aggiunto al registro");
+    return;
+  }
   if (e.target.id === "fumo-item-form") {
     e.preventDefault();
     const f = e.target, fd = new FormData(f);
