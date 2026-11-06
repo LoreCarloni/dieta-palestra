@@ -144,6 +144,11 @@ function fumoDiaryCard() {
     ".fumo-timed > .fumo-tools{grid-column:2}";
   document.head.appendChild(st);
 })();
+// Lista delle azioni della previsione: compare solo dopo aver toccato la casella di ricerca.
+function fumoPlanHtml() {
+  return fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("");
+}
+
 // Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
 function fumoCandidati() {
   const past = (S.fumo.log || []).filter((e) => e.kind === "act").map((e) => e.text);
@@ -180,6 +185,9 @@ function fumoSearchCard() {
 // Le azioni compaiono solo quando si tocca la casella o si scrive.
 document.addEventListener("focusin", (e) => {
   if (e.target.id !== "fumo-q") return;
+  view.fumoPlanOpen = true;
+  const pl = $("#fumo-plan");
+  if (pl) pl.innerHTML = fumoPlanHtml();
   const h = $("#fumo-hits");
   if (h) h.innerHTML = fumoHitsHtml(e.target.value);
 });
@@ -239,7 +247,7 @@ function renderFumo() {
     <section class="card">
       <h2>Previsione della giornata</h2>
       <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
-      ${fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("")}
+      <div id="fumo-plan">${view.fumoPlanOpen ? fumoPlanHtml() : ""}</div>
       <form id="fumo-acts-form" class="form" style="margin-top:10px">
         <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
         <button class="btn ghost wide" type="submit">Aggiungi</button>
