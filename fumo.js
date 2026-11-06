@@ -698,7 +698,16 @@ function fumoAct(a, el) {
         if (d > new Date()) { toast("L'ora di inizio è nel futuro"); return true; }
         start = d.getTime();
       }
-      gRun().push({ text: text.charAt(0).toUpperCase() + text.slice(1), start });
+      const run = gRun();
+      if (run.length) {
+        // Iniziare una nuova attività chiude quella più recente, all'ora di inizio della nuova.
+        const last = run[run.length - 1];
+        const min = Math.round((start - last.start) / 60000);
+        if (min < 1) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return true; }
+        S.giornata.log = [...(S.giornata.log || []), { at: new Date(last.start).toISOString(), text: last.text, min }];
+        run.pop();
+      }
+      run.push({ text: text.charAt(0).toUpperCase() + text.slice(1), start });
       save(); render(); toast("Attività iniziata");
       return true;
     }
