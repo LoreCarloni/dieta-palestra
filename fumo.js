@@ -160,6 +160,7 @@ function renderGiornata() {
     <section class="card">
       <h2>Inizia un'attività</h2>
       <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
+      <input id="giornata-start-time" inputmode="numeric" maxlength="5" placeholder="Dalle, es. 6.50 (facoltativo, altrimenti adesso)" style="margin-top:8px">
       <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
     </section>`;
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, kind: "act", idx }));
@@ -601,8 +602,18 @@ function fumoAct(a, el) {
     case "giornata-start": {
       const text = String(($("#giornata-start-text") || {}).value || "").trim();
       if (!text) { toast("Scrivi cosa stai facendo"); return true; }
+      let start = fumoNow();
+      const dalle = String(($("#giornata-start-time") || {}).value || "").trim();
+      if (dalle) {
+        const ora = parseOra(dalle);
+        if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return true; }
+        const d = new Date();
+        d.setHours(ora[0], ora[1], 0, 0);
+        if (d > new Date()) { toast("L'ora di inizio è nel futuro"); return true; }
+        start = d.getTime();
+      }
       S.giornata = S.giornata || { log: [] };
-      S.giornata.current = { text, start: fumoNow() };
+      S.giornata.current = { text, start };
       save(); render(); toast("Attività iniziata");
       return true;
     }
