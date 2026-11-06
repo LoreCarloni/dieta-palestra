@@ -251,6 +251,11 @@ const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim())
 
 function refreshForecast() {
   const k = view.date, future = k > todayKey();
+  // i cibi da non suggerire (dolci, snack, marche di cioccolato) vengono tolti anche dalle previsioni gia salvate
+  if (S.plannedDinner && NOT_FOR_DIET.test(S.plannedDinner)) {
+    S.plannedDinner = S.plannedDinner.split("\n").filter((l) => !NOT_FOR_DIET.test(l)).join("\n");
+    save();
+  }
   // niente righe doppie: le ripetizioni accumulate in passato vengono tolte
   // stesso nome = stesso cibo: se c'e due volte (anche con grammi diversi) resta la prima riga
   const seenNames = new Set();
