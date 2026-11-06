@@ -346,6 +346,16 @@ function giornataRiepilogoHtml(day, acts, nSmoke) {
     <p class="muted small" style="margin:8px 0 0">Sigarette fumate: ${nSmoke}</p></section>`;
 }
 
+// Le azioni che servono a resistere alla voglia (respirando, bevi un bicchiere...) non sono attività della giornata.
+function isAzioneVoglia(testo) {
+  const t = normTesto(testo).replace(/[.!?]+$/, "").trim();
+  const noti = new Set([
+    ...fumoPrevisione(), ...FUMO_PREVISIONE_BASE, ...Object.keys(FUMO_PREVISIONE_VECCHIE), ...Object.keys(FUMO_GERUNDI_IMPERATIVI),
+    ...Object.values(FUMO_GERUNDI_IMPERATIVI), ...Object.values(FUMO_PREVISIONE_VECCHIE), ...FUMO_AZIONI.map((a) => a.t),
+  ].map((x) => normTesto(x).replace(/[.!?]+$/, "").trim()));
+  return noti.has(t) || /^respir(a|ando|are|i)\b/.test(t);
+}
+
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
   const running = gRun();
@@ -366,7 +376,7 @@ function renderGiornata() {
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind !== "pausa").map((e) => ({ ...e, kind: "act" }));
   const pause = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "pausa").map((e) => ({ ...e, kind: "pausa" }));
   // Le attività registrate dalla scheda Fumo (ricerca o "Fatto") compaiono anche qui, senza durata.
-  const attFumo = ((S.fumo && S.fumo.log) || []).map((e) => ({ ...e })).filter((e) => e.kind === "act").map((e) => ({ ...e, kind: "act", fumo: true, idx: -1 }));
+  const attFumo = ((S.fumo && S.fumo.log) || []).map((e) => ({ ...e })).filter((e) => e.kind === "act" && !isAzioneVoglia(e.text)).map((e) => ({ ...e, kind: "act", fumo: true, idx: -1 }));
   acts.push(...attFumo);
   const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
   const rows = [...acts, ...smokes, ...pause].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => b.at.localeCompare(a.at));
