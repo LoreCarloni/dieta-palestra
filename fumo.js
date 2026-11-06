@@ -88,7 +88,7 @@ function fumoDiaryCard() {
   const acts = rows.filter((e) => e.kind === "act").length;
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="row" style="align-items:center;padding:6px 0"><div class="muted small" style="min-width:48px">${esc(hhmm(e.at))}</div><div style="flex:1">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button> <button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item"><div class="muted small" style="min-width:44px">${esc(hhmm(e.at))}</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div></div>`).join("");
   return `
     <section class="card">
       <div class="row" style="align-items:center">
@@ -100,6 +100,15 @@ function fumoDiaryCard() {
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
     </section>`;
 }
+
+// Stile delle righe con i tasti: il testo ha la priorità, i tasti scendono sotto quando non ci stanno.
+(function () {
+  const st = document.createElement("style");
+  st.textContent = ".fumo-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--line)}" +
+    ".fumo-text{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}" +
+    ".fumo-tools{display:flex;flex-wrap:wrap;gap:6px;flex:0 0 auto}";
+  document.head.appendChild(st);
+})();
 
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
@@ -151,7 +160,7 @@ function renderFumo() {
     <section class="card">
       <h2>Previsione della giornata</h2>
       <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
-      ${fumoPrevisione().map((a, i) => `<div class="row" style="align-items:center;padding:6px 0"><div style="flex:1">${esc(a)}</div><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button> <button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button> <button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div>`).join("")}
+      ${fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("")}
       <form id="fumo-acts-form" class="form" style="margin-top:10px">
         <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
         <button class="btn ghost wide" type="submit">Aggiungi</button>
