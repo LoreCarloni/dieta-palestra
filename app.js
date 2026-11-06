@@ -1648,6 +1648,7 @@ function parseDiary(text) {
     // più frasi sulla stessa riga: separale dopo il punto
     raw.replace(/([.!])\s+(?=[A-ZÀ-Ý])/g, "$1\n").split("\n").forEach((x) => lines.push(x));
   });
+  let pendingName = null; // nome di un alimento scritto su una riga senza calorie, con le calorie sulla riga dopo
   lines.forEach((raw) => {
     let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
     if (!line) return;
@@ -1658,7 +1659,9 @@ function parseDiary(text) {
     const k = line.match(/(\d+(?:[.,]\d+)?)\s*(?:kcal|calorie|cal)\b/i);
     // solo grammi (o una porzione): calorie e macro li calcola l'app dal database
     const nameOnly = line.split(/[,:(]/)[0].replace(/\b(circa|una|un|uno|mezza|mezzo|porzione|piatto|di|da)\b/gi, "").replace(/\d+(?:[.,]\d+)?\s*%?|%/g, "").trim();
-    const dbHit = !k && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? searchFoods(nameOnly).find((x) => !x.perServing) : null;
+    // "Calorie", "Proteine", "Grassi" ecc. sono intestazioni dei macro, non alimenti: non vanno cercati nel database
+    const MACRO_LABEL = /^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale|p|c|g|f)$/i;
+    const dbHit = !k && !MACRO_LABEL.test(nameOnly.trim()) && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? searchFoods(nameOnly).find((x) => !x.perServing) : null;
     const gramLine = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
     const dbG = dbHit ? (gramLine ? num1(gramLine[1]) : /porzione/i.test(line) ? dbHit.portion : null) : null;
     if (dbHit && dbG) {
@@ -1670,11 +1673,22 @@ function parseDiary(text) {
       // riga di sola descrizione dei macro: appartiene all'alimento precedente
       const last = items[items.length - 1];
       if (last) ["p", "c", "f"].forEach((key) => { const v = grabMacro(line, key); if (v !== null && !last.hasMacro[key]) { last[key] = v; last.hasMacro[key] = true; } });
+      else if (!/^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale)\b/i.test(line)) pendingName = line.replace(/[,:]\s*$/, "").trim();
       return;
     }
     const colon = line.indexOf(":");
     let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s\-–]+$/, "").trim();
     name = name.replace(/\s*\(.*$/, "").trim() || "Alimento";
+    if (/^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale)$/i.test(name)) {
+      // intestazione di un'altra riga: se prima c'era il nome dell'alimento, le calorie vanno a lui; altrimenti i macro vanno al precedente
+      if (!items.length && pendingName) {
+        items.push({ name: pendingName.charAt(0).toUpperCase() + pendingName.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, g: null, hasMacro: { p: false, c: false, f: false } });
+        pendingName = null;
+      }
+      const prev = items[items.length - 1];
+      if (prev) ["p", "c", "f"].forEach((key) => { const v = grabMacro(line.slice(k.index), key); if (v !== null && !prev.hasMacro[key]) { prev[key] = v; prev.hasMacro[key] = true; } });
+      return;
+    }
     const rest = line.slice(k.index);
     const item = { name: name.charAt(0).toUpperCase() + name.slice(1), kcal: num1(k[1]), p: 0, c: 0, f: 0, g: null, hasMacro: { p: false, c: false, f: false } };
     const gm = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
