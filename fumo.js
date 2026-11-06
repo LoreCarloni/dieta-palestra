@@ -166,7 +166,14 @@ function renderGiornata() {
   const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
   const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
   const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
-  const minTot = rows.filter((e) => e.kind === "act").reduce((a, e) => a + (e.min || 0), 0);
+  // Totale del tempo: le attività sovrapposte contano una volta sola.
+  const intervalli = rows.filter((e) => e.kind === "act" && e.min).map((e) => [new Date(e.at).getTime(), new Date(e.at).getTime() + e.min * 60000]).sort((a, b) => a[0] - b[0]);
+  const fusi = [];
+  intervalli.forEach(([a0, b0]) => {
+    const ultimo = fusi[fusi.length - 1];
+    if (ultimo && a0 <= ultimo[1]) ultimo[1] = Math.max(ultimo[1], b0); else fusi.push([a0, b0]);
+  });
+  const minTot = Math.round(fusi.reduce((acc, [a0, b0]) => acc + (b0 - a0), 0) / 60000);
   const gOver = (iso) => {
     const t = new Date(iso).getTime();
     const names = acts.filter((a) => keyOf(new Date(a.at)) === day && new Date(a.at).getTime() <= t && t <= new Date(a.at).getTime() + (a.min || 0) * 60000).map((a) => a.text);
