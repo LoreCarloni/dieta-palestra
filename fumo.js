@@ -487,7 +487,9 @@ function normOre(testo) {
 // Legge una frase tipo "ho lavorato all'app dalle 6.50 alle 9.50" o "ho fumato 2 sigarette alle 7".
 const NUMERI_PAROLE = { un: 1, una: 1, uno: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9, dieci: 10 };
 function parseFrase(frase, day) {
-  const s = normOre(String(frase || "").trim());
+  // "due ore" → "2 ore": solo davanti a ore e minuti, così "una mail" resta com'è.
+  const numeri = { un: 1, una: 1, uno: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9, dieci: 10, undici: 11, dodici: 12, quindici: 15, venti: 20, trenta: 30, quaranta: 40, cinquanta: 50 };
+  const s = normOre(String(frase || "").trim()).replace(/\b(un|una|uno|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|quindici|venti|trenta|quaranta|cinquanta)\s+(?=(ore|ora|minuti|minuto)\b)/gi, (_, w) => numeri[w.toLowerCase()] + " ");
   const low = s.toLowerCase();
   const isoDay = parseKey(day);
   const oraIn = (str) => { const o = parseOra(str); if (!o) return null; const d = new Date(isoDay); d.setHours(o[0], o[1], 0, 0); return d; };
@@ -513,10 +515,11 @@ function parseFrase(frase, day) {
   if (start > new Date()) return { error: "L'ora di inizio è nel futuro" };
   let min = 0;
   // durata passata: "per 20 minuti", "negli ultimi 20 minuti", "20 minuti", "per un'ora"
-  const dur = low.match(/(?:\bper\s+|\bnegli\s+ultimi\s+|\bultimi\s+)?(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))\b/);
+  const dur = low.match(/(?:\bper\s+|\bnegli\s+ultimi\s+|\bultimi\s+)?(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora)(?:\s+e\s+(mezz[oa]))?)\b/);
   if (dur && !range && !single) {
     const q = dur[1];
-    const mins = q.startsWith("mezz") ? 30 : q.startsWith("un quarto") ? 15 : q.startsWith("un") && q.includes("ora") ? 60 : (parseInt(dur[2]) * (dur[3].startsWith("or") ? 60 : 1)) || 0;
+    const base = q.startsWith("mezz") ? 30 : q.startsWith("un quarto") ? 15 : q.startsWith("un") && q.includes("ora") ? 60 : (parseInt(dur[2]) * (dur[3].startsWith("or") ? 60 : 1)) || 0;
+    const mins = base + (dur[4] ? 30 : 0);
     if (mins > 0) {
       const now = new Date();
       const st = new Date(now.getTime() - mins * 60000);
