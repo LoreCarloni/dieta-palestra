@@ -297,7 +297,7 @@ function renderGiornata() {
 
 // Lista delle azioni della previsione: compare solo dopo aver toccato la casella di ricerca.
 function fumoPlanHtml() {
-  return fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("");
+  return `<div style="text-align:right"><button class="link" data-act="fumo-elenco-chiudi">Chiudi l'elenco</button></div>` + fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("");
 }
 
 // Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
@@ -321,7 +321,8 @@ function fumoHitsHtml(q) {
   const rows = list.slice(0, 8).map((t) => `<div class="fumo-item"><div class="fumo-text">${esc(t)}</div><div class="fumo-tools"><button class="link" data-act="fumo-log-text" data-t="${esc(t)}">Fatto</button></div></div>`).join("");
   const exact = list.some((x) => x.toLowerCase() === norm);
   const fresh = norm && !exact ? `<div class="fumo-item"><div class="fumo-text">Nuova azione: ${esc(q.trim())}</div><div class="fumo-tools"><button class="link" data-act="fumo-log-text" data-t="${esc(q.trim())}">Registra</button></div></div>` : "";
-  return rows + fresh || `<p class="muted small">Scrivi qualcosa: per esempio "bevi", "passeggiata", "doccia".</p>`;
+  const chiudi = `<div style="text-align:right"><button class="link" data-act="fumo-elenco-chiudi">Chiudi l'elenco</button></div>`;
+  return chiudi + (rows + fresh || `<p class="muted small">Scrivi qualcosa: per esempio "bevi", "passeggiata", "doccia".</p>`);
 }
 
 function fumoSearchCard() {
@@ -911,6 +912,13 @@ function fumoAct(a, el) {
       if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
       save(); toast(`Fatto: ${text}`);
       if (!dlg().open) render();
+      return true;
+    }
+    case "fumo-elenco-chiudi": {
+      view.fumoPlanOpen = false;
+      const pl = $("#fumo-plan"); if (pl) pl.innerHTML = "";
+      const h = $("#fumo-hits"); if (h) h.innerHTML = "";
+      const q = $("#fumo-q"); if (q) q.value = "";
       return true;
     }
     case "fumo-sugg-next": {
