@@ -272,6 +272,16 @@ function parseFrase(frase, day) {
   else start = day === todayKey() ? new Date() : new Date(new Date(isoDay).setHours(12, 0, 0, 0));
   if (start > new Date()) return { error: "L'ora di inizio è nel futuro" };
   let min = 0;
+  const dur = low.match(/per\s+(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))/);
+  if (dur && !range && !single) {
+    const q = dur[1];
+    const mins = q.startsWith("mezz") ? 30 : q.startsWith("un quarto") ? 15 : q.startsWith("un") && q.includes("ora") ? 60 : (parseInt(dur[2]) * (dur[3].startsWith("or") ? 60 : 1)) || 0;
+    if (mins > 0) {
+      const now = new Date();
+      const st = new Date(now.getTime() - mins * 60000);
+      return { kind: "act", text: text.replace(/\s*per\s+.*$/i, "").replace(/^sono stato\s+/i, "").replace(/^(?:sono|ho)\s+/i, "").replace(/^./, (c) => c.toUpperCase()) || "Attività", at: st.toISOString(), min: mins };
+    }
+  }
   if (range) {
     const end = oraIn(range[2]);
     if (!end) return { error: "Ora di fine non valida: prova 9.50" };
@@ -280,6 +290,20 @@ function parseFrase(frase, day) {
     min = Math.round((end - start) / 60000);
   }
   return { kind: "act", text, at: start.toISOString(), min };
+}
+
+// Comandi per l'attività in corso: "ho iniziato a lavorare all'app alle 6.50", "ho finito di lavorare", "vado a fare la doccia".
+function fumoComando(frase) {
+  const low = String(frase || "").trim().toLowerCase();
+  if (/fumat[oa]|sigaret/.test(low)) return null;
+  const ora = (x) => (x ? x : null);
+  let m = low.match(/^(?:ho\s+)?(?:iniziato|cominciato|inizio|comincio)\s+(?:a\s+|di\s+)?(.+?)(?:\s+alle\s+([\d.:]+))?$/);
+  if (m) return { type: "start", text: m[1], time: ora(m[2]) };
+  m = low.match(/^(?:ho\s+)?finit[oa]\b(?:\s+di\s+\S+(?:\s+\S+)*?)?(?:\s+alle\s+([\d.:]+))?$/);
+  if (m) return { type: "stop", time: ora(m[1]) };
+  m = low.match(/^vado\s+(?:a\s+|in\s+|al\s+|alla\s+|allo\s+|ai\s+|agli\s+|nel\s+|nella\s+|da\s+)?(.+?)(?:\s+alle\s+([\d.:]+))?$/);
+  if (m) return { type: "switch", text: m[1], time: ora(m[2]) };
+  return null;
 }
 
 // Ora scritta a mano: 6.50, 6:50, 6 50, 650, 6 oppure 1050. Restituisce [ore, minuti] o null.
@@ -745,7 +769,38 @@ document.addEventListener("submit", (e) => {
   if (e.target.id === "giornata-add-form") {
     e.preventDefault();
     const day = view.giornataDay || todayKey();
-    const r = parseFrase(new FormData(e.target).get("frase"), day);
+    const frase = new FormData(e.target).get("frase");
+    const cmd = day === todayKey() ? fumoComando(frase) : null;
+    if (cmd) {
+      const cur = S.giornata && S.giornata.current;
+      const oraCmd = cmd.time ? parseOra(cmd.time) : null;
+      if (cmd.time && !oraCmd) { toast("Scrivi l'ora, per esempio 6.50"); return; }
+      const at = new Date(); if (oraCmd) at.setHours(oraCmd[0], oraCmd[1], 0, 0);
+      if (at > new Date()) { toast("L'ora è nel futuro"); return; }
+      const chiudi = (c, fine) => {
+        const min = Math.round((fine - c.start) / 60000);
+        if (min < 1) return false;
+        S.giornata.log = [...(S.giornata.log || []), { at: new Date(c.start).toISOString(), text: c.text, min }];
+        return true;
+      };
+      S.giornata = S.giornata || { log: [] };
+      if (cmd.type === "stop") {
+        if (!cur) { toast("Nessuna attività in corso"); return; }
+        if (!chiudi(cur, at.getTime())) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
+        S.giornata.current = null;
+        save(); render(); toast(`Registrato: ${cur.text}`);
+        return;
+      }
+      if (cur) {
+        if (at.getTime() <= cur.start) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return; }
+        if (!chiudi(cur, at.getTime())) { toast("Attività precedente troppo breve"); return; }
+      }
+      const text = cmd.text.replace(/^./, (c) => c.toUpperCase());
+      S.giornata.current = { text, start: at.getTime() };
+      save(); render(); toast(`Iniziato: ${text}`);
+      return;
+    }
+    const r = parseFrase(frase, day);
     if (r.error) { toast(r.error); return; }
     if (r.kind === "smoke") {
       if (!S.fumo) { toast("Imposta prima la data di inizio nella scheda Fumo"); return; }
