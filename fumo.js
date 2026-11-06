@@ -144,6 +144,35 @@ function fumoDiaryCard() {
     ".fumo-timed > .fumo-tools{grid-column:2}";
   document.head.appendChild(st);
 })();
+// Sezione Giornata: attività della giornata e sigarette, con possibilità di aggiungere ciò che si è dimenticato.
+function renderGiornata() {
+  const day = view.giornataDay || todayKey();
+  const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, kind: "act", idx }));
+  const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
+  const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
+  const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
+  const nSmoke = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  return `
+    <section class="card">
+      <div class="row" style="align-items:center">
+        <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
+        <strong style="text-align:center">${esc(fmtDate(day))}</strong>
+        <button class="btn ghost small-btn" data-act="giornata-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
+      </div>
+      <p class="muted small" style="text-align:center">Attività: ${nAct} · Sigarette fumate: ${nSmoke}</p>
+      ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
+      <form id="giornata-add-form" class="form" style="margin-top:12px">
+        <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
+        <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
+        <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
+        <input name="text" maxlength="80" placeholder="Cosa hai fatto, oppure quante sigarette (1 se non scrivi nulla)">
+        <button class="btn ghost wide" type="submit">Aggiungi</button>
+      </form>
+    </section>`;
+}
+
 // Lista delle azioni della previsione: compare solo dopo aver toccato la casella di ricerca.
 function fumoPlanHtml() {
   return fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("");
@@ -520,6 +549,8 @@ function fumoAct(a, el) {
       save(); render(); toast("Voce eliminata");
       return true;
     }
+    case "giornata-prev": view.giornataDay = addDays(view.giornataDay || todayKey(), -1); render(); return true;
+    case "giornata-next": { const d = addDays(view.giornataDay || todayKey(), 1); view.giornataDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
     case "fumo-day-next": { const d = addDays(view.fumoDay || todayKey(), 1); view.fumoDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-log-text": {
@@ -584,6 +615,31 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "giornata-add-form") {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const day = view.giornataDay || todayKey();
+    const [hh, mm] = String(fd.get("time") || "").split(":").map(Number);
+    const when = parseKey(day);
+    when.setHours(hh || 0, mm || 0, 0, 0);
+    if (when > new Date()) { toast("L'ora è nel futuro"); return; }
+    const at = when.toISOString();
+    const text = String(fd.get("text") || "").trim();
+    if (fd.get("kind") === "smoke") {
+      if (!S.fumo) { toast("Imposta prima la data di inizio nella scheda Fumo"); return; }
+      const n = Math.max(1, parseInt(text) || 1);
+      S.fumo.log = [...(S.fumo.log || []), { at, kind: "smoke", n }];
+      S.fumo.smoked = (S.fumo.smoked || 0) + n;
+      S.fumo.smokedDays = S.fumo.smokedDays || {};
+      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + n;
+    } else {
+      if (!text) { toast("Scrivi cosa hai fatto"); return; }
+      S.giornata = S.giornata || { log: [] };
+      S.giornata.log = [...S.giornata.log, { at, text }];
+    }
+    save(); render(); toast("Aggiunto");
+    return;
+  }
   if (e.target.id === "fumo-add-form") {
     e.preventDefault();
     const fd = new FormData(e.target);
