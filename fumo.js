@@ -938,8 +938,31 @@ function fumoAct(a, el) {
       let text = String(($("#giornata-start-text") || {}).value || "").trim();
       if (!text) { toast("Scrivi cosa stai facendo"); return true; }
       let start = fumoNow();
+      // "ho lavorato 20 minuti", "negli ultimi 20 minuti", "per un'ora": attivita gia finita, registrata senza cronometro
+      const dallaCasellaOra = String(($("#giornata-start-time") || {}).value || "").trim();
+      if (!dallaCasellaOra && /(\d+\s*(minuti|minuto|ore|ora)|mezz['’]ora|un['’]ora|un quarto d['’]ora)\b/i.test(text)) {
+        const pf = parseFrase(text, todayKey());
+        if (pf && pf.kind === "act" && pf.min > 0) {
+          S.giornata = S.giornata || { log: [] };
+          S.giornata.log = [...(S.giornata.log || []), { at: pf.at, text: pf.text, min: pf.min }];
+          save(); render(); toast(`Registrato: ${pf.text}, ${pf.min} minuti`);
+          return true;
+        }
+      }
       const durataTxt = durataDaTesto(text);
-      if (durataTxt && durataTxt.minuti > 0 && durataTxt.resto) { start = fumoNow() - durataTxt.minuti * 60000; text = durataTxt.resto; }
+      if (durataTxt && durataTxt.minuti > 0 && durataTxt.resto) {
+        // "ho lavorato 20 minuti" e simili: attività gia finita, registrata senza far partire il cronometro
+        const fatta = durataTxt.resto.replace(/^(?:ho\s+|sono\s+stato\s+|sto\s+|mi\s+sto\s+)/i, "").replace(/^./, (c) => c.toUpperCase());
+        const finita = fumoNow() - durataTxt.minuti * 60000;
+        const dallaCasella = String(($("#giornata-start-time") || {}).value || "").trim();
+        if (!dallaCasella) {
+          S.giornata = S.giornata || { log: [] };
+          S.giornata.log = [...(S.giornata.log || []), { at: new Date(finita).toISOString(), text: fatta, min: durataTxt.minuti }];
+          save(); render(); toast(`Registrato: ${fatta}, ${durataTxt.minuti} minuti`);
+          return true;
+        }
+        start = finita; text = durataTxt.resto;
+      }
       const dalle = String(($("#giornata-start-time") || {}).value || "").trim();
       if (dalle) {
         const ora = parseOra(dalle);
