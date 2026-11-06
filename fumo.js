@@ -145,6 +145,40 @@ function fumoDiaryCard() {
   document.head.appendChild(st);
 })();
 // Sezione Giornata: attività della giornata e sigarette, con possibilità di aggiungere ciò che si è dimenticato.
+// Report degli ultimi sette giorni: ore per attività, ore per giorno, sigarette per giorno.
+function giornataReportHtml() {
+  const oggi = todayKey();
+  const giorni = Array.from({ length: 7 }, (_, i) => addDays(oggi, i - 6));
+  const acts = ((S.giornata && S.giornata.log) || []).filter((e) => e.min);
+  const perGiorno = giorni.map((g) => {
+    const rows = acts.filter((e) => keyOf(new Date(e.at)) === g).map((e) => [new Date(e.at).getTime(), new Date(e.at).getTime() + e.min * 60000]).sort((a, b) => a[0] - b[0]);
+    const fusi = [];
+    rows.forEach(([a, b]) => { const u = fusi[fusi.length - 1]; if (u && a <= u[1]) u[1] = Math.max(u[1], b); else fusi.push([a, b]); });
+    const min = Math.round(fusi.reduce((x, [a, b]) => x + (b - a), 0) / 60000);
+    const sigarette = ((S.fumo && S.fumo.smokedDays) || {})[g] || 0;
+    return { g, min, sigarette };
+  });
+  const totMin = perGiorno.reduce((x, d) => x + d.min, 0);
+  const totSig = perGiorno.reduce((x, d) => x + d.sigarette, 0);
+  const perAtt = {};
+  acts.filter((e) => giorni.includes(keyOf(new Date(e.at)))).forEach((e) => {
+    const k = e.text.toLowerCase();
+    perAtt[k] = perAtt[k] || { text: e.text, min: 0 };
+    perAtt[k].min += e.min;
+  });
+  const attRows = Object.values(perAtt).sort((a, b) => b.min - a.min)
+    .map((a) => `<div class="row"><div style="flex:1">${esc(a.text)}</div><div>${esc(fumoDurataMin(a.min))}</div></div>`).join("");
+  const giorniRows = perGiorno.map((d) => `<div class="row"><div style="flex:1">${esc(fmtDate(d.g, { weekday: "long", day: "numeric", month: "long" }))}</div><div>${d.min ? esc(fumoDurataMin(d.min)) : "nessuna attività"} · ${d.sigarette} ${d.sigarette === 1 ? "sigaretta" : "sigarette"}</div></div>`).join("");
+  return `
+    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Torna al registro</button></div>
+    <section class="card">
+      <h2>Ultimi sette giorni</h2>
+      <p class="stat-v" style="margin:6px 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
+    </section>
+    <section class="card"><h2>Per attività</h2>${attRows || `<p class="muted small">Nessuna attività registrata.</p>`}</section>
+    <section class="card"><h2>Per giorno</h2>${giorniRows}</section>`;
+}
+
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
   const running = gRun();
@@ -183,7 +217,9 @@ function renderGiornata() {
   };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  if (view.giornataReport) return giornataReportHtml();
   return `
+    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
     ${runningHtml}
     <section class="card">
       <div class="row" style="align-items:center">
@@ -782,6 +818,7 @@ function fumoAct(a, el) {
       toast("Compilato dall'ultima sigaretta: scrivi cosa hai fatto");
       return true;
     }
+    case "giornata-report-toggle": view.giornataReport = !view.giornataReport; render(); return true;
     case "giornata-prev": view.giornataDay = addDays(view.giornataDay || todayKey(), -1); render(); return true;
     case "giornata-next": { const d = addDays(view.giornataDay || todayKey(), 1); view.giornataDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
