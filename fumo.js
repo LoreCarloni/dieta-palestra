@@ -154,6 +154,16 @@ function parolaChiave(testo) {
   return t ? t.charAt(0).toUpperCase() + t.slice(1) : testo;
 }
 
+// Gruppi di attività: "Auto" raccoglie auto, macchina, automobile, pratica auto. Li definisci tu nel report.
+function normTesto(x) {
+  return String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’`]/g, "'");
+}
+function gruppoDi(testo) {
+  const t = normTesto(testo);
+  const g = ((S.giornata && S.giornata.gruppi) || []).find((x) => x.parole.some((p) => t.includes(normTesto(p))));
+  return g ? g.nome : parolaChiave(testo);
+}
+
 // Report: giorno, ultimi sette giorni, mese, anno, tutto. Ore per attività, per giorno, sigarette.
 const GIORNATA_PERIODI = { giorno: "Oggi", settimana: "7 giorni", mese: "Questo mese", anno: "Quest'anno", tutto: "Tutto" };
 function giornataGiorni(periodo) {
@@ -190,7 +200,7 @@ function giornataReportHtml() {
   const totSig = perGiorno.reduce((x, d) => x + d.sigarette, 0);
   const perAtt = {};
   acts.forEach((e) => {
-    const nome = parolaChiave(e.text);
+    const nome = gruppoDi(e.text);
     const k = nome.toLowerCase();
     perAtt[k] = perAtt[k] || { text: nome, min: 0 };
     perAtt[k].min += e.min;
@@ -201,7 +211,7 @@ function giornataReportHtml() {
   const visibili = perGiorno.filter((d) => d.min || d.sigarette || periodo === "giorno" || periodo === "settimana");
   const giorniRows = visibili.slice(-400).map((d) => {
     const dettagli = (byDay[d.g] || []).sort((x, y) => x.at.localeCompare(y.at))
-      .map((e) => `<div class="muted small">${esc(hm(e.at))}–${esc(hm(new Date(e.at).getTime() + e.min * 60000))} · ${esc(parolaChiave(e.text))} (${esc(fumoDurataMin(e.min))})</div>`).join("");
+      .map((e) => `<div class="muted small">${esc(hm(e.at))}–${esc(hm(new Date(e.at).getTime() + e.min * 60000))} · ${esc(gruppoDi(e.text))} (${esc(fumoDurataMin(e.min))})</div>`).join("");
     return `<div class="row"><div style="flex:1">${esc(fmtDate(d.g, { weekday: "short", day: "numeric", month: "short", year: "numeric" }))}</div><div>${d.min ? esc(fumoDurataMin(d.min)) : "nessuna attività"} · ${d.sigarette} ${d.sigarette === 1 ? "sigaretta" : "sigarette"}</div></div>${dettagli}`;
   }).join("");
   const bottoni = Object.entries(GIORNATA_PERIODI).map(([k, v]) => `<button class="btn ${k === periodo ? "primary" : "ghost"} small-btn" data-act="giornata-periodo" data-p="${k}">${esc(v)}</button>`).join(" ");
@@ -210,6 +220,14 @@ function giornataReportHtml() {
     <section class="card">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${bottoni}</div>
       <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
+    </section>
+    <section class="card"><h2>Gruppi di attività</h2>
+      ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">Elimina</button></div></div>`).join("")}
+      <form id="giornata-gruppo-form" class="form" style="margin-top:10px">
+        <input name="nome" maxlength="40" placeholder="Nome del gruppo, es. Auto">
+        <input name="parole" maxlength="200" placeholder="Parole, separate da virgola: auto, macchina, automobile">
+        <button class="btn ghost wide" type="submit">Salva gruppo</button>
+      </form>
     </section>
     <section class="card"><h2>Per attività</h2>${attRows || `<p class="muted small">Nessuna attività in questo periodo.</p>`}</section>
     <section class="card"><h2>Per giorno</h2>${giorniRows || `<p class="muted small">Nessuna voce in questo periodo.</p>`}</section>`;
@@ -869,6 +887,13 @@ function fumoAct(a, el) {
       return true;
     }
     case "giornata-report-toggle": view.giornataReport = !view.giornataReport; render(); return true;
+    case "giornata-gruppo-del": {
+      const i = parseInt(el.dataset.i);
+      if (!S.giornata || !S.giornata.gruppi || !S.giornata.gruppi[i]) return true;
+      S.giornata.gruppi = S.giornata.gruppi.filter((_, k) => k !== i);
+      save(); render(); toast("Gruppo eliminato");
+      return true;
+    }
     case "giornata-periodo": view.giornataPeriodo = el.dataset.p; render(); return true;
     case "giornata-prev": view.giornataDay = addDays(view.giornataDay || todayKey(), -1); render(); return true;
     case "giornata-next": { const d = addDays(view.giornataDay || todayKey(), 1); view.giornataDay = d > todayKey() ? todayKey() : d; render(); return true; }
@@ -953,6 +978,17 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "giornata-gruppo-form") {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const nome = String(fd.get("nome") || "").trim();
+    const parole = String(fd.get("parole") || "").split(",").map((x) => x.trim()).filter(Boolean);
+    if (!nome || !parole.length) { toast("Scrivi il nome e almeno una parola"); return; }
+    S.giornata = S.giornata || { log: [] };
+    S.giornata.gruppi = [...(S.giornata.gruppi || []), { nome, parole }];
+    save(); render(); toast("Gruppo salvato");
+    return;
+  }
   if (e.target.id === "giornata-add-form") {
     e.preventDefault();
     const day = view.giornataDay || todayKey();
