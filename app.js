@@ -1650,12 +1650,13 @@ function parseDiary(text) {
   });
   let pendingName = null; // nome di un alimento scritto su una riga senza calorie, con le calorie sulla riga dopo
   lines.forEach((raw) => {
-    let line = raw.replace(/^[\s\-•*·\d.)]+(?=\D)/, "").trim();
+    // via elenchi e punti (1. 2) •) ma non i numeri delle calorie (70 kcal)
+    let line = raw.replace(/^[\s\-•*·]*(\d+[.)]\s+|[\-•*·]\s*)(?=\S)/, "").trim();
     if (!line) return;
     for (const re of SLOT_WORDS) {
       if (re.test(line)) { line = line.replace(re, "").replace(/^[\s:–-]+/, ""); break; }
     }
-    if (!line || /^(totale|giornata|in totale|ho stimato|stima per|riepilogo|aggiungi|due cose|stasera|nota|attenzione)/i.test(line)) return;
+    if (!line || /^(totale|giornata|in totale|ho stimato|stima per|riepilogo|aggiungi|due cose|stasera|nota|attenzione|sono stime|stime|ecco|ecco il|ecco i|valori|macro)\b/i.test(line)) return;
     const k = line.match(/(\d+(?:[.,]\d+)?)\s*(?:kcal|calorie|cal)\b/i);
     // solo grammi (o una porzione): calorie e macro li calcola l'app dal database
     const nameOnly = line.split(/[,:(]/)[0].replace(/\b(circa|una|un|uno|mezza|mezzo|porzione|piatto|di|da)\b/gi, "").replace(/\d+(?:[.,]\d+)?\s*%?|%/g, "").trim();
@@ -1678,7 +1679,7 @@ function parseDiary(text) {
     }
     const colon = line.indexOf(":");
     let name = (colon > 0 && colon < k.index ? line.slice(0, colon) : line.slice(0, k.index).replace(/\bcirca\b.*$/i, "")).replace(/[,\s\-–]+$/, "").trim();
-    name = name.replace(/\s*\(.*$/, "").trim() || "Alimento";
+    name = name.replace(/\s*\(.*$/, "").trim() || pendingName || "Alimento";
     if (/^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale)$/i.test(name)) {
       // intestazione di un'altra riga: se prima c'era il nome dell'alimento, le calorie vanno a lui; altrimenti i macro vanno al precedente
       if (!items.length && pendingName) {
@@ -1695,6 +1696,7 @@ function parseDiary(text) {
     if (gm) item.g = num1(gm[1]);
     ["p", "c", "f"].forEach((key) => { const v = grabMacro(rest, key); if (v !== null) { item[key] = v; item.hasMacro[key] = true; } });
     items.push(item);
+    pendingName = null;
   });
   items.forEach((it) => { it.noMacro = !it.hasMacro.p && !it.hasMacro.c && !it.hasMacro.f; delete it.hasMacro; });
   return items;
