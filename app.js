@@ -327,7 +327,7 @@ function kcalBar(v, target) {
 }
 
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
-const HABIT_FOODS = ["Cotoletta di pollo impanata", "Patatine fritte", "Crocchette di patate", "Pizza margherita", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Cioccolato fondente", "Frutta secca mista", "Gelato alla crema"];
+const HABIT_FOODS = ["Pizza margherita", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
 function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
   return HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
