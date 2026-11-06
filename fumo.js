@@ -252,7 +252,7 @@ function renderGiornata() {
     return names.join(", ");
   };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   if (view.giornataReport) return giornataReportHtml();
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
@@ -811,6 +811,20 @@ function fumoAct(a, el) {
       save(); render(); toast("Attività iniziata");
       return true;
     }
+    case "giornata-log-edit": {
+      const idx = parseInt(el.dataset.idx);
+      const voce = (S.giornata && S.giornata.log || [])[idx];
+      if (!voce) return true;
+      openDialog(`
+        <h3>Modifica l'attività</h3>
+        <p class="muted small">Puoi aggiungere dettagli, per esempio "Lavorare alla pratica auto".</p>
+        <form id="fumo-item-form" class="form" data-kind="glog" data-idx="${idx}">
+          <input name="text" maxlength="80" value="${esc(voce.text)}" autofocus>
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
     case "giornata-log-del": {
       const idx = parseInt(el.dataset.idx);
       const voce = (S.giornata && S.giornata.log || [])[idx];
@@ -1023,7 +1037,11 @@ document.addEventListener("submit", (e) => {
     e.preventDefault();
     const f = e.target, fd = new FormData(f);
     const idx = parseInt(f.dataset.idx);
-    if (f.dataset.kind === "plan") {
+    if (f.dataset.kind === "glog") {
+      const text = String(fd.get("text") || "").trim();
+      if (!text || !S.giornata || !S.giornata.log[idx]) return;
+      S.giornata.log[idx] = { ...S.giornata.log[idx], text };
+    } else if (f.dataset.kind === "plan") {
       const text = String(fd.get("text") || "").trim();
       if (!text) return;
       S.fumo.acts = fumoPrevisione().map((a, k) => (k === idx ? text : a));
