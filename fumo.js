@@ -549,7 +549,8 @@ function fumoAct(a, el) {
       const act = S.fumo.active;
       clearInterval(fumoTimer);
       const now = fumoNow();
-      const started = act ? act.start : new Date(S.fumo.start).getTime();
+      // Il tempo resistito è quello dall'ultima sigaretta, cioè lo stesso conteggio di "Senza fumare da".
+      const started = new Date(S.fumo.start).getTime();
       const elapsed = Math.max(0, now - started);
       const m = Math.floor(elapsed / 60000), sec = Math.floor((elapsed % 60000) / 1000);
       S.fumo.attempts = S.fumo.attempts || [];
