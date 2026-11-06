@@ -442,7 +442,8 @@ function parseFrase(frase, day) {
 function gChiudiPausa() {
   const p = S.giornata && S.giornata.pausa;
   if (!p) return;
-  const min = Math.max(1, Math.round((fumoNow() - p.start) / 60000));
+  // Una sigaretta dura 5 minuti: la registro sempre così, anche se l'attività dopo arriva più tardi.
+  const min = 5;
   S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Sigaretta", kind: "pausa", min }];
   S.giornata.pausa = null;
 }
