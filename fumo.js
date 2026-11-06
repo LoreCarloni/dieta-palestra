@@ -599,6 +599,17 @@ function fumoSelectedMinutes() {
   return Math.min(60, Math.max(1, Math.round(w.scrollTop / FUMO_ITEM_H)));
 }
 
+// Un solo suggerimento alla volta, con "Un'altra" per cambiarlo.
+function fumoSuggBox() {
+  const list = fumoPrevisione();
+  if (!list.length) return "";
+  if (view.fumoSugg == null || view.fumoSugg >= list.length) view.fumoSugg = Math.floor(Math.random() * list.length);
+  const i = view.fumoSugg;
+  return `<p style="margin:0 0 6px">Prova a fare: <strong>${esc(list[i])}</strong></p>
+    <button class="btn primary" data-act="fumo-act" data-i="${i}">La faccio</button>
+    <button class="link" data-act="fumo-sugg-next">Un'altra</button>`;
+}
+
 function fumoShowCraving(act) {
   const tec = fumoPensieroById(act.tech);
   openDialog(`
@@ -608,8 +619,9 @@ function fumoShowCraving(act) {
     <p id="fumo-breath" class="small" style="text-align:center"></p>
     <p>${esc(tec.t)}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
-    <p class="small" style="margin:12px 0 6px;font-weight:600">Fai una di queste al posto della sigaretta:</p>
-    ${fumoPrevisione().map((a, i) => `<button class="btn ghost wide" data-act="fumo-act" data-i="${i}" style="margin-top:6px">${esc(a)}</button>`).join("")}
+    <div id="fumo-sugg-box" style="margin:12px 0">${fumoSuggBox()}</div>
+    <input id="fumo-dialog-text" maxlength="80" placeholder="Oppure scrivi o detta cosa fai al posto della sigaretta" style="margin-top:4px">
+    <button class="btn ghost wide" data-act="fumo-dialog-log" style="margin-top:6px">Registra</button>
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
     <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
   clearInterval(fumoTimer);
@@ -767,6 +779,23 @@ function fumoAct(a, el) {
       if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
       save(); toast(`Fatto: ${text}`);
       if (!dlg().open) render();
+      return true;
+    }
+    case "fumo-sugg-next": {
+      const n = fumoPrevisione().length || 1;
+      view.fumoSugg = ((view.fumoSugg || 0) + 1) % n;
+      const box = $("#fumo-sugg-box"); if (box) box.innerHTML = fumoSuggBox();
+      return true;
+    }
+    case "fumo-dialog-log": {
+      const text = String((($("#fumo-dialog-text") || {}).value) || "").trim();
+      if (!text) { toast("Scrivi cosa fai al posto della sigaretta"); return true; }
+      const now = new Date(fumoNow()).toISOString();
+      S.fumo.actCount = (S.fumo.actCount || 0) + 1;
+      S.fumo.log = [...(S.fumo.log || []), { at: now, kind: "act", text }];
+      if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
+      save(); toast(`Fatto: ${text}`);
+      const inp = $("#fumo-dialog-text"); if (inp) inp.value = "";
       return true;
     }
     case "fumo-act": {
