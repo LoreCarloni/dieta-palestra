@@ -183,7 +183,8 @@ function renderGiornata() {
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="act">Attività</option><option value="smoke">Sigarette fumate</option></select>
         <input name="time" type="time" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5) : "12:00"}" required>
-        <input name="min" type="number" min="1" max="1440" step="1" placeholder="Durata in minuti (facoltativo)">
+        <label>Fino alle (facoltativo)<input name="end" type="time"></label>
+        <input name="min" type="number" min="1" max="1440" step="1" placeholder="Oppure durata in minuti (facoltativo)">
         <button class="btn ghost wide" type="button" data-act="giornata-from-last">Dall'ultima sigaretta fino a adesso</button>
         <input name="text" list="giornata-suggest" maxlength="80" placeholder="Cosa hai fatto, per esempio studiare o fare la doccia">
         <datalist id="giornata-suggest">
@@ -695,7 +696,16 @@ document.addEventListener("submit", (e) => {
     } else {
       if (!text) { toast("Scrivi cosa hai fatto"); return; }
       S.giornata = S.giornata || { log: [] };
-      const min = Math.max(0, parseInt(fd.get("min")) || 0);
+      let min = Math.max(0, parseInt(fd.get("min")) || 0);
+      const endStr = String(fd.get("end") || "");
+      if (endStr) {
+        const [eh, em] = endStr.split(":").map(Number);
+        const end = parseKey(day);
+        end.setHours(eh || 0, em || 0, 0, 0);
+        if (end <= when) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
+        if (end > new Date()) { toast("L'ora di fine è nel futuro"); return; }
+        min = Math.round((end - when) / 60000);
+      }
       S.giornata.log = [...S.giornata.log, min ? { at, text, min } : { at, text }];
     }
     save(); render(); toast("Aggiunto");
