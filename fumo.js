@@ -332,7 +332,7 @@ function renderGiornata() {
     return names.join(", ");
   };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn ghost small-btn" data-act="giornata-grp-open" data-idx="${e.idx}">Gruppo</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   if (view.giornataReport) return giornataReportHtml();
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
@@ -948,6 +948,21 @@ function fumoAct(a, el) {
         </form>`);
       return true;
     }
+    case "giornata-grp-open": {
+      const idx = parseInt(el.dataset.idx);
+      const voce = (S.giornata && S.giornata.log || [])[idx];
+      if (!voce) return true;
+      const nomeAttuale = haGruppo(voce.text) ? gruppoDi(voce.text) : parolaChiave(voce.text);
+      openDialog(`
+        <h3>In quale gruppo?</h3>
+        <p class="muted small">${esc(voce.text)}. Scrivi il nome del gruppo: se esiste ci finisce, altrimenti lo creo. Le voci future con la stessa parola ci finiranno da sole.</p>
+        <form id="giornata-grp-one" class="form" data-parola="${esc(parolaChiave(voce.text))}">
+          <input name="nome" maxlength="40" value="${esc(nomeAttuale)}" autofocus>
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
     case "giornata-log-del": {
       const idx = parseInt(el.dataset.idx);
       const voce = (S.giornata && S.giornata.log || [])[idx];
@@ -1103,6 +1118,19 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "giornata-grp-one") {
+    e.preventDefault();
+    const nome = String(new FormData(e.target).get("nome") || "").trim();
+    const parola = e.target.dataset.parola;
+    if (!nome) { toast("Scrivi il nome del gruppo"); return; }
+    S.giornata = S.giornata || { log: [] };
+    S.giornata.gruppi = S.giornata.gruppi || [];
+    const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
+    if (g) { if (!g.parole.some((p) => normTesto(p) === normTesto(parola))) g.parole.push(parola); }
+    else S.giornata.gruppi.push({ nome, parole: [parola] });
+    closeDialog(); save(); render(); toast(`Messo in ${nome}`);
+    return;
+  }
   if (e.target.classList && e.target.classList.contains("giornata-classifica")) {
     e.preventDefault();
     const nome = String(new FormData(e.target).get("nome") || "").trim();
