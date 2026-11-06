@@ -260,7 +260,7 @@ function renderGiornata() {
   const pausaHtml = pausa ? `
     <section class="card" style="text-align:center">
       <div class="muted small">In pausa dalle ${esc(new Date(pausa.start).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div>
-      <div style="font-size:1.1rem;font-weight:700">Sigaretta in corso</div>
+      <div style="font-size:1.1rem;font-weight:700">Sigaretta</div>
       <div class="muted small">Quando inizi una nuova attività la pausa si chiude da sola.</div>
       <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-torno">Ho finito la pausa</button></div>
     </section>` : "";
@@ -295,12 +295,14 @@ function renderGiornata() {
     return names.join(", ");
   };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Pausa, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   if (view.giornataReport) return giornataReportHtml();
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
     ${runningHtml}
-    <section class="card">
+    ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">Registro di oggi</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">Mostra</button></div></section>`}
+    ${view.giornataRegistroOpen ? `<section class="card">
+      <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">Nascondi registro</button></div>
       <div class="row" style="align-items:center">
         <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
@@ -314,7 +316,8 @@ function renderGiornata() {
         <button class="btn ghost wide" type="submit">Aggiungi</button>
         <datalist id="giornata-suggest"></datalist>
       </form>
-    </section>`;
+    </section>` : ""}
+`;
 }
 
 // Lista delle azioni della previsione: compare solo dopo aver toccato la casella di ricerca.
@@ -440,7 +443,7 @@ function gChiudiPausa() {
   const p = S.giornata && S.giornata.pausa;
   if (!p) return;
   const min = Math.max(1, Math.round((fumoNow() - p.start) / 60000));
-  S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Pausa", kind: "pausa", min }];
+  S.giornata.log = [...(S.giornata.log || []), { at: new Date(p.start).toISOString(), text: "Sigaretta", kind: "pausa", min }];
   S.giornata.pausa = null;
 }
 
@@ -927,6 +930,7 @@ function fumoAct(a, el) {
       toast("Compilato dall'ultima sigaretta: scrivi cosa hai fatto");
       return true;
     }
+    case "giornata-registro-toggle": view.giornataRegistroOpen = !view.giornataRegistroOpen; render(); return true;
     case "giornata-report-toggle": view.giornataReport = !view.giornataReport; render(); return true;
     case "giornata-gruppo-del": {
       const i = parseInt(el.dataset.i);
