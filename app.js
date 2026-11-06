@@ -1503,6 +1503,11 @@ function dayComment(k) {
       lines.push({ lvl: leftK < 0 ? "bad" : "warn", text: `Con la previsione: ${r0(dk)} kcal e ${r0(dp)} g di proteine in più. Restano ${leftK} kcal e ${leftP} g di proteine.` });
     }
   }
+  // sopra il target: nessuna previsione, ma se vuoi mangiare comunque la scelta piu magra e l'albume
+  if (k === todayKey() && !d.closed && t.kcal > tg.kcal) {
+    const over = t.kcal - tg.kcal;
+    lines.push({ lvl: "tip", text: `Sei ${r0(over)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.` });
+  }
   const sgarriWeek = overview(k, 7).over.length;
   const sgarriPrev = overview(addDays(k, -7), 7).over.length;
   if (sgarriWeek >= 1 || sgarriPrev >= 1) {
