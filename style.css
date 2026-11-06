@@ -372,3 +372,8 @@ html { font-size: 118%; }
 
 /* le card occupano tutta la larghezza dello schermo, senza margine laterale */
 main > .card, main > section.card { margin-left: -16px; margin-right: -16px; max-width: none; width: auto; border-radius: 0; border-left: 0; border-right: 0; }
+
+/* bottoncini (mangiato, preferito, grammi): stesso fondo chiaro in tutti i temi, niente nero in modalita scura */
+.chip { background: #f2f2f7; color: var(--text); border: 1px solid rgba(60, 60, 67, 0.16); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip { background: #2c2c2e; border-color: rgba(255, 255, 255, 0.12); } }
+:root[data-theme="dark"] .chip { background: #2c2c2e; border-color: rgba(255, 255, 255, 0.12); }
