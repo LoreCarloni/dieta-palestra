@@ -403,6 +403,10 @@ function renderFumo() {
       <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
+    <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
+      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
+      <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
+    </div>
     ${fumoDiaryCard()}
     ${fumoSearchCard()}
     <section class="card">
@@ -419,10 +423,6 @@ function renderFumo() {
       </form>
     </section>
     <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
-    <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
-      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
-      <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
-    </div>
     <section class="card">
       ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${Math.floor(f.attempts[f.attempts.length - 1].seconds / 60)} minuti e ${f.attempts[f.attempts.length - 1].seconds % 60} secondi</div>` : ""}
     </section>
