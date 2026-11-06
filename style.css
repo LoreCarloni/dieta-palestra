@@ -72,7 +72,7 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 .top { padding: calc(14px + env(safe-area-inset-top)) 16px 2px; }
 .top h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
-main { max-width: 640px; margin: 0 auto; padding: 8px 16px 16px; }
+main { max-width: 960px; margin: 0 auto; padding: 8px 16px 16px; }
 h2 { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 h3 { margin: 0 0 8px; padding-right: 32px; }
 /* card bianche con filo di luce sottile in alto e bordo chiaro, ombra morbida fuori (anteprima B) */
