@@ -114,9 +114,18 @@ const FUMO_PREVISIONE_VECCHIE = {
   "Sistema una cosa sul tavolo": "Sistema una cosa sul tavolo",
   "Lavati il viso con acqua fredda": "Lavati il viso con acqua fredda",
 };
+// "Lavorato sull'app" (al passato, dal registro) diventa il consiglio "Lavora sull'app".
+function consigliaImperativo(testo) {
+  const m = String(testo || "").match(/^([A-Za-zàèéìòù]+?)(ato|ito|uto)\b(.*)$/);
+  if (!m) return testo;
+  const verbo = m[1] + (m[2] === "ato" ? "a" : "i");
+  const frase = (verbo + m[3]).trim();
+  return frase.charAt(0).toUpperCase() + frase.slice(1);
+}
+
 // Le azioni fatte più spesso stanno in cima. A parità di uso resta l'ordine originale.
 function fumoPrevisione() {
-  const list = ((S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE).map((x) => FUMO_GERUNDI_IMPERATIVI[x] || FUMO_PREVISIONE_VECCHIE[x] || x);
+  const list = ((S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE).map((x) => consigliaImperativo(FUMO_GERUNDI_IMPERATIVI[x] || FUMO_PREVISIONE_VECCHIE[x] || x));
   const counts = {};
   ((S.fumo && S.fumo.log) || []).forEach((e) => {
     if (e.kind !== "act") return;
