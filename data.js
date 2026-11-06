@@ -95,6 +95,7 @@ const FOODS = [
   ["Nocciole", 671, 13.8, 6.1, 64.1, 30, "Frutta secca", "CREA 2019: Nocciole, secche"],
   ["Pistacchi", 629, 18.1, 8.1, 56.1, 30, "Frutta secca", "CREA 2019: Pistacchi"],
   ["Arachidi", 620, 29, 8.5, 50, 30, "Frutta secca", "CREA 2019: Arachidi, tostate"],
+  ["Cachi (kaki), freschi", 70, 0.6, 16, 0.3, 150, "Frutta", "CREA 2019: Loti o kaki, freschi"],
   // Condimenti
   ["Maionese", 655, 4.3, 2.1, 70, 15, "Condimenti", "CREA 2019: Maionese, industriale"],
   ["Ketchup", 100, 2.1, 24, 0, 15, "Condimenti", "CREA 2019: Ketchup, salsa"],
