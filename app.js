@@ -995,10 +995,11 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   const yog = byName("Yogurt greco 0%");
   if (needP > 5) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
-  if (needP > 5) { const ag = Math.min(400, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); add("Albume", ag, ALB); }
+  // albume e tacchino entrano solo nelle calorie rimaste: niente sforamenti
+  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
-  if (needP > 5 && momCut && momCut.p > 0) { const g = Math.min(230, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g > 0) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
+  if (needP > 5 && momCut && momCut.p > 0) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(230, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4) {
