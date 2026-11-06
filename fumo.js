@@ -171,6 +171,10 @@ function parolaChiave(testo) {
 function normTesto(x) {
   return String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’`]/g, "'");
 }
+function haGruppo(testo) {
+  const t = normTesto(testo);
+  return ((S.giornata && S.giornata.gruppi) || []).some((x) => x.parole.some((p) => t.includes(normTesto(p))));
+}
 function gruppoDi(testo) {
   const t = normTesto(testo);
   const g = ((S.giornata && S.giornata.gruppi) || []).find((x) => x.parole.some((p) => t.includes(normTesto(p))));
@@ -234,6 +238,13 @@ function giornataReportHtml() {
       <div style="display:flex;flex-wrap:wrap;gap:6px">${bottoni}</div>
       <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
     </section>
+    ${(() => {
+      const nonClass = [...new Map(acts.filter((e) => !haGruppo(e.text)).map((e) => [parolaChiave(e.text).toLowerCase(), parolaChiave(e.text)])).values()];
+      if (!nonClass.length) return "";
+      return `<section class="card"><h2>Da classificare</h2><p class="muted small">Scrivi il nome del gruppo in cui mettere queste voci. Le voci future con la stessa parola finiranno lì da sole.</p>
+        ${nonClass.map((k) => `<form class="form giornata-classifica" data-parola="${esc(k)}" style="margin-top:8px"><div class="muted small">${esc(k)}</div><div style="display:flex;gap:8px"><input name="nome" maxlength="40" value="${esc(k)}" style="flex:1"><button class="btn ghost small-btn" type="submit">Metti qui</button></div></form>`).join("")}
+      </section>`;
+    })()}
     <section class="card"><h2>Gruppi di attività</h2>
       ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">Elimina</button></div></div>`).join("")}
       <form id="giornata-gruppo-form" class="form" style="margin-top:10px">
@@ -1066,6 +1077,19 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.classList && e.target.classList.contains("giornata-classifica")) {
+    e.preventDefault();
+    const nome = String(new FormData(e.target).get("nome") || "").trim();
+    const parola = e.target.dataset.parola;
+    if (!nome) { toast("Scrivi il nome del gruppo"); return; }
+    S.giornata = S.giornata || { log: [] };
+    S.giornata.gruppi = S.giornata.gruppi || [];
+    const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
+    if (g) { if (!g.parole.some((p) => normTesto(p) === normTesto(parola))) g.parole.push(parola); }
+    else S.giornata.gruppi.push({ nome, parole: [parola] });
+    save(); render(); toast(`Messo in ${nome}`);
+    return;
+  }
   if (e.target.id === "giornata-gruppo-form") {
     e.preventDefault();
     const fd = new FormData(e.target);
