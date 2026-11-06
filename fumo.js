@@ -1338,8 +1338,16 @@ document.addEventListener("submit", (e) => {
   const Riconoscimento = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Riconoscimento) return;
   const ICONA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
+  const posiziona = (input, b) => {
+    // Dentro il bordo destro della casella, centrato in verticale, misurato sul contenitore.
+    const pr = b.parentNode.getBoundingClientRect();
+    const ir = input.getBoundingClientRect();
+    b.style.left = (ir.right - pr.left - 40) + "px";
+    b.style.top = (ir.top - pr.top + (ir.height - 34) / 2) + "px";
+  };
   const micro = (input) => {
-    if (input.nextElementSibling && input.nextElementSibling.dataset.micro) return;
+    const esistente = input.nextElementSibling && input.nextElementSibling.dataset.micro ? input.nextElementSibling : null;
+    if (esistente) { posiziona(input, esistente); return; }
     const parent = input.parentNode;
     if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
     const b = document.createElement("button");
@@ -1347,7 +1355,7 @@ document.addEventListener("submit", (e) => {
     b.dataset.micro = "1";
     b.setAttribute("aria-label", "Detta");
     b.innerHTML = ICONA;
-    b.style.cssText = "position:absolute;right:6px;top:" + (input.offsetTop + input.offsetHeight / 2 - 17) + "px;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2";
+    b.style.cssText = "position:absolute;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2";
     b.addEventListener("click", (e) => {
       e.preventDefault();
       const r = new Riconoscimento();
@@ -1359,6 +1367,10 @@ document.addEventListener("submit", (e) => {
         const testo = ev.results[0][0].transcript;
         input.value = (input.value ? input.value + " " : "") + testo;
         input.dispatchEvent(new Event("input", { bubbles: true }));
+        // Riporta il testo a vista: il telefono lo mostra solo dopo un nuovo tocco senza questo passo.
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        input.scrollIntoView({ block: "nearest" });
       };
       r.onend = () => { b.style.color = "var(--accent)"; };
       r.onerror = () => { b.style.color = "var(--accent)"; toast("Non ho sentito, riprova"); };
@@ -1366,10 +1378,16 @@ document.addEventListener("submit", (e) => {
     });
     input.style.paddingRight = "44px";
     input.insertAdjacentElement("afterend", b);
+    posiziona(input, b);
   };
   document.addEventListener("focusin", (e) => {
     const t = e.target;
     if (t.tagName !== "INPUT" || /^(number|time|file|checkbox|radio|hidden)$/.test(t.type)) return;
     micro(t);
+  });
+  // Quando la casella riceve il testo dettato, il microfono resta al suo posto.
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.tagName === "INPUT" && t.nextElementSibling && t.nextElementSibling.dataset.micro) posiziona(t, t.nextElementSibling);
   });
 })();
