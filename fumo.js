@@ -297,6 +297,40 @@ function giornataReportHtml() {
     <section class="card"><h2>Per giorno</h2>${giorniRows || `<p class="muted small">Nessuna voce in questo periodo.</p>`}</section>`;
 }
 
+// Gruppi di partenza, aggiunti una volta sola se non esistono già. Puoi modificarli nel report.
+const GIORNATA_GRUPPI_BASE = [
+  { nome: "App", parole: ["app"] },
+  { nome: "Pratica Maruccio e Bartoletti", parole: ["pratica", "bartoletti"] },
+  { nome: "Telefonate", parole: ["telefonata"] },
+  { nome: "Mail", parole: ["mail"] },
+  { nome: "Meditazione", parole: ["medit", "mindfulness"] },
+  { nome: "Bagno", parole: ["bagno", "lavarmi"] },
+  { nome: "Spesa", parole: ["supermercato"] },
+];
+function giornataAssicuraGruppi() {
+  if (!S.giornata) S.giornata = { log: [] };
+  S.giornata.gruppi = S.giornata.gruppi || [];
+  if (S.giornata.gruppiBaseOk) return;
+  GIORNATA_GRUPPI_BASE.forEach((g) => { if (!S.giornata.gruppi.some((x) => normTesto(x.nome) === normTesto(g.nome))) S.giornata.gruppi.push({ ...g }); });
+  S.giornata.gruppiBaseOk = true;
+}
+
+// Riepilogo del giorno: un totale per argomento, senza elenco delle voci.
+function giornataRiepilogoHtml(day, acts, nSmoke) {
+  const totali = {};
+  acts.filter((e) => keyOf(new Date(e.at)) === day && e.min).forEach((e) => {
+    const nome = gruppoDi(e.text);
+    totali[nome] = (totali[nome] || 0) + e.min;
+  });
+  const righe = Object.entries(totali).sort((a, b) => b[1] - a[1])
+    .map(([nome, min]) => `<div class="row"><div style="flex:1">${esc(nome)}</div><div style="font-weight:700">${esc(fumoDurataMin(min))}</div></div>`).join("");
+  const totale = Object.values(totali).reduce((a, b) => a + b, 0);
+  if (!righe) return "";
+  return `<section class="card"><h2>Riepilogo di oggi</h2>${righe}
+    <div class="row" style="margin-top:6px;border-top:1px solid var(--line);padding-top:6px"><div style="flex:1;font-weight:700">Totale</div><div style="font-weight:700">${esc(fumoDurataMin(totale))}</div></div>
+    <p class="muted small" style="margin:8px 0 0">Sigarette fumate: ${nSmoke}</p></section>`;
+}
+
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
   const running = gRun();
@@ -340,9 +374,11 @@ function renderGiornata() {
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn ghost small-btn" data-act="giornata-grp-open" data-idx="${e.idx}">Gruppo</button><button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
   if (view.giornataReport) return giornataReportHtml();
+  giornataAssicuraGruppi();
   return `
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
     ${runningHtml}
+    ${giornataRiepilogoHtml(day, acts, nSmoke)}
     ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">Registro di oggi</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">Mostra</button></div></section>`}
     ${view.giornataRegistroOpen ? `<section class="card">
       <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">Nascondi registro</button></div>
