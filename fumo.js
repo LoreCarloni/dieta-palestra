@@ -1380,10 +1380,18 @@ document.addEventListener("submit", (e) => {
     input.insertAdjacentElement("afterend", b);
     posiziona(input, b);
   };
+  // Il microfono solo nelle caselle di testo delle schede Fumo e Giornata, non per i valori numerici.
+  const ammesso = (t) => {
+    if (t.tagName !== "INPUT" || /^(number|time|file|checkbox|radio|hidden)$/.test(t.type)) return false;
+    if (!(view.tab === "fumo" || view.tab === "giornata")) return false;
+    if (t.id === "giornata-start-time" || t.name === "end" || t.name === "min" || t.name === "time") return false;
+    return true;
+  };
   document.addEventListener("focusin", (e) => {
     const t = e.target;
-    if (t.tagName !== "INPUT" || /^(number|time|file|checkbox|radio|hidden)$/.test(t.type)) return;
-    micro(t);
+    if (ammesso(t)) { micro(t); return; }
+    const b = t.nextElementSibling;
+    if (b && b.dataset && b.dataset.micro) b.remove();
   });
   // Quando la casella riceve il testo dettato, il microfono resta al suo posto.
   document.addEventListener("input", (e) => {
