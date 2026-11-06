@@ -528,13 +528,13 @@ function attivitaGerundio(testo) {
 
 // "sto lavorando all'app da mezz'ora": tolgo la durata e la uso per l'ora di inizio.
 function durataDaTesto(testo) {
-  const m = String(testo || "").match(/\bda\s+(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))\b/i);
+  const m = String(testo || "").match(/\bda\s+(mezz[oa]?\s*['’]?\s*ora|un['’ ]ora|un quarto d['’ ]?ora|(\d+)\s*(minuti|minuto|ore|ora))\b/i);
   if (!m) return null;
   const q = m[1].toLowerCase();
   let minuti = 0;
   if (q.startsWith("mezz")) minuti = 30;
-  else if (q.startsWith("un quarto")) minuti = 15;
-  else if (q.startsWith("un")) minuti = 60;
+  else if (q.startsWith("un quarto") || q.startsWith("un quarto")) minuti = 15;
+  else if (/^un['’ ]/.test(q) && q.includes("ora")) minuti = 60;
   else minuti = parseInt(m[2]) * (m[3].toLowerCase().startsWith("or") ? 60 : 1);
   return { minuti, resto: String(testo).replace(m[0], "").replace(/\s+/g, " ").trim() };
 }
