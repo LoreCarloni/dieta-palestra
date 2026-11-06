@@ -110,9 +110,9 @@ function fumoCandidati() {
 function fumoHitsHtml(q) {
   const norm = (q || "").trim().toLowerCase();
   const list = fumoCandidati().filter((x) => !norm || x.toLowerCase().includes(norm));
-  const rows = list.slice(0, 8).map((t) => `<div class="fumo-item"><div class="fumo-text">${esc(t)}</div><div class="fumo-tools"><button class="btn primary small-btn" data-act="fumo-log-text" data-t="${esc(t)}">Fatto</button></div></div>`).join("");
+  const rows = list.slice(0, 8).map((t) => `<div class="fumo-item"><div class="fumo-text">${esc(t)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-text" data-t="${esc(t)}">Fatto</button></div></div>`).join("");
   const exact = list.some((x) => x.toLowerCase() === norm);
-  const fresh = norm && !exact ? `<div class="fumo-item"><div class="fumo-text">Nuova azione: ${esc(q.trim())}</div><div class="fumo-tools"><button class="btn primary small-btn" data-act="fumo-log-text" data-t="${esc(q.trim())}">Registra</button></div></div>` : "";
+  const fresh = norm && !exact ? `<div class="fumo-item"><div class="fumo-text">Nuova azione: ${esc(q.trim())}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-text" data-t="${esc(q.trim())}">Registra</button></div></div>` : "";
   return rows + fresh || `<p class="muted small">Scrivi qualcosa: per esempio "bevi", "passeggiata", "doccia".</p>`;
 }
 
