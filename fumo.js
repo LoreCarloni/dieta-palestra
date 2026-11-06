@@ -272,7 +272,7 @@ function giornataReportHtml() {
       </section>`;
     })()}
     <section class="card"><h2>Gruppi di attività</h2>
-      ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">Elimina</button></div></div>`).join("")}
+      ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-gruppo-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">Elimina</button></div></div>`).join("")}
       <form id="giornata-gruppo-form" class="form" style="margin-top:10px">
         <input name="nome" maxlength="40" placeholder="Nome del gruppo, es. Auto">
         <input name="parole" maxlength="200" placeholder="Parole, separate da virgola: auto, macchina, automobile">
@@ -1013,6 +1013,20 @@ function fumoAct(a, el) {
     }
     case "giornata-registro-toggle": view.giornataRegistroOpen = !view.giornataRegistroOpen; render(); return true;
     case "giornata-report-toggle": view.giornataReport = !view.giornataReport; render(); return true;
+    case "giornata-gruppo-edit": {
+      const i = parseInt(el.dataset.i);
+      const g = S.giornata && S.giornata.gruppi && S.giornata.gruppi[i];
+      if (!g) return true;
+      openDialog(`
+        <h3>Modifica il gruppo</h3>
+        <form id="giornata-gruppo-edit" class="form" data-i="${i}">
+          <input name="nome" maxlength="40" value="${esc(g.nome)}" placeholder="Nome del gruppo" autofocus>
+          <input name="parole" maxlength="200" value="${esc(g.parole.join(", "))}" placeholder="Parole, separate da virgola">
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
     case "giornata-gruppo-del": {
       const i = parseInt(el.dataset.i);
       if (!S.giornata || !S.giornata.gruppi || !S.giornata.gruppi[i]) return true;
@@ -1142,6 +1156,17 @@ document.addEventListener("submit", (e) => {
     if (g) { if (!g.parole.some((p) => normTesto(p) === normTesto(parola))) g.parole.push(parola); }
     else S.giornata.gruppi.push({ nome, parole: [parola] });
     save(); render(); toast(`Messo in ${nome}`);
+    return;
+  }
+  if (e.target.id === "giornata-gruppo-edit") {
+    e.preventDefault();
+    const i = parseInt(e.target.dataset.i);
+    const fd = new FormData(e.target);
+    const nome = String(fd.get("nome") || "").trim();
+    const parole = String(fd.get("parole") || "").split(",").map((x) => x.trim()).filter(Boolean);
+    if (!nome || !parole.length || !S.giornata.gruppi[i]) { toast("Scrivi il nome e almeno una parola"); return; }
+    S.giornata.gruppi[i] = { nome, parole };
+    closeDialog(); save(); render(); toast("Gruppo modificato");
     return;
   }
   if (e.target.id === "giornata-gruppo-form") {
