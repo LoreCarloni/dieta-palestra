@@ -251,6 +251,9 @@ function renderGiornata() {
       <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-stop" data-i="${i}">Finisci</button><button class="link" data-act="giornata-rename" data-i="${i}">Cambia nome</button><button class="link" data-act="giornata-cancel" data-i="${i}">Annulla</button></div>
     </section>`).join("") : "") + startCard;
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, kind: "act", idx }));
+  // Le attività registrate dalla scheda Fumo (ricerca o "Fatto") compaiono anche qui, senza durata.
+  const attFumo = ((S.fumo && S.fumo.log) || []).map((e) => ({ ...e })).filter((e) => e.kind === "act").map((e) => ({ ...e, kind: "act", fumo: true, idx: -1 }));
+  acts.push(...attFumo);
   const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
   const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
   const nAct = acts.filter((e) => keyOf(new Date(e.at)) === day).length;
