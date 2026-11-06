@@ -148,19 +148,20 @@ function fumoDiaryCard() {
 function renderGiornata() {
   const day = view.giornataDay || todayKey();
   const running = gRun();
-  const runningHtml = running.length ? running.map((r, i) => `
+  const startCard = `
+    <section class="card">
+      <h2>Cosa stai facendo adesso?</h2>
+      <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
+      <input id="giornata-start-time" maxlength="5" placeholder="Dalle, es. 6.50 (facoltativo, altrimenti adesso)" style="margin-top:8px">
+      <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
+    </section>`;
+  const runningHtml = (running.length ? running.map((r, i) => `
     <section class="card" style="text-align:center">
       <div class="muted small">In corso</div>
       <div style="font-weight:700;font-size:1.1rem">${esc(r.text)}</div>
       <div class="giornata-live" data-start="${r.start}" style="font-size:2.2rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - r.start))}</div>
       <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-stop" data-i="${i}">Finisci</button><button class="link" data-act="giornata-rename" data-i="${i}">Cambia nome</button><button class="link" data-act="giornata-cancel" data-i="${i}">Annulla</button></div>
-    </section>`).join("") : `
-    <section class="card">
-      <h2>Inizia un'attività</h2>
-      <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
-      <input id="giornata-start-time" maxlength="5" placeholder="Dalle, es. 6.50 (facoltativo, altrimenti adesso)" style="margin-top:8px">
-      <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
-    </section>`;
+    </section>`).join("") : "") + startCard;
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, kind: "act", idx }));
   const smokes = ((S.fumo && S.fumo.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "smoke").map((e) => ({ ...e, kind: "smoke", fromFumo: true }));
   const rows = [...acts, ...smokes].filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
@@ -193,7 +194,7 @@ function renderGiornata() {
       <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${fumoDurataMin(minTot)})` : ""} · Sigarette fumate: ${nSmoke}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
       <form id="giornata-add-form" class="form" style="margin-top:12px">
-        <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Scrivilo come una frase, anche con la tastiera che detta. Per esempio: "ho lavorato all'app dalle 6.50 alle 9.50" oppure "ho fumato 2 sigarette alle 7".</p>
+        <p class="muted small" style="margin:0 0 6px">Qualcosa di già fatto da registrare? Scrivilo come una frase, anche con la tastiera che detta. Per esempio: "ho lavorato all'app dalle 6.50 alle 9.50" oppure "ho fumato 2 sigarette alle 7".</p>
         <input name="frase" maxlength="160" placeholder="Scrivi o detta la frase" required>
         <button class="btn ghost wide" type="submit">Aggiungi</button>
         <datalist id="giornata-suggest"></datalist>
