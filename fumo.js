@@ -38,20 +38,21 @@ function fumoDuration(ms) {
 
 // Cose concrete da fare invece di fumare. Ad ogni apertura se ne scelgono tre, in base all'ora.
 const FUMO_AZIONI = [
-  { t: "Bevi un sorso d'acqua e posa il bicchiere lontano dal pacchetto.", when: "sempre" },
-  { t: "Fai due passi, anche solo fino alla finestra o in corridoio.", when: "sempre" },
-  { t: "Sistema una cosa in camera: il letto, la scrivania, il tavolo.", when: "sempre" },
-  { t: "Lavati le mani e il viso con acqua fredda.", when: "sempre" },
-  { t: "Scrivi su un foglio tre cose che farai nell'ora successiva, senza sigaretta.", when: "sempre" },
-  { t: "Metti le sigarette in un cassetto lontano e chiudilo.", when: "sempre" },
-  { t: "Scrivi o chiama una persona e raccontale come stai andando.", when: "sempre" },
-  { t: "Guarda fuori dalla finestra per un minuto e respira piano.", when: "sempre" },
-  { t: "Buongiorno: fatti una doccia e cambia la maglietta.", when: "mattina" },
-  { t: "Apri la finestra, fai entrare aria e prepara la colazione.", when: "mattina" },
-  { t: "Prepara la borsa o la giornata di oggi, una cosa alla volta.", when: "mattina" },
-  { t: "Lava i denti e mettiti il pigiama.", when: "sera" },
-  { t: "Prepara il letto e posa tutto quello che hai in mano.", when: "sera" },
-  { t: "Pianifica la mattina: sveglia, bagno, denti, colazione, senza sigaretta.", when: "sera" },
+  { t: "Mangiando una mela o una carota.", when: "sempre" },
+  { t: "Bevendo un sorso d'acqua e posando il bicchiere lontano dal pacchetto.", when: "sempre" },
+  { t: "Camminando per due minuti, anche solo in corridoio.", when: "sempre" },
+  { t: "Sistemando una cosa in camera: il letto, la scrivania, il tavolo.", when: "sempre" },
+  { t: "Lavandoti le mani e il viso con acqua fredda.", when: "sempre" },
+  { t: "Scrivendo su un foglio tre cose che farai nell'ora successiva, senza sigaretta.", when: "sempre" },
+  { t: "Mettendo le sigarette in un cassetto lontano e chiudendolo.", when: "sempre" },
+  { t: "Scrivendo o chiamando una persona e raccontandole come stai andando.", when: "sempre" },
+  { t: "Guardando fuori dalla finestra per un minuto, respirando piano.", when: "sempre" },
+  { t: "Facendoti una doccia e cambiando la maglietta.", when: "mattina" },
+  { t: "Aprendo la finestra e preparando la colazione.", when: "mattina" },
+  { t: "Preparando la borsa o la giornata di oggi, una cosa alla volta.", when: "mattina" },
+  { t: "Lavandoti i denti e mettendoti il pigiama.", when: "sera" },
+  { t: "Preparando il letto e posando tutto quello che hai in mano.", when: "sera" },
+  { t: "Pianificando la mattina: sveglia, bagno, denti, colazione, senza sigaretta.", when: "sera" },
 ];
 let fumoAzioniAperte = null;
 function fumoAzioniDiOggi() {
@@ -67,17 +68,29 @@ function fumoAzioniDiOggi() {
 
 // Azioni piccole da fare al posto di fumare. Si possono aggiungere dalla scheda Fumo.
 const FUMO_PREVISIONE_BASE = [
-  "Bevi un bicchiere d'acqua",
-  "Alzati e cammina per due minuti",
-  "Esci in balcone e respira",
-  "Siediti e chiudi gli occhi per un minuto",
-  "Fai cinque respiri lenti",
-  "Torna al lavoro su una piccola cosa",
-  "Sistema una cosa sul tavolo",
-  "Lavati il viso con acqua fredda",
+  "Mangiando una mela o una carota",
+  "Camminando per due minuti",
+  "Respirando sul balcone",
+  "Seduto con gli occhi chiusi per un minuto",
+  "Respirando lentamente per cinque respiri",
+  "Lavorando su una piccola cosa",
+  "Sistemando una cosa sul tavolo",
+  "Lavandoti il viso con acqua fredda",
 ];
+// Vecchie formulazioni salvate: vengono convertite alla lettura.
+const FUMO_PREVISIONE_VECCHIE = {
+  "Bevi un bicchiere d'acqua": "Mangiando una mela o una carota",
+  "Alzati e cammina per due minuti": "Camminando per due minuti",
+  "Esci in balcone e respira": "Respirando sul balcone",
+  "Siediti e chiudi gli occhi per un minuto": "Seduto con gli occhi chiusi per un minuto",
+  "Fai cinque respiri lenti": "Respirando lentamente per cinque respiri",
+  "Torna al lavoro su una piccola cosa": "Lavorando su una piccola cosa",
+  "Sistema una cosa sul tavolo": "Sistemando una cosa sul tavolo",
+  "Lavati il viso con acqua fredda": "Lavandoti il viso con acqua fredda",
+};
 function fumoPrevisione() {
-  return (S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE;
+  const list = (S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE;
+  return list.map((x) => FUMO_PREVISIONE_VECCHIE[x] || x);
 }
 
 // Registro del giorno: azioni fatte e sigarette fumate, in ordine di ora.
