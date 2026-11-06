@@ -331,6 +331,7 @@ function giornataAssicuraGruppi() {
 }
 
 // Riepilogo del giorno: un totale per argomento, senza elenco delle voci.
+const hhmmG = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
 function giornataRiepilogoHtml(day, acts, nSmoke) {
   const totali = {};
   acts.filter((e) => keyOf(new Date(e.at)) === day && e.min).forEach((e) => {
@@ -338,7 +339,7 @@ function giornataRiepilogoHtml(day, acts, nSmoke) {
     totali[nome] = (totali[nome] || 0) + e.min;
   });
   const righe = Object.entries(totali).sort((a, b) => b[1] - a[1])
-    .map(([nome, min]) => `<div class="row"><div style="flex:1">${esc(nome)}</div><div style="font-weight:700">${esc(fumoDurataMin(min))}</div></div>`).join("");
+    .map(([nome, min]) => `<button class="row" data-act="giornata-riep-open" data-g="${esc(nome)}" style="width:100%;background:none;border:0;padding:8px 0;text-align:left;color:inherit;cursor:pointer;font:inherit"><div style="flex:1">${esc(nome)}</div><div style="font-weight:700">${esc(fumoDurataMin(min))} <span class="muted small">modifica</span></div></button>`).join("");
   const totale = Object.values(totali).reduce((a, b) => a + b, 0);
   if (!righe) return "";
   return `<section class="card"><h2>Riepilogo di oggi</h2>${righe}
@@ -1073,6 +1074,22 @@ function fumoAct(a, el) {
         </form>`);
       return true;
     }
+    case "giornata-riep-open": {
+      const g = el.dataset.g;
+      const day = view.giornataDay || todayKey();
+      const voci = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, idx }))
+        .filter((e) => e.kind !== "pausa" && e.min && keyOf(new Date(e.at)) === day && gruppoDi(e.text) === g);
+      if (!voci.length) return true;
+      openDialog(`
+        <h3>${esc(g)}</h3>
+        <p class="muted small">Cambia la durata di una voce, per esempio "2 ore" o "90".</p>
+        <form id="giornata-riep-form" class="form">
+          ${voci.map((v) => `<div style="margin-top:8px"><div class="small">${esc(v.text)} · ${esc(hhmmG(v.at))}</div><input name="d_${v.idx}" maxlength="30" value="${esc(fumoDurataMin(v.min))}"></div>`).join("")}
+          <button class="btn primary wide" type="submit">Salva</button>
+          <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
+        </form>`);
+      return true;
+    }
     case "giornata-grp-open": {
       const idx = parseInt(el.dataset.idx);
       const voce = (S.giornata && S.giornata.log || [])[idx];
@@ -1254,6 +1271,20 @@ function fumoAct(a, el) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.id === "giornata-riep-form") {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const log = S.giornata.log;
+    for (const [k, v] of fd.entries()) {
+      const idx = parseInt(k.replace("d_", ""));
+      if (!log[idx]) continue;
+      const min = durataIn(v);
+      if (min === null) { toast("Durata non chiara: prova '2 ore' o '90'"); return; }
+      if (min > 0) log[idx] = { ...log[idx], min };
+    }
+    closeDialog(); save(); render(); toast("Durate aggiornate");
+    return;
+  }
   if (e.target.id === "giornata-grp-one") {
     e.preventDefault();
     const nome = String(new FormData(e.target).get("nome") || "").trim();
