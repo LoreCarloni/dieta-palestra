@@ -45,6 +45,8 @@ const FOODS = [
   ["Manzo filetto (crudo)", 127, 20.5, 0, 5, 150, "Proteine", "CREA 2019: Bovino adulto o vitellone, filetto, crudo"],
   ["Manzo costata (cruda)", 140, 21.3, 0, 6.1, 150, "Proteine", "CREA 2019: Bovino adulto o vitellone, costata, crudo"],
   ["Lonza di maiale (lombo leggero, crudo)", 146, 20.7, 0, 7, 150, "Proteine", "CREA 2019: Maiale, lombo, crudo"],
+  ["Maiale, spalla (crudo)", 133, 19, 0, 6.3, 150, "Proteine", "CREA 2019: Maiale, spalla, crudo"],
+  ["Vitellone, tagli anteriori (crudo)", 145, 20.5, 0, 7, 150, "Proteine", "CREA 2019: Bovino adulto o vitellone, tagli anteriori, crudo"],
   ["Salmone (crudo)", 185, 18.4, 1, 12, 150, "Proteine", "CREA 2019: Salmone"],
   ["Tonno al naturale", 103, 25.1, 0, 0.3, 80, "Proteine", "CREA 2019: Tonno in salamoia, sgocciolato"],
   ["Tonno sott'olio sgocciolato", 192, 25.2, 0, 10.1, 80, "Proteine", "CREA 2019: Tonno sott'olio, sgocciolato"],
