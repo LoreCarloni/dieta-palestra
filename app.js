@@ -986,6 +986,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
     if (needK - fv.per[0] * fv.g / 100 < -150) return; // non far superare troppo le calorie
+    // ne carboidrati ne grassi oltre il rimanente: un preferito come la pasta non deve sforare
+    if (fv.per[2] * fv.g / 100 > needC + 3) return;
+    if (fv.per[3] * fv.g / 100 > (tg.fat - t.f - ff) + 2) return;
     add(fv.name, fv.g, fv.per); picked++;
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
