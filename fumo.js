@@ -1310,44 +1310,45 @@ document.addEventListener("submit", (e) => {
   save(); resetScroll = true; render(); toast("Dati salvati");
 });
 
-// Microfono dentro le caselle di testo: tocchi l'icona e detti, il testo finisce nella casella.
-// Dove il telefono non supporta il riconoscimento vocale, non compare nulla e resta la tastiera.
+// Microfono dentro le caselle di testo: l'icona compare quando tocchi la casella.
+// Non sposta la casella (così la tastiera non si chiude) e non osserva tutta la pagina.
+// Dove il telefono non supporta il riconoscimento vocale, non compare nulla.
 (function () {
   const Riconoscimento = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Riconoscimento) return;
   const ICONA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
-  const aggiungi = () => {
-    document.querySelectorAll("input:not([type=number]):not([type=time]):not([type=file]):not([type=checkbox]):not([type=radio]):not([type=hidden]):not([data-mic])").forEach((input) => {
-      input.dataset.mic = "1";
-      const wrap = document.createElement("div");
-      wrap.style.position = "relative";
-      input.parentNode.insertBefore(wrap, input);
-      wrap.appendChild(input);
-      input.style.paddingRight = "44px";
-      const b = document.createElement("button");
-      b.type = "button";
-      b.setAttribute("aria-label", "Detta");
-      b.innerHTML = ICONA;
-      b.style.cssText = "position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0";
-      b.addEventListener("click", (e) => {
-        e.preventDefault();
-        const r = new Riconoscimento();
-        r.lang = "it-IT";
-        r.interimResults = false;
-        r.maxAlternatives = 1;
-        b.style.color = "#c0392b";
-        r.onresult = (ev) => {
-          const testo = ev.results[0][0].transcript;
-          input.value = (input.value ? input.value + " " : "") + testo;
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-        };
-        r.onend = () => { b.style.color = "var(--accent)"; };
-        r.onerror = () => { b.style.color = "var(--accent)"; toast("Non ho sentito, riprova"); };
-        r.start();
-      });
-      wrap.appendChild(b);
+  const micro = (input) => {
+    if (input.nextElementSibling && input.nextElementSibling.dataset.micro) return;
+    const parent = input.parentNode;
+    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.micro = "1";
+    b.setAttribute("aria-label", "Detta");
+    b.innerHTML = ICONA;
+    b.style.cssText = "position:absolute;right:6px;top:" + (input.offsetTop + input.offsetHeight / 2 - 17) + "px;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2";
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      const r = new Riconoscimento();
+      r.lang = "it-IT";
+      r.interimResults = false;
+      r.maxAlternatives = 1;
+      b.style.color = "#c0392b";
+      r.onresult = (ev) => {
+        const testo = ev.results[0][0].transcript;
+        input.value = (input.value ? input.value + " " : "") + testo;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      r.onend = () => { b.style.color = "var(--accent)"; };
+      r.onerror = () => { b.style.color = "var(--accent)"; toast("Non ho sentito, riprova"); };
+      r.start();
     });
+    input.style.paddingRight = "44px";
+    input.insertAdjacentElement("afterend", b);
   };
-  new MutationObserver(() => aggiungi()).observe(document.body, { childList: true, subtree: true });
-  aggiungi();
+  document.addEventListener("focusin", (e) => {
+    const t = e.target;
+    if (t.tagName !== "INPUT" || /^(number|time|file|checkbox|radio|hidden)$/.test(t.type)) return;
+    micro(t);
+  });
 })();
