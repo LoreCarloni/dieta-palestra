@@ -297,6 +297,21 @@ function giornataReportHtml() {
     <section class="card"><h2>Per giorno</h2>${giorniRows || `<p class="muted small">Nessuna voce in questo periodo.</p>`}</section>`;
 }
 
+// Durata scritta a mano o detta: "2 ore", "2 ore e 30 minuti", "un'ora e mezza", "90" (minuti). Null se non si capisce.
+function durataIn(testo) {
+  const t = String(testo || "").toLowerCase().trim();
+  if (!t) return 0;
+  if (/^\d+$/.test(t)) return parseInt(t);
+  let minuti = 0, trovato = false;
+  const ore = t.match(/(\d+)\s*or[ae]/) || t.match(/\b(un['’ ]?)ora\b/);
+  if (ore) { minuti += (ore[1] && /^\d+$/.test(ore[1]) ? parseInt(ore[1]) : 1) * 60; trovato = true; }
+  const min = t.match(/(\d+)\s*min/);
+  if (min) { minuti += parseInt(min[1]); trovato = true; }
+  if (/mezz[oa]?\s*['’]?\s*ora/.test(t) || /\be\s+mezz[oa]\b/.test(t)) { minuti += 30; trovato = true; }
+  if (/un\s+quarto/.test(t)) { minuti += 15; trovato = true; }
+  return trovato ? minuti : null;
+}
+
 // Gruppi di partenza, aggiunti una volta sola se non esistono già. Puoi modificarli nel report.
 const GIORNATA_GRUPPI_BASE = [
   { nome: "App", parole: ["app"] },
@@ -1036,9 +1051,10 @@ function fumoAct(a, el) {
       if (!voce) return true;
       openDialog(`
         <h3>Modifica l'attività</h3>
-        <p class="muted small">Puoi aggiungere dettagli, per esempio "Lavorare alla pratica auto".</p>
+        <p class="muted small">Puoi cambiare il nome e la durata, per esempio "2 ore", "2 ore e 30 minuti" oppure "90" (minuti).</p>
         <form id="fumo-item-form" class="form" data-kind="glog" data-idx="${idx}">
           <input name="text" maxlength="80" value="${esc(voce.text)}" autofocus>
+          <input name="durata" maxlength="30" value="${esc(voce.min ? fumoDurataMin(voce.min) : "")}" placeholder="Durata, es. 2 ore e 30 minuti">
           <button class="btn primary wide" type="submit">Salva</button>
           <button class="btn ghost wide" type="button" data-act="dlg-close">Annulla</button>
         </form>`);
@@ -1365,7 +1381,9 @@ document.addEventListener("submit", (e) => {
     if (f.dataset.kind === "glog") {
       const text = String(fd.get("text") || "").trim();
       if (!text || !S.giornata || !S.giornata.log[idx]) return;
-      S.giornata.log[idx] = { ...S.giornata.log[idx], text };
+      const min = durataIn(fd.get("durata"));
+      if (min === null) { toast("Durata non chiara: prova '2 ore' o '90'"); return; }
+      S.giornata.log[idx] = { ...S.giornata.log[idx], text, min: min || S.giornata.log[idx].min };
     } else if (f.dataset.kind === "plan") {
       const text = String(fd.get("text") || "").trim();
       if (!text) return;
