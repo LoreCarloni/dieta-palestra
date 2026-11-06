@@ -88,7 +88,7 @@ function fumoDiaryCard() {
   const acts = rows.filter((e) => e.kind === "act").length;
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item"><div class="muted small" style="min-width:44px">${esc(hhmm(e.at))}</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div></div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item"><div class="muted small">${esc(hhmm(e.at))}</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div></div>`).join("");
   return `
     <section class="card">
       <div class="row" style="align-items:center">
@@ -104,9 +104,10 @@ function fumoDiaryCard() {
 // Stile delle righe con i tasti: il testo ha la priorità, i tasti scendono sotto quando non ci stanno.
 (function () {
   const st = document.createElement("style");
-  st.textContent = ".fumo-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--line)}" +
-    ".fumo-text{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}" +
-    ".fumo-tools{display:flex;flex-wrap:wrap;gap:6px;flex:0 0 auto}";
+  st.textContent = ".fumo-item{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 0;border-bottom:1px solid var(--line)}" +
+    ".fumo-item .muted{font-size:0.8rem}" +
+    ".fumo-text{width:100%;min-width:0;overflow-wrap:anywhere;white-space:normal}" +
+    ".fumo-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}";
   document.head.appendChild(st);
 })();
 // Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
