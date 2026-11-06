@@ -38,7 +38,7 @@ function fumoDuration(ms) {
 
 // Cose concrete da fare invece di fumare. Ad ogni apertura se ne scelgono tre, in base all'ora.
 const FUMO_AZIONI = [
-  { t: "Mangiando una mela o una carota.", when: "sempre" },
+  { t: "Mangia una mela o una carota.", when: "sempre" },
   { t: "Bevendo un sorso d'acqua e posando il bicchiere lontano dal pacchetto.", when: "sempre" },
   { t: "Camminando per due minuti, anche solo in corridoio.", when: "sempre" },
   { t: "Sistemando una cosa in camera: il letto, la scrivania, il tavolo.", when: "sempre" },
@@ -68,7 +68,7 @@ function fumoAzioniDiOggi() {
 
 // Azioni piccole da fare al posto di fumare. Si possono aggiungere dalla scheda Fumo.
 const FUMO_PREVISIONE_BASE = [
-  "Mangiando una mela o una carota",
+  "Mangia una mela o una carota",
   "Camminando per due minuti",
   "Respirando sul balcone",
   "Seduto con gli occhi chiusi per un minuto",
@@ -79,7 +79,8 @@ const FUMO_PREVISIONE_BASE = [
 ];
 // Vecchie formulazioni salvate: vengono convertite alla lettura.
 const FUMO_PREVISIONE_VECCHIE = {
-  "Bevi un bicchiere d'acqua": "Mangiando una mela o una carota",
+  "Mangiando una mela o una carota": "Mangia una mela o una carota",
+  "Bevi un bicchiere d'acqua": "Mangia una mela o una carota",
   "Alzati e cammina per due minuti": "Camminando per due minuti",
   "Esci in balcone e respira": "Respirando sul balcone",
   "Siediti e chiudi gli occhi per un minuto": "Seduto con gli occhi chiusi per un minuto",
