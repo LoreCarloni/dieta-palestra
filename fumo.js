@@ -80,6 +80,27 @@ function fumoPrevisione() {
   return (S.fumo && S.fumo.acts) || FUMO_PREVISIONE_BASE;
 }
 
+// Registro del giorno: azioni fatte e sigarette fumate, in ordine di ora.
+function fumoDiaryCard() {
+  const day = view.fumoDay || todayKey();
+  const log = (S.fumo && S.fumo.log) || [];
+  const rows = log.filter((e) => keyOf(new Date(e.at)) === day).sort((a, b) => a.at.localeCompare(b.at));
+  const acts = rows.filter((e) => e.kind === "act").length;
+  const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  const lines = rows.map((e) => `<div class="row"><div class="muted small" style="min-width:48px">${esc(hhmm(e.at))}</div><div style="flex:1">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div></div>`).join("");
+  return `
+    <section class="card">
+      <div class="row" style="align-items:center">
+        <button class="btn ghost small-btn" data-act="fumo-day-prev">Giorno prima</button>
+        <strong style="text-align:center">${esc(fmtDate(day))}</strong>
+        <button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
+      </div>
+      <p class="muted small" style="text-align:center">Azioni fatte: ${acts} · Sigarette fumate: ${smoked}</p>
+      ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
+    </section>`;
+}
+
 function fumoHMS(ms) {
   const t = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
@@ -122,6 +143,7 @@ function renderFumo() {
       <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
+    ${fumoDiaryCard()}
     <section class="card">
       <p class="stat-v" style="text-align:center;font-size:1.6rem;margin:0 0 8px">Resisti!</p>
       <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(a.t)}</li>`).join("")}</ul>
@@ -129,7 +151,7 @@ function renderFumo() {
     <section class="card">
       <h2>Previsione della giornata</h2>
       <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
-      <ul style="margin:0;padding-left:20px">${fumoPrevisione().map((a) => `<li style="margin:4px 0">${esc(a)}</li>`).join("")}</ul>
+      ${fumoPrevisione().map((a, i) => `<div class="row" style="align-items:center;padding:6px 0"><div style="flex:1">${esc(a)}</div><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button></div>`).join("")}
       <form id="fumo-acts-form" class="form" style="margin-top:10px">
         <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
         <button class="btn ghost wide" type="submit">Aggiungi</button>
@@ -354,12 +376,16 @@ function fumoAct(a, el) {
       fumoCravingDialog(fumoSelectedMinutes());
       return true;
     }
+    case "fumo-day-prev": view.fumoDay = addDays(view.fumoDay || todayKey(), -1); render(); return true;
+    case "fumo-day-next": { const d = addDays(view.fumoDay || todayKey(), 1); view.fumoDay = d > todayKey() ? todayKey() : d; render(); return true; }
     case "fumo-act": {
       const list = fumoPrevisione();
       const text = list[parseInt(el && el.dataset.i)] || "";
       S.fumo.actCount = (S.fumo.actCount || 0) + 1;
       S.fumo.actLog = [...(S.fumo.actLog || []), { at: new Date(fumoNow()).toISOString(), text }];
+      S.fumo.log = [...(S.fumo.log || []), { at: new Date(fumoNow()).toISOString(), kind: "act", text }];
       save(); toast(`Fatto: ${text}`);
+      if (!dlg().open) render();
       return true;
     }
     case "fumo-done":
@@ -385,6 +411,7 @@ function fumoAct(a, el) {
       S.fumo.smoked = (S.fumo.smoked || 0) + 1;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
       S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + 1;
+      S.fumo.log = [...(S.fumo.log || []), { at: new Date(now).toISOString(), kind: "smoke", n: 1 }];
       S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
       S.fumo.start = new Date(now).toISOString();
       save(); resetScroll = true;
