@@ -116,10 +116,10 @@ function fumoDiaryCard() {
     <section class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
-          <div style="font-weight:600">Registro di oggi</div>
-          <div class="muted small">${acts} ${acts === 1 ? "azione" : "azioni"} · ${smoked} ${smoked === 1 ? "sigaretta" : "sigarette"}</div>
+          <div style="font-size:1.2rem;font-weight:700;letter-spacing:-0.01em">Registro di oggi</div>
+          <div style="font-size:1rem;color:var(--muted);margin-top:2px">${acts} ${acts === 1 ? "azione" : "azioni"} · ${smoked} ${smoked === 1 ? "sigaretta" : "sigarette"}</div>
         </div>
-        <button class="link" data-act="fumo-registro-toggle">Mostra</button>
+        <button class="btn ghost small-btn" data-act="fumo-registro-toggle">Mostra</button>
       </div>
     </section>`;
   return `
