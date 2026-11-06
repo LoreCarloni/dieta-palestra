@@ -1256,7 +1256,7 @@ document.addEventListener("submit", (e) => {
     S.giornata.gruppi = S.giornata.gruppi || [];
     const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
     if (g) { if (!g.parole.some((p) => normTesto(p) === normTesto(parola))) g.parole.push(parola); }
-    else S.giornata.gruppi.push({ nome, parole: [parola] });
+    else S.giornata.gruppi.unshift({ nome, parole: [parola] }); // i gruppi nuovi, più specifici, hanno la precedenza
     closeDialog(); save(); render(); toast(`Messo in ${nome}`);
     return;
   }
@@ -1269,7 +1269,7 @@ document.addEventListener("submit", (e) => {
     S.giornata.gruppi = S.giornata.gruppi || [];
     const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
     if (g) { if (!g.parole.some((p) => normTesto(p) === normTesto(parola))) g.parole.push(parola); }
-    else S.giornata.gruppi.push({ nome, parole: [parola] });
+    else S.giornata.gruppi.unshift({ nome, parole: [parola] }); // i gruppi nuovi, più specifici, hanno la precedenza
     save(); render(); toast(`Messo in ${nome}`);
     return;
   }
@@ -1291,7 +1291,7 @@ document.addEventListener("submit", (e) => {
     const parole = String(fd.get("parole") || "").split(",").map((x) => x.trim()).filter(Boolean);
     if (!nome || !parole.length) { toast("Scrivi il nome e almeno una parola"); return; }
     S.giornata = S.giornata || { log: [] };
-    S.giornata.gruppi = [...(S.giornata.gruppi || []), { nome, parole }];
+    S.giornata.gruppi = [{ nome, parole }, ...(S.giornata.gruppi || [])]; // il gruppo nuovo ha la precedenza
     save(); render(); toast("Gruppo salvato");
     return;
   }
