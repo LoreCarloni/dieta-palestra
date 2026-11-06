@@ -438,6 +438,35 @@ function parseFrase(frase, day) {
   return { kind: "act", text, at: start.toISOString(), min };
 }
 
+// Breathing Space: tre minuti guidati, tre passi da un minuto ciascuno.
+const FUMO_BS_PASSI = [
+  { t: "Cosa senti adesso", d: "Nota cosa stai pensando e sentendo, senza giudicarlo. Dai un nome a quello che c'è." },
+  { t: "Concentrati sul respiro", d: "Porta l'attenzione al respiro che entra ed esce. Seguilo per tutto il minuto." },
+  { t: "Allarga l'attenzione", d: "Senti il corpo nella sua interezza, le mani, i piedi, le spalle. Poi torna alla giornata." },
+];
+let fumoBsTimer = null;
+function fumoBreathingSpace() {
+  const passo = (i) => {
+    const p = FUMO_BS_PASSI[i];
+    openDialog(`
+      <h3>Breathing Space · ${i + 1} di 3</h3>
+      <p style="font-weight:700;margin:6px 0">${esc(p.t)}</p>
+      <p>${esc(p.d)}</p>
+      <div id="fumo-bs-count" class="stat-v" style="text-align:center;font-size:2rem">0:60</div>
+      <button class="btn ghost wide" data-act="dlg-close">Interrompi</button>`);
+    const fine = fumoNow() + 60000;
+    clearInterval(fumoBsTimer);
+    fumoBsTimer = setInterval(() => {
+      const c = $("#fumo-bs-count");
+      if (!c || !dlg().open) { clearInterval(fumoBsTimer); return; }
+      const left = Math.max(0, fine - fumoNow());
+      c.textContent = `0:${String(Math.ceil(left / 1000)).padStart(2, "0")}`;
+      if (left === 0) { clearInterval(fumoBsTimer); if (i < 2) passo(i + 1); else { closeDialog(); toast("Ottimo, tre minuti fatti"); } }
+    }, 250);
+  };
+  passo(0);
+}
+
 // Chiude la pausa per sigaretta e la registra con la sua durata.
 function gChiudiPausa() {
   const p = S.giornata && S.giornata.pausa;
@@ -545,6 +574,7 @@ function renderFumo() {
       <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
       <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
     </section>
+    <div style="text-align:center;margin:-6px 0 10px"><button class="link" data-act="fumo-breathing">Breathing Space · 3 minuti</button></div>
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
       <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
@@ -954,6 +984,7 @@ function fumoAct(a, el) {
       if (!dlg().open) render();
       return true;
     }
+    case "fumo-breathing": fumoBreathingSpace(); return true;
     case "fumo-registro-toggle": view.fumoRegistroOpen = !view.fumoRegistroOpen; render(); return true;
     case "fumo-elenco-chiudi": {
       view.fumoPlanOpen = false;
