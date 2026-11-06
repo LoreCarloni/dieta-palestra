@@ -526,12 +526,30 @@ function attivitaGerundio(testo) {
   return frase.charAt(0).toUpperCase() + frase.slice(1);
 }
 
+// "sto lavorando all'app da mezz'ora": tolgo la durata e la uso per l'ora di inizio.
+function durataDaTesto(testo) {
+  const m = String(testo || "").match(/\bda\s+(mezz['’]ora|un['’]ora|un quarto d['’]ora|(\d+)\s*(minuti|minuto|ore|ora))\b/i);
+  if (!m) return null;
+  const q = m[1].toLowerCase();
+  let minuti = 0;
+  if (q.startsWith("mezz")) minuti = 30;
+  else if (q.startsWith("un quarto")) minuti = 15;
+  else if (q.startsWith("un")) minuti = 60;
+  else minuti = parseInt(m[2]) * (m[3].toLowerCase().startsWith("or") ? 60 : 1);
+  return { minuti, resto: String(testo).replace(m[0], "").replace(/\s+/g, " ").trim() };
+}
+
 // Frasi come: "ho iniziato a lavorare all'app alle 6.50", "vado a fare la doccia", "ho finito di lavorare alle 9.50".
 function fumoComando(frase) {
   const raw = normOre(String(frase || "").trim());
   const low = raw.toLowerCase();
   if (/fumat[oa]|sigaret/.test(low)) return null;
   const time = (low.match(/(?:alle|sono le|verso le)\s+([\d.:]+)/) || [])[1] || null;
+  const durata = durataDaTesto(low);
+  if (durata && durata.minuti > 0 && /^(?:mi\s+sto\s+|sto\s+|sono\s+|ci\s+sono\s+)/.test(low)) {
+    const testoPulito = durata.resto.replace(/^(?:mi\s+sto\s+|sto\s+|sono\s+|ci\s+sono\s+)/i, "").replace(/\b(?:ci sto|sto ancora|ancora|sono ancora|ci sono ancora)\b.*$/i, "").trim();
+    if (testoPulito) return { type: "start", text: testoPulito, time: null, startAt: fumoNow() - durata.minuti * 60000 };
+  }
   const pulisci = (x) => x
     .replace(/(?:alle|sono le|verso le)\s+[\d.:]+.*$/, "")
     .replace(/\b(?:ci sto|sto ancora|ancora|sono ancora|ci sono ancora)\b.*$/, "")
@@ -901,9 +919,11 @@ function fumoAct(a, el) {
       return true;
     }
     case "giornata-start": {
-      const text = String(($("#giornata-start-text") || {}).value || "").trim();
+      let text = String(($("#giornata-start-text") || {}).value || "").trim();
       if (!text) { toast("Scrivi cosa stai facendo"); return true; }
       let start = fumoNow();
+      const durataTxt = durataDaTesto(text);
+      if (durataTxt && durataTxt.minuti > 0 && durataTxt.resto) { start = fumoNow() - durataTxt.minuti * 60000; text = durataTxt.resto; }
       const dalle = String(($("#giornata-start-time") || {}).value || "").trim();
       if (dalle) {
         const ora = parseOra(dalle);
@@ -1183,6 +1203,7 @@ document.addEventListener("submit", (e) => {
       const oraCmd = cmd.time ? parseOra(cmd.time) : null;
       if (cmd.time && !oraCmd) { toast("Scrivi l'ora, per esempio 6.50"); return; }
       const at = new Date(); if (oraCmd) at.setHours(oraCmd[0], oraCmd[1], 0, 0);
+      if (cmd.startAt) at.setTime(cmd.startAt);
       if (at > new Date()) { toast("L'ora è nel futuro"); return; }
       if (cmd.type === "stop") {
         let idx = -1;
