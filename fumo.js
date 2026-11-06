@@ -112,8 +112,15 @@ function fumoDiaryCard() {
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  if (!view.fumoRegistroOpen) return `
+    <section class="card">
+      <button class="btn ghost wide" data-act="fumo-registro-toggle">Registro di oggi (${acts} azioni, ${smoked} sigarette) · Mostra</button>
+    </section>`;
   return `
     <section class="card">
+      <div class="row" style="align-items:center">
+        <button class="link" data-act="fumo-registro-toggle">Nascondi registro</button>
+      </div>
       <div class="row" style="align-items:center">
         <button class="btn ghost small-btn" data-act="fumo-day-prev">Giorno prima</button>
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
@@ -914,6 +921,7 @@ function fumoAct(a, el) {
       if (!dlg().open) render();
       return true;
     }
+    case "fumo-registro-toggle": view.fumoRegistroOpen = !view.fumoRegistroOpen; render(); return true;
     case "fumo-elenco-chiudi": {
       view.fumoPlanOpen = false;
       const pl = $("#fumo-plan"); if (pl) pl.innerHTML = "";
