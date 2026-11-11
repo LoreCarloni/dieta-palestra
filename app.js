@@ -1092,7 +1092,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
-      const base = (pz) => (/albume/i.test(pz) ? 150 : /whey|polvere/i.test(pz) ? 15 : /yogurt/i.test(pz) ? 150 : /latte/i.test(pz) ? 100 : 100);
+      // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
+      const base = (pz) => {
+        const h = trovati.find((y) => y.pz === pz);
+        if (/whey|polvere/i.test(pz)) return 15;
+        if (h && h.hit.portion > 0) return Math.min(200, h.hit.portion);
+        return 100;
+      };
       const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
       const kCombo = combo.reduce((a, x) => a + x.per[0] * x.g / 100, 0);
       const cCombo = combo.reduce((a, x) => a + x.per[2] * x.g / 100, 0);
