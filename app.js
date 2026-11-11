@@ -351,10 +351,18 @@ function habitDialog() {
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
 // Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
-const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 203, p: 24, c: 11, f: 7, portion: 230, src: "Stima, non verificata (ricetta di famiglia)" };
+const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90, src: "Stima, non verificata (ricetta di famiglia)" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
 // Pasta zucca e pancetta salvato prima dell'elenco ingredienti: ricostruisco gli ingredienti dichiarati (una sola volta, i valori salvati restano)
+// Cotoletta di tacchino della mamma: una cotoletta di 90 g. Un giro: 300 g di tacchino, 2 uova, 40 g di pane grattugiato, 30 g di parmigiano, 10 g di olio, circa 4 cotolette.
+const MOM_CUTLET_VALORI = { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 };
+function fixMomCutletValues() {
+  if (S.momCutletValuesFixed) return;
+  const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name);
+  if (c) { Object.assign(c, MOM_CUTLET_VALORI); c.src = "Stima dalla ricetta di famiglia: 300 g di tacchino, 2 uova, 40 g di pane grattugiato, 30 g di parmigiano, 10 g di olio, diviso in circa 4 cotolette"; }
+  S.momCutletValuesFixed = true; save();
+}
 function ensureDishParts() {
   if (S.dishPartsFixed) return;
   const d = S.customFoods.find((x) => norm(x.name).trim() === "pasta zucca e pancetta" && !x.parts);
@@ -415,6 +423,7 @@ function ensureMomCutlet() {
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
+  fixMomCutletValues();
   S.momCutletAdded = true; save();
 }
 function maybeHabitDialog() {
