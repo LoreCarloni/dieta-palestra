@@ -923,7 +923,7 @@ function favRefresh() {
 }
 function favCardHtml() {
   const pair = view.favPair;
-  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-g" data-i="${i}">grammi</button><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsRow === i ? `<div class="fav-grams">${r.split(" + ").map((x) => `<div class="field"><label class="muted small">${esc(x)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(x)}" value="${(S.favGrams || {})[x] || ""}" placeholder="per esempio 150"></div>`).join("")}<button class="btn primary" data-act="fav-g-save" data-i="${i}">Salva le quantità</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
   return `<section class="fav-section"><h3>I miei cibi preferiti</h3><p class="muted small">Sono cibi che ti piacciono sempre, senza grammi. Scrivi un cibo e scegli dall'elenco salvato. Con + abbina metti un secondo cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
@@ -1084,13 +1084,16 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
-      combo.forEach((x) => { const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); add(x.hit.name, /whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g, x.per); });
+      combo.forEach((x) => { const fis = (S.favGrams || {})[x.pz]; const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); add(x.hit.name, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per); });
       picked++;
       return;
     }
     const hit = favHit(nome);
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
+    // quantita scelta da te per questo preferito: la uso cosi com'e
+    const fissi = (S.favGrams || {})[nome];
+    if (fissi) { add(hit.name, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
@@ -2277,6 +2280,21 @@ function act(a, el) {
       day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, qn), name: qn, g: null, kcal: kc, p, c: qc, f: qf });
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
+    }
+    case "fav-g": {
+      const i = +el.dataset.i;
+      view.favGramsRow = view.favGramsRow === i ? undefined : i;
+      favRefresh();
+      break;
+    }
+    case "fav-g-save": {
+      S.favGrams = S.favGrams || {};
+      document.querySelectorAll(".fav-gin").forEach((inp) => {
+        const v = Math.round(Number(inp.value));
+        if (v > 0) S.favGrams[inp.dataset.name] = v; else delete S.favGrams[inp.dataset.name];
+      });
+      view.favGramsRow = undefined; save(); favRefresh();
+      break;
     }
     case "fav-plus": {
       view.favPair = +el.dataset.i; favRefresh();
