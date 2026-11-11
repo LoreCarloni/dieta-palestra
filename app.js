@@ -1085,7 +1085,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   });
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
   (S.favFoods || []).forEach((nome) => {
-    if (picked >= 6 || eatenToday.has(norm(nome).trim())) return;
+    if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
