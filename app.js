@@ -1077,7 +1077,10 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
       const kCombo = combo.reduce((a, x) => a + x.per[0] * x.g / 100, 0);
       const cCombo = combo.reduce((a, x) => a + x.per[2] * x.g / 100, 0);
-      const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, cCombo > 0 ? (needC + 3) / cCombo : 1);
+      // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
+      if (cCombo > 15) { if (needC <= 0) return; }
+      const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
+      const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
       combo.forEach((x) => { const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); add(x.hit.name, /whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g, x.per); });
       picked++;
