@@ -335,7 +335,7 @@ function kcalBar(v, target) {
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
 // Cibi che non vanno suggeriti in una dieta: dolci, snack, fritti, pizza, salumi. Non entrano nei suggerimenti automatici.
 const NOT_FOR_DIET = /cioccolat|\b(lindt|ferrero|milka|perugina|baci|ritter|bounty|snickers|twix|kit ?kat|oreo|haribo|magnum|algida|nesquik|pan di stelle|mulino bianco|mars|tuc|nutella|kinder)\b|excellence|gelato|patatine|pringles|merendin|torta|tiramis|brioche|croissant|cornetto|biscott|frollin|dolc|snack|caramell|barretta|galletta|fritt|crocchett|pizza|salame|wurstel|salsicc|mortadella/i;
-const HABIT_FOODS = ["Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
+const HABIT_FOODS = ["Cotoletta di pollo impanata", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"];
 function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
   return HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
@@ -1048,7 +1048,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn ghost small-btn" data-act="fv-open">Aggiungi</button>${S.plannedDinner ? `<button class="btn ghost small-btn" data-act="plan-regen">Rigenera</button><button class="btn ghost small-btn" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn ghost small-btn" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn ghost small-btn" data-act="plan-regen">Rigenera</button><button class="btn ghost small-btn" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
