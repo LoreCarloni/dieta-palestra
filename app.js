@@ -2427,8 +2427,10 @@ function act(a, el) {
       let carbTot = () => tutte.reduce((a, l) => a + carbRiga(l), 0);
       let tolteC = 0;
       while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && carbRiga(l) > 0)) {
-        let best = -1, bc = -1;
-        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && carbRiga(l) > bc) { bc = carbRiga(l); best = k; } });
+        // tolgo prima la voce con piu carboidrati e meno proteine
+        let best = -1, bc = -Infinity;
+        const punteggio = (l) => { const x = parseDiary(l).reduce((a, y) => ({ c: a.c + (y.c || 0), p: a.p + (y.p || 0) }), { c: 0, p: 0 }); return x.c - 2 * x.p; };
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && carbRiga(l) > 0 && punteggio(l) > bc) { bc = punteggio(l); best = k; } });
         tutte.splice(best, 1); tolteC++;
       }
       if (carbTot() > cLim) {
