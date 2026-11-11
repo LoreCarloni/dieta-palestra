@@ -908,6 +908,8 @@ function favHit(nome) {
 }
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
+// dopo una modifica dei preferiti: se la finestra e aperta la ridisegno, altrimenti aggiorno la pagina
+function favRefresh() { if (dlg().open) openDialog(favCardHtml()); else render(); }
 function favCardHtml() {
   const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => `<span class="fav-food">${esc(x)}</span>`).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span></div>`).join("");
   return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Scrivi un cibo e scegli dall'elenco salvato. Con + abbina aggiungi un altro cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
@@ -2271,11 +2273,12 @@ function act(a, el) {
       } else {
         S.favFoods.push(nome);
       }
-      save(); render();
+      save();
+      if (dlg().open && view.favPair === undefined) favRefresh(); else render();
       break;
     }
     case "fav-del": {
-      S.favFoods.splice(+el.dataset.i, 1); save(); render();
+      S.favFoods.splice(+el.dataset.i, 1); save(); favRefresh();
       break;
     }
     case "myplan-edit": {
