@@ -1046,6 +1046,21 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
   (S.favFoods || []).forEach((nome) => {
     if (picked >= 6 || eatenToday.has(norm(nome).trim())) return;
+    // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
+    const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
+    if (pezzi.length > 1) {
+      const trovati = pezzi.map((pz) => ({ pz, hit: searchFoods(pz).find((x) => !x.perServing && norm(x.name).includes(norm(pz))) })).filter((x) => x.hit);
+      if (trovati.length !== pezzi.length || trovati.some((x) => out.some((l) => l.startsWith(x.hit.name + ",")))) return;
+      const base = (pz) => (/albume/i.test(pz) ? 150 : /whey|polvere/i.test(pz) ? 15 : /latte/i.test(pz) ? 100 : 100);
+      const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
+      const kCombo = combo.reduce((a, x) => a + x.per[0] * x.g / 100, 0);
+      const cCombo = combo.reduce((a, x) => a + x.per[2] * x.g / 100, 0);
+      const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, cCombo > 0 ? (needC + 3) / cCombo : 1);
+      if (fatt < 0.3) return;
+      combo.forEach((x) => { const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); add(x.hit.name, /whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g, x.per); });
+      picked++;
+      return;
+    }
     const hit = searchFoods(nome).find((x) => !x.perServing && norm(x.name).includes(norm(nome).trim()));
     if (!hit || out.some((l) => l.startsWith(hit.name + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
