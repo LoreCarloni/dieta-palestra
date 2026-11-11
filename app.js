@@ -1087,6 +1087,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
+    if (/cotoletta/i.test(hit.name)) g = Math.min(g, 60);
     if (pol) g = Math.min(g, 15);
     if (g < 30) return;
     add(hit.name, g, per); picked++;
