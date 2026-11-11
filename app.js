@@ -177,7 +177,10 @@ function targets(k) {
   const refW = Math.min(b.w, (S.profile.goalWeight || b.w) + 10);
   const protein = Math.round((plan ? 2.2 : 2.0) * refW);
   const med = medicalKcal();
-  const kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
+  let kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
+  // recupero: l'eccesso di carboidrati del giorno prima toglie calorie da oggi (al massimo un quinto), le proteine restano
+  const debito = (S.carbDebt || {})[addDays(k, -1)] || 0;
+  if (debito > 0) kcal = Math.round(Math.max(kcal * 0.8, kcal - debito * 4));
   const planOut = plan ? { ...plan, cutKcal: b.kcal - kcal } : null;
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
