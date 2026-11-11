@@ -2705,7 +2705,9 @@ function act(a, el) {
       S.autoForecast = true; S.forecastSnap = null;
       const kTd = view.date, over = targets(kTd).kcal - totals(kTd).kcal <= 0;
       if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
-      S.plannedDinner = over ? "" : autoPlan("", S.plannedDinner || "", kTd);
+      // solo le righe bloccate restano fisse: le altre vengono ricalcolate, come in Rigenera
+      const bloccate = (S.plannedDinner || "").split("\n").filter((l) => /bloccato/i.test(l)).join("\n");
+      S.plannedDinner = over ? "" : autoPlan("", bloccate, kTd);
       S.autoLines = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
       save(); closeDialog(); render();
       break;
