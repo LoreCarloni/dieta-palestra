@@ -2459,6 +2459,19 @@ function act(a, el) {
           return l;
         });
       }
+      // proteine: se ne mancano per il target e restano calorie, aggiungo albume fino al tetto di 400 g in totale (poche calorie, quasi zero carboidrati)
+      {
+        const kcalRiga2 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
+        const pSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
+        const kSum = tutte.reduce((a, l) => a + kcalRiga2(l), 0);
+        const pMancano = targets(view.date).protein - totals(view.date).p - pSum;
+        const kRimaste = leftK - kSum;
+        const albumeGia = tutte.filter((l) => /^albume\b/i.test(l.trim())).reduce((a, l) => a + gRiga(l), 0);
+        if (pMancano > 5 && kRimaste > 20 && albumeGia < 400) {
+          const g = Math.min(400 - albumeGia, Math.floor(kRimaste / 0.45 / 10) * 10, Math.ceil(pMancano / 0.107 / 10) * 10);
+          if (g >= 50) { tutte.push(`Albume, ${g} g: circa ${Math.round(g * 0.45)} kcal e ${Math.round(g * 0.107)} g di proteine`); ridotte.push(`albume ${g} g`); }
+        }
+      }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
       S.plannedDinner = tutte.join("\n");
       toast([tolteC ? `tolte ${tolteC} voci per i carboidrati` : "", tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
