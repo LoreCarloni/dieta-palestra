@@ -900,6 +900,12 @@ function renderCoach() {
 }
 
 // ---------- Profilo ----------
+// alimento del database per un preferito: la pasta si pesa sempre da cruda
+function favHit(nome) {
+  const n = norm(nome).trim();
+  const pasta = /pasta/.test(n);
+  return searchFoods(pasta ? "pasta integrale" : nome).find((x) => !x.perServing && (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n))) || null;
+}
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
 function favCardHtml() {
@@ -1050,7 +1056,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
-      const trovati = pezzi.map((pz) => ({ pz, hit: searchFoods(pz).find((x) => !x.perServing && norm(x.name).includes(norm(pz))) })).filter((x) => x.hit);
+      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.length !== pezzi.length || trovati.some((x) => out.some((l) => l.startsWith(x.hit.name + ",")))) return;
       const base = (pz) => (/albume/i.test(pz) ? 150 : /whey|polvere/i.test(pz) ? 15 : /latte/i.test(pz) ? 100 : 100);
       const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
@@ -1062,7 +1068,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       picked++;
       return;
     }
-    const hit = searchFoods(nome).find((x) => !x.perServing && norm(x.name).includes(norm(nome).trim()));
+    const hit = favHit(nome);
     if (!hit || out.some((l) => l.startsWith(hit.name + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     const pol = /whey|proteine in polvere/i.test(hit.name);
