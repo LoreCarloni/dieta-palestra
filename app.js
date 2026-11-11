@@ -2460,6 +2460,17 @@ function act(a, el) {
           return l;
         });
       }
+      // se mancano proteine e c'e ancora spazio di calorie, aggiungo albume (quasi niente carboidrati)
+      {
+        const pSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
+        const kSum = tutte.reduce((a, l) => a + kcalRiga(l), 0);
+        const pMancano = targets(view.date).protein - totals(view.date).p - pSum;
+        const kRimaste = leftK - kSum;
+        if (pMancano > 5 && kRimaste > 40) {
+          const g = Math.min(400, Math.floor(kRimaste / 0.43 / 10) * 10, Math.floor(pMancano / 0.109 / 10) * 10);
+          if (g >= 50) { tutte.push(`Albume, ${g} g ✓ ver. ${Math.round(g * 0.43)} kcal`); ridotte.push(`albume ${g} g`); }
+        }
+      }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
       S.plannedDinner = tutte.join("\n");
       toast([tolteC ? `tolte ${tolteC} voci per i carboidrati` : "", tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
