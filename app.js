@@ -1122,7 +1122,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       combo.forEach((x) => {
         const fis = (S.favGrams || {})[x.pz];
         const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
-        const altro = trovati.find((y) => y !== x);
+        const altro = trovati.find((y) => y.pz !== x.pz);
         const etichetta = altro ? `${x.hit.name}, con ${altro.hit.name}` : x.hit.name;
         add(etichetta, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per);
       });
