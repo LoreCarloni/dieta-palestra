@@ -1142,7 +1142,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button><button class="btn" data-act="fav-open">I miei cibi preferiti</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div>${favCardHtml()}</section>`;
 }
 function openDialog(html) {
   const d = dlg();
