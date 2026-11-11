@@ -1051,8 +1051,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (pg >= 40) add("Pasta integrale", pg, PAS);
     else { const bg = Math.round((needC / 0.595) / 5) * 5; if (bg > 0) add("Pane bianco", bg, [268, 8.1, 59.5, 0.5]); }
   }
-  // verdura: riempie senza calorie
-  out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
+  // verdura: riempie senza calorie, solo quando le proteine sono coperte e restano calorie; altrimenti ci pensa la carne
+  if (needP <= 5 && needK > 30) out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
   return out.join("\n");
 }
 // Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
