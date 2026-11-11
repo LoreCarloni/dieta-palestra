@@ -2678,6 +2678,7 @@ function act(a, el) {
       if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
       S.plannedDinner = over ? "" : autoPlan("", S.plannedDinner || "", kTd);
       S.autoLines = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
+      save(); closeDialog(); render();
       break;
     }
     case "pv-paste-add": {
