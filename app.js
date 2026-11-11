@@ -927,7 +927,7 @@ function favRefresh() {
 }
 function favCardHtml() {
   const pair = view.favPair;
-  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div>${/albume/i.test(view.favGramsKey || "") ? `<div class="field"><label class="muted small">Bicchieri, quanti al giorno</label><input class="fav-glass" type="number" inputmode="numeric" data-name="${esc(view.favGramsKey)}" value="${(S.favGlasses || {})[view.favGramsKey] || ""}" placeholder="per esempio 3"></div>` : ""}<button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
   return `<section class="fav-section"><h3>I miei cibi preferiti</h3><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
@@ -1087,10 +1087,20 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
+      const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       const base = (pz) => (/albume/i.test(pz) ? 150 : /whey|polvere/i.test(pz) ? 15 : /yogurt/i.test(pz) ? 150 : /latte/i.test(pz) ? 100 : 100);
       const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
       const kCombo = combo.reduce((a, x) => a + x.per[0] * x.g / 100, 0);
       const cCombo = combo.reduce((a, x) => a + x.per[2] * x.g / 100, 0);
+      // se l'albume del preferito e indicato per bicchiere, ogni bicchiere e una riga con i suoi grammi
+      const nBicchieri = Math.max(0, ...pezzi.map((pz) => (S.favGlasses || {})[pz] || 0));
+      if (nBicchieri > 0) {
+        for (let k = 1; k <= nBicchieri; k++) {
+          trovati.forEach((x) => { const fis = (S.favGrams || {})[x.pz] || base0(x.pz); add(`${x.hit.name}, bicchiere ${k}`, fis, [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f]); });
+        }
+        picked++;
+        return;
+      }
       // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
       if (cCombo > 15) { if (needC <= 0) return; }
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
@@ -1105,6 +1115,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
+    const bicchieri = (S.favGlasses || {})[nome];
+    if (fissi && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi, per); picked++; return; }
     if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
@@ -2305,6 +2317,11 @@ function act(a, el) {
       document.querySelectorAll(".fav-gin").forEach((inp) => {
         const v = Math.round(Number(inp.value));
         if (v > 0) S.favGrams[inp.dataset.name] = v; else delete S.favGrams[inp.dataset.name];
+      });
+      S.favGlasses = S.favGlasses || {};
+      document.querySelectorAll(".fav-glass").forEach((inp) => {
+        const n = Math.round(Number(inp.value));
+        if (n > 0) S.favGlasses[inp.dataset.name] = n; else delete S.favGlasses[inp.dataset.name];
       });
       view.favGramsKey = undefined; save(); favRefresh();
       break;
