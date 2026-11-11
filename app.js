@@ -1053,6 +1053,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     out.push(`${name}, ${g} g`);
     needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
   };
+  // stesso alimento in piu abbinamenti (per esempio JUST WHEY con albume e con yogurt): una sola riga, con i grammi sommati
+  const addSum = (name, g, per) => {
+    const i = out.findIndex((l) => l.startsWith(name + ","));
+    if (i < 0) return add(name, g, per);
+    const og = Number((out[i].match(/(\d+)\s*g\b/) || [0, 0])[1]);
+    out[i] = `${name}, ${og + g} g`;
+    needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
+  };
   const ALB = [45, 10.7, 0.8, 0.2], YOG = [57, 10, 3.6, 0.2], TAC = [135, 29, 0, 2], PAS = [340, 13.5, 64, 2.5];
   // proteine: yogurt greco 0% con 10 g di proteine in polvere (valori dal database e dall'alimento personale), poi albume e tacchino
   // prima i cibi che mangi di solito (ultimi 30 giorni), con la porzione che usi di solito
@@ -1088,7 +1096,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
-      combo.forEach((x) => { const fis = (S.favGrams || {})[x.pz]; const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); add(x.hit.name, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per); });
+      combo.forEach((x) => { const fis = (S.favGrams || {})[x.pz]; const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); addSum(x.hit.name, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per); });
       picked++;
       return;
     }
@@ -1097,7 +1105,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
-    if (fissi) { add(hit.name, fissi, per); picked++; return; }
+    if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
