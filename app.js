@@ -2209,6 +2209,7 @@ function act(a, el) {
         <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
         <div id="fv-res"></div>
+        <button class="btn ghost wide" data-act="habit-open">Alimenti abituali</button>
         <button class="btn ghost wide" data-act="dish-open">Piatto composto (es. pasta e zucca)</button>
         <button class="btn ghost wide" data-act="custom-food">Nuovo alimento</button>`);
     }
