@@ -2230,7 +2230,7 @@ function act(a, el) {
     case "fv-open": {
       return openDialog(`
         <h3>Aggiungi o correggi un alimento</h3>
-        <p class="muted small">Scrivi il nome: puoi aggiungerlo alla previsione oppure aggiornare i suoi valori con la fotocamera.</p>
+        <p class="muted small">Cerca</p>
         <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
         <button class="btn ghost wide" data-act="fv-mine">I miei alimenti</button>
