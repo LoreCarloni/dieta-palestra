@@ -282,7 +282,7 @@ function refreshForecast() {
   {
     const tgo = targets(k), to = totals(k);
     const plannedNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
-    const autoRe0 = /^(albume|yogurt greco 0%|proteine in polvere|just whey|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+    const autoRe0 = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
     if (plannedNow > tgo.kcal - to.kcal) {
       const before = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
       const after = before.filter((x) => !(autoRe0.test(x.trim()) && !/bloccato/i.test(x)));
@@ -298,7 +298,7 @@ function refreshForecast() {
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
-  const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+  const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
   const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
   const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x) && !(autoRe.test(x.trim()) && !/bloccato/i.test(x)));
   const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), k).split("\n").filter((x) => x.trim());
@@ -2414,7 +2414,7 @@ function act(a, el) {
     }
     case "plan-regen": {
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
-      const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+      const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
       const kept = sortPlanLines(S.plannedDinner).filter((l) => !((autoRe.test(l.trim()) && !/bloccato/i.test(l)) || known.has(l)));
       S.autoLines = []; S.autoAll = [];
