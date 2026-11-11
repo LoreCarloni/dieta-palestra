@@ -900,9 +900,9 @@ function renderCoach() {
 }
 
 // ---------- Profilo ----------
-// i grammi si scelgono solo per le proteine in polvere (JUST WHEY)
+// i grammi si scelgono per le proteine in polvere (JUST WHEY) e per l'albume (un bicchiere)
 function favIsProteic(nome) {
-  return /whey|proteine in polvere/i.test(nome) && !!favHit(nome);
+  return /whey|proteine in polvere|albume/i.test(nome) && !!favHit(nome);
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 function favHit(nome) {
