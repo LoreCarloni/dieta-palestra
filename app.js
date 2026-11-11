@@ -900,10 +900,9 @@ function renderCoach() {
 }
 
 // ---------- Profilo ----------
-// i grammi si scelgono solo per gli alimenti proteici (albume, yogurt, polvere, cotoletta)
+// i grammi si scelgono solo per le proteine in polvere (JUST WHEY)
 function favIsProteic(nome) {
-  const h = favHit(nome);
-  return !!h && h.p >= 8 && h.c <= 20;
+  return /whey|proteine in polvere/i.test(nome) && !!favHit(nome);
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 function favHit(nome) {
