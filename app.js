@@ -908,7 +908,10 @@ function favIsProteic(nome) {
 function favHit(nome) {
   const n = norm(nome).trim();
   const pasta = /pasta/.test(n);
-  return searchFoods(pasta ? "pasta integrale" : nome).find((x) => !x.perServing && (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n))) || null;
+  const trovati = searchFoods(pasta ? "pasta integrale" : nome).filter((x) => !x.perServing);
+  return trovati.find((x) => (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n)))
+    // se il nome scritto non c'e uguale nel database, prendo il primo alimento che corrisponde alle parole scritte
+    || (!pasta ? trovati[0] : null) || null;
 }
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
