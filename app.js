@@ -2418,6 +2418,22 @@ function act(a, el) {
       let tutte = [...kept, ...gen];
       // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
       const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
+      // priorita ai carboidrati: entro il 20% in piu del target, il resto va tolto (non bloccato) o ridotto
+      const cLim = targets(view.date).carbs * 1.2 - totals(view.date).c;
+      const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
+      let carbTot = () => tutte.reduce((a, l) => a + carbRiga(l), 0);
+      let tolteC = 0;
+      while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && carbRiga(l) > 0)) {
+        let best = -1, bc = -1;
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && carbRiga(l) > bc) { bc = carbRiga(l); best = k; } });
+        tutte.splice(best, 1); tolteC++;
+      }
+      if (carbTot() > cLim) {
+        const ecc = carbTot() - cLim; const bloccatiC = tutte.filter((l) => /bloccato/i.test(l)).reduce((a, l) => a + carbRiga(l), 0);
+        if (bloccatiC > 0) { const fattore = Math.max(0, (bloccatiC - ecc) / bloccatiC); tutte = tutte.map((l) => (/bloccato/i.test(l) && carbRiga(l) > 0 ? l.replace(/(\d+)\s*g\b/, (m, g) => `${Math.floor(Number(g) * fattore / 10) * 10} g`) : l)); }
+      }
+      const carbExcess = Math.max(0, carbTot() - targets(view.date).carbs);
+      S.carbDebt = S.carbDebt || {}; S.carbDebt[view.date] = Math.round(carbExcess);
       let tolte = 0;
       while (sopra() && tutte.some((l) => !/bloccato/i.test(l))) {
         const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
@@ -2441,7 +2457,7 @@ function act(a, el) {
       }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
       S.plannedDinner = tutte.join("\n");
-      toast([tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
+      toast([tolteC ? `tolte ${tolteC} voci per i carboidrati` : "", tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
       break;
     }
     case "plan-add-dinner": {
