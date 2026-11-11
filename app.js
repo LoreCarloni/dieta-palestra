@@ -911,7 +911,14 @@ S.favFoods = S.favFoods || [];
 // dopo una modifica dei preferiti: se la finestra e aperta la ridisegno, altrimenti aggiorno la pagina
 function favRefresh() {
   const sez = document.querySelector(".fav-section");
-  if (dlg().open && sez) { sez.outerHTML = favCardHtml(); return; }
+  if (dlg().open && sez) {
+    // ridisegno solo la sezione e tengo ferma la posizione della finestra
+    const y = dlg().scrollTop;
+    sez.outerHTML = favCardHtml();
+    dlg().scrollTop = y;
+    if (view.favPair !== undefined) { const pi = document.getElementById("fav-pair"); if (pi) pi.focus({ preventScroll: true }); }
+    return;
+  }
   render();
 }
 function favCardHtml() {
