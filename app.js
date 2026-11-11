@@ -166,7 +166,7 @@ function plannedHtml(k, t, tg) {
   const left = Math.round(tg.kcal - t.kcal - dk);
   const m = (cls, lbl, v, target) => `<div class="macro-btn"><span class="muted small">${lbl}</span><b>${r0(v)} di ${r0(target)} g</b>${bar(v, target, cls)}</div>`;
   return `<div class="plan-line"><div><b>Con quanto previsto</b> · kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
-    <div class="macros">${m("p", "Proteine", t.p + dp, tg.protein)}${m("c", "Carboidrati", t.c + dc, Math.round(tg.carbs * 1.2))}${m("f", "Grassi", t.f + df, tg.fat)}</div></div>`;
+    <div class="macros">${m("p", "Proteine", t.p + dp, tg.protein)}${m("c", "Carboidrati", t.c + dc, tg.carbs)}${m("f", "Grassi", t.f + df, tg.fat)}</div></div>`;
 }
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
