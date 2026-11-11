@@ -1096,6 +1096,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const base = (pz) => {
         const h = trovati.find((y) => y.pz === pz);
         if (/whey|polvere/i.test(pz)) return 15;
+        if (/olio/i.test(pz)) return 10; // un cucchiaio, non un flacone
         if (h && h.hit.portion > 0) return Math.min(200, h.hit.portion);
         return 100;
       };
