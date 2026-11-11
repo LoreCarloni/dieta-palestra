@@ -908,7 +908,21 @@ function favIsProteic(nome) {
 function favHit(nome) {
   const n = norm(nome).trim();
   const pasta = /pasta/.test(n);
-  return searchFoods(pasta ? "pasta integrale" : nome).find((x) => !x.perServing && (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n))) || null;
+  const trovati = searchFoods(pasta ? "pasta integrale" : nome).filter((x) => !x.perServing);
+  return trovati.find((x) => (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n)))
+    // se il nome scritto non c'e uguale nel database, prendo il primo alimento che corrisponde alle parole scritte
+    || (!pasta ? trovati[0] : null)
+    // ultimo tentativo: l'alimento del database che contiene piu parole del nome scritto
+    || (() => {
+      const parole = norm(nome).split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+      let migliore = null, punti = 0;
+      allFoods().filter((x) => !x.perServing).forEach((x) => {
+        const p = parole.filter((w) => norm(x.name).includes(w)).length;
+        if (p > punti) { punti = p; migliore = x; }
+      });
+      return punti >= 2 ? migliore : null;
+    })()
+    || null;
 }
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
@@ -1118,10 +1132,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
-      combo.forEach((x) => { const fis = (S.favGrams || {})[x.pz]; const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); const partner = trovati.find((y) => !/whey|polvere/i.test(y.pz));
-        // lo yogurt si mangia sempre con la polvere: la polvere dello yogurt e una riga a parte
-        if (partner && /whey|polvere/i.test(x.pz)) { add(`${x.hit.name}, con ${partner.hit.name}`, fis ? fis : Math.min(g, 15), x.per); return; }
-        addSum(x.hit.name, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per); });
+      // ogni cibo dell'abbinamento e una riga con il nome dell'altro cibo accanto: "Cetrioli, con Olio extravergine d'oliva, 200 g"
+      combo.forEach((x) => {
+        const fis = (S.favGrams || {})[x.pz];
+        const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
+        const altro = trovati.find((y) => y.pz !== x.pz);
+        const etichetta = altro ? `${x.hit.name}, con ${altro.hit.name}` : x.hit.name;
+        add(etichetta, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per);
+      });
       picked++;
       return;
     }
