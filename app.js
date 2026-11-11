@@ -357,6 +357,21 @@ const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f:
 // Pasta zucca e pancetta salvato prima dell'elenco ingredienti: ricostruisco gli ingredienti dichiarati (una sola volta, i valori salvati restano)
 // Cotoletta di tacchino della mamma: una cotoletta di 90 g. Un giro: 300 g di tacchino, 2 uova, 40 g di pane grattugiato, 30 g di parmigiano, 10 g di olio, circa 4 cotolette.
 const MOM_CUTLET_VALORI = { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 };
+// Tutte le cotolette di tacchino (della mamma): nei giorni passati, negli alimenti personali e nella previsione. Una sola volta.
+const COTOLETTA_RE = /cotolett.*(tacchino|mamma)|(tacchino|mamma).*cotolett/i;
+function fixAllCotolette() {
+  if (S.cotolettaTuttiOk) return;
+  const k = (100 / 100);
+  const vals = (g) => ({ kcal: Math.round(g * 2.18), p: Math.round(g * 0.249 * 10) / 10, c: Math.round(g * 0.076 * 10) / 10, f: Math.round(g * 0.086 * 10) / 10 });
+  Object.values(S.days || {}).forEach((d) => (d.meals || []).forEach((m) => {
+    if (COTOLETTA_RE.test(m.name) && m.g) Object.assign(m, vals(m.g) && { kcal: vals(m.g).kcal, p: vals(m.g).p, c: vals(m.g).c, f: vals(m.g).f });
+  }));
+  (S.customFoods || []).forEach((f) => { if (COTOLETTA_RE.test(f.name)) Object.assign(f, { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 }); });
+  const riga = (txt) => String(txt || "").replace(/(Cotoletta di tacchino \(come la fa mamma\),\s*)(\d+)\s*g(\s*stima)?\s*(\d+)\s*kcal/gi, (_, pre, g, st) => `${pre}${g} g${st || ""} ${Math.round(Number(g) * 2.18)} kcal`);
+  if (S.plannedDinner) S.plannedDinner = riga(S.plannedDinner);
+  Object.values(S.plansByDay || {}).forEach((pd) => { if (pd && pd.p) pd.p = riga(pd.p); });
+  S.cotolettaTuttiOk = true; save();
+}
 function fixMomCutletValues() {
   if (S.momCutletValuesFixed) return;
   const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name);
@@ -424,6 +439,7 @@ function ensureMomCutlet() {
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   fixMomCutletValues();
+  fixAllCotolette();
   S.momCutletAdded = true; save();
 }
 function maybeHabitDialog() {
