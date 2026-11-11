@@ -2501,7 +2501,8 @@ function act(a, el) {
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
-      const kept = sortPlanLines(S.plannedDinner).filter((l) => !((autoRe.test(l.trim()) && !/bloccato/i.test(l)) || known.has(l)));
+      // Rigenera ricalcola tutto: resta solo cio che hai bloccato, le altre righe (anche quelle non proposte dall'app) vengono rifatte
+      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l));
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
