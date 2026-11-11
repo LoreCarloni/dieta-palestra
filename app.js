@@ -903,7 +903,8 @@ function renderCoach() {
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
 function favCardHtml() {
-  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Un cibo per riga, senza grammi. Restano finché non li cambi.</p><div class="field"><textarea id="fav-foods" rows="6" placeholder="Cotoletta di tacchino&#10;Ricotta&#10;Uova&#10;Albume&#10;Pasta integrale">${esc((S.favFoods || []).join("\n"))}</textarea></div><button class="btn primary" data-act="fav-save">Salva i preferiti</button></section>`;
+  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => `<span class="fav-food">${esc(x)}</span>`).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span></div>`).join("");
+  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Scrivi un cibo e premi Aggiungi. Con + abbina aggiungi un altro cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="fav-add"><input id="fav-new" type="search" placeholder="Nuovo cibo" autocomplete="off"><button class="btn primary" data-act="fav-add">Aggiungi</button></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
   const p = S.profile || { sex: "m", age: 35, height: 175, weight: 85, goalWeight: 75, rate: 0.5, activity: 1.2, trainDays: 3, level: "principiante" };
@@ -2240,9 +2241,25 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "fav-save": {
-      S.favFoods = (document.getElementById("fav-foods").value || "").split("\n").map((x) => x.trim()).filter(Boolean);
-      save(); toast("Preferiti salvati");
+    case "fav-add": {
+      const v = (document.getElementById("fav-new").value || "").trim();
+      if (!v) break;
+      S.favFoods = S.favFoods || []; S.favFoods.push(v); save(); render();
+      break;
+    }
+    case "fav-plus": {
+      openDialog(`<h3>Abbina a questo cibo</h3><p class="muted small">Scrivi il secondo cibo, per esempio parmigiano o pasta.</p><div class="field"><input id="fav-pair" type="search" placeholder="Altro cibo" autocomplete="off"></div><button class="btn primary wide" data-act="fav-pair-ok" data-i="${el.dataset.i}">Abbina</button>`);
+      break;
+    }
+    case "fav-pair-ok": {
+      const v = (document.getElementById("fav-pair").value || "").trim();
+      const i = +el.dataset.i;
+      if (v && S.favFoods[i]) { S.favFoods[i] = S.favFoods[i] + " + " + v; save(); }
+      closeDialog(); render();
+      break;
+    }
+    case "fav-del": {
+      S.favFoods.splice(+el.dataset.i, 1); save(); render();
       break;
     }
     case "myplan-edit": {
