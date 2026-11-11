@@ -1085,7 +1085,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   });
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
   (S.favFoods || []).forEach((nome) => {
-    if (picked >= 6 || eatenToday.has(norm(nome).trim())) return;
+    if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
@@ -1096,6 +1096,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const base = (pz) => {
         const h = trovati.find((y) => y.pz === pz);
         if (/whey|polvere/i.test(pz)) return 15;
+        if (/olio/i.test(pz)) return 10; // un cucchiaio, non un flacone
         if (h && h.hit.portion > 0) return Math.min(200, h.hit.portion);
         return 100;
       };
