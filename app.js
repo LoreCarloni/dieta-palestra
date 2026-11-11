@@ -1028,11 +1028,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let picked = 0;
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
-    if (needK - fv.per[0] * fv.g / 100 < -150) return; // non far superare troppo le calorie
-    // ne carboidrati ne grassi oltre il rimanente: un preferito come la pasta non deve sforare
-    if (fv.per[2] * fv.g / 100 > needC + 3) return;
-    if (fv.per[3] * fv.g / 100 > (tg.fat - t.f - ff) + 2) return;
-    add(fv.name, fv.g, fv.per); picked++;
+    // il preferito e il cibo, non la quantita: la porzione abituale e solo un massimo, e si scende se le calorie o i carboidrati non entrano
+    const gMax = fv.g;
+    const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
+    const gC = fv.per[2] > 0 ? Math.floor((needC + 3) / (fv.per[2] / 100) / 5) * 5 : gMax;
+    const gF = fv.per[3] > 0 ? Math.floor(((tg.fat - t.f - ff) + 2) / (fv.per[3] / 100) / 5) * 5 : gMax;
+    const g = Math.min(gMax, gK, gC, gF);
+    if (g < 10) return;
+    add(fv.name, g, fv.per); picked++;
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
