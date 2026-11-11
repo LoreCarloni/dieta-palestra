@@ -3,5 +3,5 @@ const FOODS_CREA = [["Farro perlato, crudo", 353, 14.6, 69.3, 2.4, 100, "Cereali
 {
   const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const presenti = new Set(FOODS.map((f) => norm(f[0])));
-  FOODS_CREA.forEach((f) => { if (!presenti.has(norm(f[0]))) { FOODS.push(f); presenti.add(norm(f[0])); } });
+  FOODS_CREA.forEach((f) => { if (!presenti.has(norm(f[0]))) { FOODS.push({ name: f[0], kcal: f[1], p: f[2], c: f[3], f: f[4], portion: f[5], cat: f[6], src: f[7] }); presenti.add(norm(f[0])); } });
 }
