@@ -1070,7 +1070,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
-      if (trovati.length !== pezzi.length || trovati.some((x) => out.some((l) => l.startsWith(x.hit.name + ",")))) return;
+      if (trovati.length !== pezzi.length || trovati.some((x) => out.some((l) => l.startsWith(x.hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",")))) return;
       const base = (pz) => (/albume/i.test(pz) ? 150 : /whey|polvere/i.test(pz) ? 15 : /latte/i.test(pz) ? 100 : 100);
       const combo = trovati.map((x) => ({ ...x, g: base(x.pz), per: [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f] }));
       const kCombo = combo.reduce((a, x) => a + x.per[0] * x.g / 100, 0);
@@ -1082,7 +1082,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       return;
     }
     const hit = favHit(nome);
-    if (!hit || out.some((l) => l.startsWith(hit.name + ","))) return;
+    if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
