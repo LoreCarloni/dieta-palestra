@@ -910,7 +910,7 @@ function favHit(nome) {
 S.favFoods = S.favFoods || [];
 function favCardHtml() {
   const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => `<span class="fav-food">${esc(x)}</span>`).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span></div>`).join("");
-  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Scrivi un cibo e premi Aggiungi. Con + abbina aggiungi un altro cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="fav-add"><input id="fav-new" type="search" placeholder="Nuovo cibo" autocomplete="off"><button class="btn primary" data-act="fav-add">Aggiungi</button></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
+  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Scrivi un cibo e scegli dall'elenco salvato. Con + abbina aggiungi un altro cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
   const p = S.profile || { sex: "m", age: 35, height: 175, weight: 85, goalWeight: 75, rate: 0.5, activity: 1.2, trainDays: 3, level: "principiante" };
@@ -1104,6 +1104,12 @@ function renderPbList(q) {
   if (!box) return;
   const list = q.trim() ? searchFoods(q.trim()).slice(0, 8) : [];
   box.innerHTML = list.map((f) => `<button class="item" data-act="pb-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
+}
+function renderFavList(q, boxId) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const list = q.trim() ? allFoods().filter((f) => !f.perServing).filter((f, i, a) => a.findIndex((y) => norm(y.name) === norm(f.name)) === i && norm(f.name).includes(norm(q.trim()))).slice(0, 8) : [];
+  box.innerHTML = list.map((f) => `<button class="item" data-act="fav-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function renderPvList(q) {
   const box = $("#pv-list");
@@ -2247,21 +2253,21 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "fav-add": {
-      const v = (document.getElementById("fav-new").value || "").trim();
-      if (!v) break;
-      S.favFoods = S.favFoods || []; S.favFoods.push(v); save(); render();
-      break;
-    }
     case "fav-plus": {
-      openDialog(`<h3>Abbina a questo cibo</h3><p class="muted small">Scrivi il secondo cibo, per esempio parmigiano o pasta.</p><div class="field"><input id="fav-pair" type="search" placeholder="Altro cibo" autocomplete="off"></div><button class="btn primary wide" data-act="fav-pair-ok" data-i="${el.dataset.i}">Abbina</button>`);
+      view.favPair = +el.dataset.i; openDialog(`<h3>Abbina a questo cibo</h3><p class="muted small">Scrivi il secondo cibo, per esempio parmigiano o pasta.</p><div class="field"><input id="fav-pair" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>`);
       break;
     }
-    case "fav-pair-ok": {
-      const v = (document.getElementById("fav-pair").value || "").trim();
-      const i = +el.dataset.i;
-      if (v && S.favFoods[i]) { S.favFoods[i] = S.favFoods[i] + " + " + v; save(); }
-      closeDialog(); render();
+    case "fav-pick": {
+      const nome = el.dataset.name;
+      S.favFoods = S.favFoods || [];
+      if (view.favPair !== undefined && dlg().open) {
+        const i = view.favPair; view.favPair = undefined;
+        if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
+        closeDialog();
+      } else {
+        S.favFoods.push(nome);
+      }
+      save(); render();
       break;
     }
     case "fav-del": {
@@ -3007,6 +3013,8 @@ document.addEventListener("click", (e) => {
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
+  if (e.target.id === "fav-new") renderFavList(e.target.value, "fav-list");
+  if (e.target.id === "fav-pair") renderFavList(e.target.value, "fav-list-pair");
 
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
   if (e.target.id === "q-g" || e.target.id === "q-n") updateQtyPreview();
