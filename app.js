@@ -2472,6 +2472,19 @@ function act(a, el) {
           if (g >= 50) { tutte.push(`Albume, ${g} g: circa ${Math.round(g * 0.45)} kcal e ${Math.round(g * 0.107)} g di proteine`); ridotte.push(`albume ${g} g`); }
         }
       }
+      // se con l'albume (tetto 400 g) mancano ancora proteine, aggiungo proteine in polvere verificate
+      {
+        const kcalRiga3 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
+        const pSum3 = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
+        const kSum3 = tutte.reduce((a, l) => a + kcalRiga3(l), 0);
+        const pMancano3 = targets(view.date).protein - totals(view.date).p - pSum3;
+        const kRimaste3 = leftK - kSum3;
+        const pol = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
+        if (pol && pol.p > 0 && pol.kcal > 0 && pMancano3 > 5 && kRimaste3 > 20) {
+          const gP = Math.min(60, Math.ceil(pMancano3 / (pol.p / 100) / 5) * 5, Math.floor(kRimaste3 / (pol.kcal / 100) / 5) * 5);
+          if (gP >= 10) { tutte.push(`${pol.name}, ${gP} g ✓ ver. ${Math.round(gP * pol.kcal / 100)} kcal`); ridotte.push(`${pol.name} ${gP} g`); }
+        }
+      }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
       S.plannedDinner = tutte.join("\n");
       toast([tolteC ? `tolte ${tolteC} voci per i carboidrati` : "", tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
