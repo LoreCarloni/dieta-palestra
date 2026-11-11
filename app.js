@@ -1028,7 +1028,9 @@ function favoriteFoods(k) {
     const per = c.per.map((x) => Math.round((x / c.w) * 10) / 10);
     if (g > 0 && per[0] > 0) out.push({ name: c.name, g, per });
   });
-  return [...pref, ...out.filter((o) => !pref.some((x) => foodGroup(x.name) === foodGroup(o.name)))].slice(0, 12);
+  // Rigenera usa solo i cibi che hai scelto come preferiti: la cronologia non propone più alimenti da sola (per esempio il parmigiano)
+  void out;
+  return pref.slice(0, 12);
 }
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
