@@ -909,10 +909,15 @@ function favHit(nome) {
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
 // dopo una modifica dei preferiti: se la finestra e aperta la ridisegno, altrimenti aggiorno la pagina
-function favRefresh() { if (dlg().open) openDialog(favCardHtml()); else render(); }
+function favRefresh() {
+  const sez = document.querySelector(".fav-section");
+  if (dlg().open && sez) { sez.outerHTML = favCardHtml(); return; }
+  render();
+}
 function favCardHtml() {
-  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => `<span class="fav-food">${esc(x)}</span>`).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span></div>`).join("");
-  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Scrivi un cibo e scegli dall'elenco salvato. Con + abbina aggiungi un altro cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
+  const pair = view.favPair;
+  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => `<span class="fav-food">${esc(x)}</span>`).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+  return `<section class="fav-section"><h3>I miei cibi preferiti</h3><p class="muted small">Sono cibi che ti piacciono sempre, senza grammi. Scrivi un cibo e scegli dall'elenco salvato. Con + abbina metti un secondo cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
   const p = S.profile || { sex: "m", age: 35, height: 175, weight: 85, goalWeight: 75, rate: 0.5, activity: 1.2, trainDays: 3, level: "principiante" };
@@ -1142,7 +1147,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div>${favCardHtml()}</section>`;
+  return `<section class="card"><h2 class="plan-h2">Previsione della giornata</h2><button class="link plan-edit" data-act="myplan-edit">Modifica previsione</button>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -2255,27 +2260,20 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
-    case "fav-open": {
-      view.favPair = undefined;
-      openDialog(favCardHtml());
-      break;
-    }
     case "fav-plus": {
-      view.favPair = +el.dataset.i; openDialog(`<h3>Abbina a questo cibo</h3><p class="muted small">Scrivi il secondo cibo, per esempio parmigiano o pasta.</p><div class="field"><input id="fav-pair" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>`);
+      view.favPair = +el.dataset.i; favRefresh();
       break;
     }
     case "fav-pick": {
       const nome = el.dataset.name;
       S.favFoods = S.favFoods || [];
-      if (view.favPair !== undefined && dlg().open) {
+      if (view.favPair !== undefined) {
         const i = view.favPair; view.favPair = undefined;
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
-        closeDialog();
       } else {
         S.favFoods.push(nome);
       }
-      save();
-      if (dlg().open && view.favPair === undefined) favRefresh(); else render();
+      save(); favRefresh();
       break;
     }
     case "fav-del": {
@@ -2283,7 +2281,7 @@ function act(a, el) {
       break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento che devi mangiare oggi (lo aggiunge ai cibi bloccati)</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="chips" id="pb-cats">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="pb-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Previsione suggerita dall'app (puoi modificarla o cancellarla)</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento che devi mangiare oggi (lo aggiunge ai cibi bloccati)</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="chips" id="pb-cats">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="pb-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Previsione suggerita dall'app (puoi modificarla o cancellarla)</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div>${favCardHtml()}<button class="btn primary wide" data-act="myplan-save">Salva</button>`);
       renderPvList("");
       renderPbList("");
       return;
