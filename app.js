@@ -911,7 +911,18 @@ function favHit(nome) {
   const trovati = searchFoods(pasta ? "pasta integrale" : nome).filter((x) => !x.perServing);
   return trovati.find((x) => (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n)))
     // se il nome scritto non c'e uguale nel database, prendo il primo alimento che corrisponde alle parole scritte
-    || (!pasta ? trovati[0] : null) || null;
+    || (!pasta ? trovati[0] : null)
+    // ultimo tentativo: l'alimento del database che contiene piu parole del nome scritto
+    || (() => {
+      const parole = norm(nome).split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+      let migliore = null, punti = 0;
+      allFoods().filter((x) => !x.perServing).forEach((x) => {
+        const p = parole.filter((w) => norm(x.name).includes(w)).length;
+        if (p > punti) { punti = p; migliore = x; }
+      });
+      return punti >= 2 ? migliore : null;
+    })()
+    || null;
 }
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
