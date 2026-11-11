@@ -1118,10 +1118,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
-      combo.forEach((x) => { const fis = (S.favGrams || {})[x.pz]; const g = Math.max(10, Math.round(x.g * fatt / 5) * 5); const partner = trovati.find((y) => !/whey|polvere/i.test(y.pz));
-        // lo yogurt si mangia sempre con la polvere: la polvere dello yogurt e una riga a parte
-        if (partner && /whey|polvere/i.test(x.pz)) { add(`${x.hit.name}, con ${partner.hit.name}`, fis ? fis : Math.min(g, 15), x.per); return; }
-        addSum(x.hit.name, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per); });
+      // ogni cibo dell'abbinamento e una riga con il nome dell'altro cibo accanto: "Cetrioli, con Olio extravergine d'oliva, 200 g"
+      combo.forEach((x) => {
+        const fis = (S.favGrams || {})[x.pz];
+        const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
+        const altro = trovati.find((y) => y !== x);
+        const etichetta = altro ? `${x.hit.name}, con ${altro.hit.name}` : x.hit.name;
+        add(etichetta, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per);
+      });
       picked++;
       return;
     }
