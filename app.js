@@ -359,6 +359,21 @@ const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f:
 const MOM_CUTLET_VALORI = { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 };
 // Tutte le cotolette di tacchino (della mamma): nei giorni passati, negli alimenti personali e nella previsione. Una sola volta.
 const COTOLETTA_RE = /cotolett.*(tacchino|mamma)|(tacchino|mamma).*cotolett/i;
+// Righe della previsione con la cotoletta: ricalcolo le kcal sui grammi della riga, qualunque sia il formato.
+function riparaRigheCotoletta(testo) {
+  return String(testo || "").split("\n").map((l) => {
+    if (!/cotoletta di tacchino/i.test(l)) return l;
+    const g = l.match(/(\d+)\s*g\b/);
+    if (!g) return l;
+    return l.replace(/(\d+)\s*kcal/i, `${Math.round(Number(g[1]) * 2.18)} kcal`);
+  }).join("\n");
+}
+function fixAllCotolette() {
+  if (S.cotolettaRigheOk) return;
+  if (S.plannedDinner) S.plannedDinner = riparaRigheCotoletta(S.plannedDinner);
+  Object.values(S.plansByDay || {}).forEach((pd) => { if (pd && pd.p) pd.p = riparaRigheCotoletta(pd.p); });
+  S.cotolettaRigheOk = true; save();
+}
 function fixAllCotolette() {
   if (S.cotolettaTuttiOk) return;
   const vals = (g) => ({ kcal: Math.round(g * 2.18), p: Math.round(g * 0.249 * 10) / 10, c: Math.round(g * 0.076 * 10) / 10, f: Math.round(g * 0.086 * 10) / 10 });
