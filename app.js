@@ -1055,7 +1055,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
     // il preferito e il cibo, non la quantita: la porzione abituale e solo un massimo, e si scende se le calorie o i carboidrati non entrano
-    const gMax = fv.g;
+    const gMax = /cotoletta/i.test(hit.name) ? Math.min(60, fv.g) : fv.g;
     const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
     const gC = fv.per[2] > 0 ? Math.floor((needC + 3) / (fv.per[2] / 100) / 5) * 5 : gMax;
     const gF = fv.per[3] > 0 ? Math.floor(((tg.fat - t.f - ff) + 2) / (fv.per[3] / 100) / 5) * 5 : gMax;
@@ -1099,7 +1099,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
-  if (needP > 5 && momCut && momCut.p > 0) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(230, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
+  if (needP > 5 && momCut && momCut.p > 0) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4) {
