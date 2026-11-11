@@ -389,5 +389,4 @@ h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-si
 /* pulsanti delle righe della previsione: grandi, con colore quando attivi */
 .plan-acts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
 .pa { border: 1px solid var(--line); background: var(--bg); color: var(--text); padding: 5px 10px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; min-height: 32px; }
-.pa.eat { background: #34c759; border-color: #34c759; color: #fff; font-weight: 600; }
-.pa.on { background: #ff9500; border-color: #ff9500; color: #fff; font-weight: 600; }
+.pa.on { background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
