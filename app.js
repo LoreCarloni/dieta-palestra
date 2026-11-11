@@ -2482,7 +2482,9 @@ function act(a, el) {
         const pol = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
         if (pol && pol.p > 0 && pol.kcal > 0 && pMancano3 > 5 && kRimaste3 > 20) {
           const gP = Math.min(60, Math.ceil(pMancano3 / (pol.p / 100) / 5) * 5, Math.floor(kRimaste3 / (pol.kcal / 100) / 5) * 5);
-          if (gP >= 10) { tutte.push(`${pol.name}, ${gP} g ✓ ver. ${Math.round(gP * pol.kcal / 100)} kcal`); ridotte.push(`${pol.name} ${gP} g`); }
+          // misurini da 10 a 15 g ciascuno: la quantita viene divisa in misurini, sulla stessa riga (le righe con lo stesso nome vengono unificate)
+          const nM = Math.max(1, Math.round(gP / 15)), perM = Math.round(gP / nM / 5) * 5, gTot = nM * perM;
+          if (gP >= 10 && perM >= 10 && perM <= 15) { tutte.push(`${pol.name}, ${gTot} g (${nM} misurini da ${perM} g) ✓ ver. ${Math.round(gTot * pol.kcal / 100)} kcal`); ridotte.push(`${pol.name} ${gTot} g`); }
         }
       }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
