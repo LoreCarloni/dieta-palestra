@@ -903,7 +903,7 @@ function renderCoach() {
 // i grammi si scelgono solo per gli alimenti proteici (albume, yogurt, polvere, cotoletta)
 function favIsProteic(nome) {
   const h = favHit(nome);
-  return !!h && h.p >= 8;
+  return !!h && h.p >= 8 && h.c <= 20;
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 function favHit(nome) {
