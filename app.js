@@ -927,7 +927,7 @@ function favRefresh() {
 }
 function favCardHtml() {
   const pair = view.favPair;
-  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools">${r.split(" + ").some((x) => favIsProteic(x)) ? `<button class="pa" data-act="fav-g" data-i="${i}">grammi</button>` : ""}<button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsRow === i ? `<div class="fav-grams">${r.split(" + ").filter((x) => favIsProteic(x)).map((x) => `<div class="field"><label class="muted small">${esc(x)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(x)}" value="${(S.favGrams || {})[x] || ""}" placeholder="per esempio 150"></div>`).join("")}<button class="btn primary" data-act="fav-g-save" data-i="${i}">Salva le quantità</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">grammi</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
   return `<section class="fav-section"><h3>I miei cibi preferiti</h3><p class="muted small">Sono cibi che ti piacciono sempre, senza grammi. Scrivi un cibo e scegli dall'elenco salvato. Con + abbina metti un secondo cibo nella stessa riga, per esempio sugo di pomodoro più pasta.</p><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
 }
 function renderProfile(first) {
@@ -2286,8 +2286,8 @@ function act(a, el) {
       closeDialog(); toast("Aggiunto"); break;
     }
     case "fav-g": {
-      const i = +el.dataset.i;
-      view.favGramsRow = view.favGramsRow === i ? undefined : i;
+      const nome = el.dataset.name;
+      view.favGramsKey = view.favGramsKey === nome ? undefined : nome;
       favRefresh();
       break;
     }
@@ -2297,7 +2297,7 @@ function act(a, el) {
         const v = Math.round(Number(inp.value));
         if (v > 0) S.favGrams[inp.dataset.name] = v; else delete S.favGrams[inp.dataset.name];
       });
-      view.favGramsRow = undefined; save(); favRefresh();
+      view.favGramsKey = undefined; save(); favRefresh();
       break;
     }
     case "fav-plus": {
