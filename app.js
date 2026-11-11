@@ -2295,7 +2295,7 @@ function act(a, el) {
       break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento che devi mangiare oggi (lo aggiunge ai cibi bloccati)</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="chips" id="pb-cats">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="pb-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Previsione suggerita dall'app (puoi modificarla o cancellarla)</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
+      openDialog(`<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`);
       renderPvList("");
       renderPbList("");
       return;
@@ -2647,12 +2647,11 @@ function act(a, el) {
       break;
     }
     case "pv-auto": {
-      const box = $("#plan-dinner");
       S.autoForecast = true; S.forecastSnap = null;
       const kTd = view.date, over = targets(kTd).kcal - totals(kTd).kcal <= 0;
       if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
-      if (box) box.value = over ? "" : autoPlan(val("#pv-blocked"), val("#plan-dinner"), kTd);
-      S.autoLines = box ? box.value.split("\n").filter((x) => x.trim()) : [];
+      S.plannedDinner = over ? "" : autoPlan("", S.plannedDinner || "", kTd);
+      S.autoLines = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
       break;
     }
     case "pv-paste-add": {
