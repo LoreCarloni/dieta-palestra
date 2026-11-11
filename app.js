@@ -1043,6 +1043,19 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (g < 10) return;
     add(fv.name, g, fv.per); picked++;
   });
+  // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
+  (S.favFoods || []).forEach((nome) => {
+    if (picked >= 6 || eatenToday.has(norm(nome).trim())) return;
+    const hit = searchFoods(nome).find((x) => !x.perServing && norm(x.name).includes(norm(nome).trim()));
+    if (!hit || out.some((l) => l.startsWith(hit.name + ","))) return;
+    const per = [hit.kcal, hit.p, hit.c, hit.f];
+    const pol = /whey|proteine in polvere/i.test(hit.name);
+    const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
+    let g = Math.min(200, perG(0), perG(2), perG(3));
+    if (pol) g = Math.min(g, 15);
+    if (g < 30) return;
+    add(hit.name, g, per); picked++;
+  });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   const yog = byName("Yogurt greco 0%");
