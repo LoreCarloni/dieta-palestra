@@ -2218,6 +2218,7 @@ function act(a, el) {
         <p class="muted small">Scrivi il nome: puoi aggiungerlo alla previsione oppure aggiornare i suoi valori con la fotocamera.</p>
         <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
+        <button class="btn ghost wide" data-act="fv-mine">I miei alimenti</button>
         <div id="fv-res"></div>
         <button class="btn ghost wide" data-act="habit-open">Alimenti abituali</button>
         <button class="btn ghost wide" data-act="dish-open">Piatto composto (es. pasta e zucca)</button>
@@ -2298,9 +2299,11 @@ function act(a, el) {
       save();
       return qtyDialog({ ...dish, cat: "I miei alimenti" }, "giorno");
     }
+    case "fv-mine": { view.fvMine = true; $("#fv-q").value = ""; document.querySelector('[data-act=fv-search]').click(); return; }
     case "fv-search": {
       const q = val("#fv-q").trim();
-      const res = q ? searchFoods(q).slice(0, 8) : [];
+      if (q) view.fvMine = false;
+      const res = view.fvMine ? allFoods().filter((f) => f.cat === "I miei alimenti").slice(0, 40) : (q ? searchFoods(q).slice(0, 8) : []);
       // quanto pesa ogni risultato sulla giornata, prima di aggiungerlo
       const k = view.date, tg = targets(k), t = totals(k);
       const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
