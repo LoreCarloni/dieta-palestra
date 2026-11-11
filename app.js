@@ -1061,7 +1061,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
     const gC = fv.per[2] > 0 ? Math.floor((needC + 3) / (fv.per[2] / 100) / 5) * 5 : gMax;
     const gF = fv.per[3] > 0 ? Math.floor(((tg.fat - t.f - ff) + 2) / (fv.per[3] / 100) / 5) * 5 : gMax;
-    const g = Math.min(gMax, gK, gC, gF);
+    let g = Math.min(gMax, gK, gC, gF);
+    // lo yogurt si propone a confezione intera (150 g)
+    if (/yogurt/i.test(hit.name)) g = g >= 100 ? 150 : 0;
     if (g < 10) return;
     add(fv.name, g, fv.per); picked++;
   });
