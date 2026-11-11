@@ -1037,7 +1037,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   const yog = byName("Yogurt greco 0%");
-  if (needP > 5) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); if (powder) add(powder.name, 10, [powder.kcal, powder.p, powder.c, powder.f]); }
+  if (needP > 5) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   // albume e tacchino entrano solo nelle calorie rimaste: niente sforamenti
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
@@ -2470,21 +2470,6 @@ function act(a, el) {
         if (pMancano > 5 && kRimaste > 20 && albumeGia < 400) {
           const g = Math.min(400 - albumeGia, Math.floor(kRimaste / 0.45 / 10) * 10, Math.ceil(pMancano / 0.107 / 10) * 10);
           if (g >= 50) { tutte.push(`Albume, ${g} g: circa ${Math.round(g * 0.45)} kcal e ${Math.round(g * 0.107)} g di proteine`); ridotte.push(`albume ${g} g`); }
-        }
-      }
-      // se con l'albume (tetto 400 g) mancano ancora proteine, aggiungo proteine in polvere verificate
-      {
-        const kcalRiga3 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
-        const pSum3 = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
-        const kSum3 = tutte.reduce((a, l) => a + kcalRiga3(l), 0);
-        const pMancano3 = targets(view.date).protein - totals(view.date).p - pSum3;
-        const kRimaste3 = leftK - kSum3;
-        const pol = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
-        if (pol && pol.p > 0 && pol.kcal > 0 && pMancano3 > 5 && kRimaste3 > 20) {
-          const gP = Math.min(60, Math.ceil(pMancano3 / (pol.p / 100) / 5) * 5, Math.floor(kRimaste3 / (pol.kcal / 100) / 5) * 5);
-          // misurini da 10 a 15 g ciascuno: la quantita viene divisa in misurini, sulla stessa riga (le righe con lo stesso nome vengono unificate)
-          const nM = Math.max(1, Math.round(gP / 15)), perM = Math.round(gP / nM / 5) * 5, gTot = nM * perM;
-          if (gP >= 10 && perM >= 10 && perM <= 15) { tutte.push(`${pol.name}, ${gTot} g (${nM} misurini da ${perM} g) ✓ ver. ${Math.round(gTot * pol.kcal / 100)} kcal`); ridotte.push(`${pol.name} ${gTot} g`); }
         }
       }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
