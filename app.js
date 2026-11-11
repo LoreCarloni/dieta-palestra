@@ -2400,8 +2400,17 @@ function act(a, el) {
       const leftK = targets(view.date).kcal - totals(view.date).kcal;
       const gen = plannedK > leftK ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), view.date).split("\n").filter((x) => x.trim());
       S.autoAll = gen; S.autoLines = gen;
-      S.plannedDinner = [...kept, ...gen].join("\n");
-      toast("Proposte automatiche aggiornate");
+      let tutte = [...kept, ...gen];
+      // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
+      const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
+      let tolte = 0;
+      while (sopra() && tutte.some((l) => !/bloccato/i.test(l))) {
+        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
+        tutte.splice(i, 1); tolte++;
+      }
+      S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
+      S.plannedDinner = tutte.join("\n");
+      toast(tolte ? `Proposte aggiornate: tolte ${tolte} voci non bloccate per restare nel rimanente` : "Proposte automatiche aggiornate");
       break;
     }
     case "plan-add-dinner": {
