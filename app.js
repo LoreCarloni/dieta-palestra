@@ -2423,9 +2423,25 @@ function act(a, el) {
         const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
         tutte.splice(i, 1); tolte++;
       }
+      // se resta sopra, riduco le voci bloccate al massimo che entra; la pasta sotto 30 g diventa pane bianco
+      const kcalRiga = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
+      const gRiga = (l) => { const m = l.match(/(\d+)\s*g\b/); return m ? Number(m[1]) : 0; };
+      let ridotte = [];
+      if (sopra()) {
+        tutte = tutte.map((l, i) => {
+          if (!sopra() || !/bloccato/i.test(l) || !gRiga(l) || !kcalRiga(l)) return l;
+          const altre = tutte.filter((_, k) => k !== i).reduce((a, x) => a + kcalRiga(x), 0);
+          const budget = Math.max(0, leftK - altre);
+          const perG = kcalRiga(l) / gRiga(l);
+          let g = Math.floor(budget / perG / 10) * 10;
+          if (g >= 30) { ridotte.push(l.split(",")[0]); return l.replace(/(\d+)\s*g\b/, `${g} g`).replace(/(\d+)\s*kcal/i, `${Math.round(g * perG)} kcal`); }
+          if (/pasta/i.test(l)) { const kc = Math.round(budget); ridotte.push("pasta sostituita con pane"); return `Pane bianco, ${Math.max(10, Math.round(kc / 2.7 / 10) * 10)} g ${Math.round(kc / 2.7 / 10) * 10 * 2.7} kcal bloccato`; }
+          return l;
+        });
+      }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
       S.plannedDinner = tutte.join("\n");
-      toast(tolte ? `Proposte aggiornate: tolte ${tolte} voci non bloccate per restare nel rimanente` : "Proposte automatiche aggiornate");
+      toast([tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
       break;
     }
     case "plan-add-dinner": {
