@@ -1119,7 +1119,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   const yog = byName("Yogurt greco 0%");
-  if (needP > 5) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
+  // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
+  if (needP > 5 && !out.some((l) => /yogurt/i.test(l))) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   // albume e tacchino entrano solo nelle calorie rimaste: niente sforamenti
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
