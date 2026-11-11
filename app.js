@@ -361,10 +361,9 @@ const MOM_CUTLET_VALORI = { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 };
 const COTOLETTA_RE = /cotolett.*(tacchino|mamma)|(tacchino|mamma).*cotolett/i;
 function fixAllCotolette() {
   if (S.cotolettaTuttiOk) return;
-  const k = (100 / 100);
   const vals = (g) => ({ kcal: Math.round(g * 2.18), p: Math.round(g * 0.249 * 10) / 10, c: Math.round(g * 0.076 * 10) / 10, f: Math.round(g * 0.086 * 10) / 10 });
   Object.values(S.days || {}).forEach((d) => (d.meals || []).forEach((m) => {
-    if (COTOLETTA_RE.test(m.name) && m.g) Object.assign(m, vals(m.g) && { kcal: vals(m.g).kcal, p: vals(m.g).p, c: vals(m.g).c, f: vals(m.g).f });
+    if (COTOLETTA_RE.test(m.name) && m.g) Object.assign(m, vals(m.g));
   }));
   (S.customFoods || []).forEach((f) => { if (COTOLETTA_RE.test(f.name)) Object.assign(f, { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 }); });
   const riga = (txt) => String(txt || "").replace(/(Cotoletta di tacchino \(come la fa mamma\),\s*)(\d+)\s*g(\s*stima)?\s*(\d+)\s*kcal/gi, (_, pre, g, st) => `${pre}${g} g${st || ""} ${Math.round(Number(g) * 2.18)} kcal`);
