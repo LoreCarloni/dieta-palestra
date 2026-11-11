@@ -385,3 +385,9 @@ h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-si
 /* Fumo e Giornata sono le schede piu usate: evidenziate con un fondo colorato */
 .nav button[data-tab="fumo"], .nav button[data-tab="giornata"] { color: var(--accent); font-weight: 800; background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 12px; margin: 6px 3px; padding: 11px 0; }
 .nav button[data-tab="fumo"].active, .nav button[data-tab="giornata"].active { background: var(--accent); color: var(--card); }
+
+/* pulsanti delle righe della previsione: grandi, con colore quando attivi */
+.plan-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+.pa { border: 1px solid var(--line); background: var(--bg); color: var(--text); padding: 9px 14px; border-radius: 12px; font-size: 0.95rem; cursor: pointer; min-height: 40px; }
+.pa.eat { background: #34c759; border-color: #34c759; color: #fff; font-weight: 600; }
+.pa.on { background: #ff9500; border-color: #ff9500; color: #fff; font-weight: 600; }
