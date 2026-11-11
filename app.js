@@ -1109,7 +1109,8 @@ function renderPbList(q) {
 function renderFavList(q, boxId) {
   const box = document.getElementById(boxId);
   if (!box) return;
-  const list = q.trim() ? allFoods().filter((f) => !f.perServing).filter((f, i, a) => a.findIndex((y) => norm(y.name) === norm(f.name)) === i && norm(f.name).includes(norm(q.trim()))).slice(0, 8) : [];
+  // stessa ricerca di Rigenera: cerca nei propri alimenti e nel database, con parole anche separate
+  const list = q.trim() ? searchFoods(q.trim()).filter((f) => !f.perServing).filter((f, i, a) => a.findIndex((y) => norm(y.name) === norm(f.name)) === i).slice(0, 8) : [];
   box.innerHTML = list.map((f) => `<button class="item" data-act="fav-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function renderPvList(q) {
