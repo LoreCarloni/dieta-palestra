@@ -1059,6 +1059,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const addSum = (name, g, per) => {
     const i = out.findIndex((l) => l.startsWith(name + ","));
     if (i < 0) return add(name, g, per);
+    // una riga per bicchiere non si tocca: la polvere di quel bicchiere e gia contata
+    if (/bicchiere/i.test(out[i])) return;
     const og = Number((out[i].match(/(\d+)\s*g\b/) || [0, 0])[1]);
     out[i] = `${name}, ${og + g} g`;
     needK -= per[0] * g / 100; needP -= per[1] * g / 100; needC -= per[2] * g / 100;
