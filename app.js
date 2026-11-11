@@ -905,6 +905,7 @@ function renderProfile(first) {
   <section class="card">
     <h2>Alimenti da aggiungere</h2>
     ${prunedWanted().length ? `<p class="muted small">Cercati e non trovati. Arrivano con il report settimanale e li aggiungo alla lista.</p><div class="chips">${S.wanted.map((w, i) => `<span class="chip">${esc(w.name)} <button class="x mini" data-act="del-wanted" data-i="${i}" aria-label="Rimuovi">×</button></span>`).join("")}</div>` : `<p class="muted small">Nessun alimento in attesa. Quando cerchi qualcosa che non trovo, comparirà qui.</p>`}
+    <button class="btn wide" data-act="habit-open">Alimenti abituali</button>
     <button class="btn wide" data-act="import-dialog">Incolla una lista di alimenti</button>
   </section>
   <section class="card">
@@ -2658,6 +2659,7 @@ function act(a, el) {
       });
       closeDialog(); toast(`${n} alimenti aggiunti`); break;
     }
+    case "habit-open": return habitDialog();
     case "import-dialog": return importDialog();
     case "import-list": {
       const { foods, errors } = parseFoodList(val("#imp-text"));
