@@ -900,11 +900,17 @@ function renderCoach() {
 }
 
 // ---------- Profilo ----------
+// cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
+S.favFoods = S.favFoods || [];
+function favCardHtml() {
+  return `<section class="card"><h2>I miei cibi preferiti</h2><p class="muted small">Un cibo per riga, senza grammi. Restano finché non li cambi.</p><div class="field"><textarea id="fav-foods" rows="6" placeholder="Cotoletta di tacchino&#10;Ricotta&#10;Uova&#10;Albume&#10;Pasta integrale">${esc((S.favFoods || []).join("\n"))}</textarea></div><button class="btn primary" data-act="fav-save">Salva i preferiti</button></section>`;
+}
 function renderProfile(first) {
   const p = S.profile || { sex: "m", age: 35, height: 175, weight: 85, goalWeight: 75, rate: 0.5, activity: 1.2, trainDays: 3, level: "principiante" };
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
+  ${favCardHtml()}
   ${first ? `<section class="card intro"><h2>Benvenuto</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
   <form class="card" id="profile-form">
     <h2>I tuoi dati</h2>
@@ -2205,6 +2211,11 @@ function act(a, el) {
       day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, qn), name: qn, g: null, kcal: kc, p, c: qc, f: qf });
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
+    }
+    case "fav-save": {
+      S.favFoods = (document.getElementById("fav-foods").value || "").split("\n").map((x) => x.trim()).filter(Boolean);
+      save(); toast("Preferiti salvati");
+      break;
     }
     case "myplan-edit": {
       openDialog(`<h3>Previsione della giornata</h3><button class="btn wide" data-act="pv-auto">Crea la previsione</button><div class="field"><label for="pv-search">Cerca un alimento che devi mangiare oggi (lo aggiunge ai cibi bloccati)</label><input id="pv-search" type="search" placeholder="per esempio sugo, pasta, albume" autocomplete="off"></div><div id="pv-list" class="list"></div><div class="field"><label for="pv-blocked">Cibi che devi mangiare oggi (non cambiabili), una riga per alimento con i grammi</label><textarea id="pv-blocked" rows="3">${esc(S.blockedToday || "")}</textarea></div><div class="chips" id="pb-cats">${[...new Set(allFoods().map((f) => f.cat))].map((c) => `<button class="chip" data-act="pb-cat" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div><div id="pb-list" class="list"></div><div class="field"><label for="plan-dinner">Previsione suggerita dall'app (puoi modificarla o cancellarla)</label><textarea id="plan-dinner" rows="8">${esc(S.plannedDinner)}</textarea></div><div class="field"><label for="pv-paste">Incolla un riepilogo (viene aggiunto quando salvi)</label><textarea id="pv-paste" rows="4" placeholder="Incolla qui il riepilogo, una riga per alimento"></textarea></div><button class="btn primary wide" data-act="myplan-save">Salva</button>`);
