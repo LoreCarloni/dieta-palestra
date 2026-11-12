@@ -307,7 +307,6 @@ body, dialog, dialog *, .card, .card *, .advice p, .muted { overflow-wrap: break
 h2 { white-space: normal; }
 h2 .link, h2 .badge { white-space: nowrap; flex: none; }
 h2 .pill { white-space: normal; flex: 0 1 auto; max-width: 62%; text-align: center; line-height: 1.25; }
-.plan-card h2 .pill { font-size: 0.95rem; padding: 6px 14px; }
 dialog, .card { overflow-x: hidden; max-width: 100%; }
 
 /* Il mio piano: nome e quantità restano sulla stessa riga, il testo va a capo */
