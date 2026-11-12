@@ -33,7 +33,18 @@ S.plans = S.plans || [];
 S.planMin = S.planMin || {};
 // Quantità fisse della giornata, modificabili dalla scheda Oggi.
 // I valori di partenza valgono solo per chi ha gia un profilo: un nuovo utente parte da una lista vuota.
-S.myPlan = S.myPlan || [];
+// i gusti di partenza personali restano sul dispositivo che li ha gia (dell'autore); chi inizia da zero parte vuoto
+if (S.gustiPersonali === undefined) S.gustiPersonali = !!S.profile;
+const GUSTI_PERSONALI = {
+  myPlan: [
+    { name: "Yogurt greco", qty: "2 vasetti da 150 g" },
+    { name: "Proteine in polvere", qty: "30 g in tutto, 15 g per yogurt" },
+    { name: "Albume", qty: "2 bicchieri da 100 g" },
+    { name: "Pollo", qty: "300 g crudi a sera" },
+  ],
+  abitudini: ["Cotoletta di pollo impanata", "Pane integrale", "Pasta di semola, cotta, bollita", "Olio extravergine d'oliva", "Frutta secca mista"],
+};
+S.myPlan = S.myPlan || (S.gustiPersonali ? GUSTI_PERSONALI.myPlan : []);
 // Recupero: il target medico scende a 1250 kcal (una volta sola, senza toccare altri valori scelti dall'utente).
 S.plannedDinner = S.plannedDinner || "";
 // piano aggiornato: 10 g di polvere per ogni yogurt e ogni albume
@@ -354,18 +365,18 @@ function kcalBar(v, target) {
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
 // Cibi che non vanno suggeriti in una dieta: dolci, snack, fritti, pizza, salumi. Non entrano nei suggerimenti automatici.
 const NOT_FOR_DIET = /cioccolat|\b(lindt|ferrero|milka|perugina|baci|ritter|bounty|snickers|twix|kit ?kat|oreo|haribo|magnum|algida|nesquik|pan di stelle|mulino bianco|mars|tuc|nutella|kinder)\b|excellence|gelato|patatine|pringles|merendin|torta|tiramis|brioche|croissant|cornetto|biscott|frollin|dolc|snack|caramell|barretta|galletta|fritt|crocchett|pizza|salame|wurstel|salsicc|mortadella/i;
-const HABIT_FOODS = []; // i cibi abituali li sceglie ognuno
+const habitFoods = () => (S.gustiPersonali ? GUSTI_PERSONALI.abitudini : []); // i cibi abituali li sceglie ognuno
 function missingHabits() {
   const have = new Set(allFoods().map((f) => norm(f.name).trim()));
-  return HABIT_FOODS.filter((n) => !have.has(norm(n).trim()));
+  return habitFoods().filter((n) => !have.has(norm(n).trim()));
 }
 // Avviso a comparsa, una volta al giorno, finche mancano alimenti abituali. "Piu tardi" lo rimanda a domani.
 function habitDialog() {
   const missing = missingHabits();
-  const done = HABIT_FOODS.length - missing.length;
+  const done = habitFoods().length - missing.length;
   openDialog(`
     <h3>I tuoi alimenti abituali</h3>
-    <p class="muted small">${done} di ${HABIT_FOODS.length} inseriti. Inseriscili una volta sola, dall'etichetta: poi li ritrovi in ricerca e i conti tornano per sempre.</p>
+    <p class="muted small">${done} di ${habitFoods().length} inseriti. Inseriscili una volta sola, dall'etichetta: poi li ritrovi in ricerca e i conti tornano per sempre.</p>
     ${missing.slice(0, 3).map((n) => `<div class="row"><span>${esc(n)}</span><button class="btn small-btn primary" data-act="habit-add" data-name="${esc(n)}">Inserisci</button></div>`).join("")}
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
@@ -468,7 +479,7 @@ function ensureMcdMacros() {
   if (n) save();
 }
 function ensureMomCutlet() {
-  return; // nessun alimento personale aggiunto da solo: ognuno inserisce i propri
+  if (!S.gustiPersonali) return; // solo sul dispositivo dell'autore
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
@@ -1205,6 +1216,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const powder = allFoods().find((f) => /whey|proteine/i.test(f.name) && isVerified(f));
   const yog = byName("Yogurt greco 0%");
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
+  // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
+  if (S.gustiPersonali) {
+  if (needP > 5 && !out.some((l) => /yogurt/i.test(l))) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
+  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
+  const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
+  if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
+  }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4) {
