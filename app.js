@@ -1281,7 +1281,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">Previsione della giornata <span class="pill ok">Modifica</span></h2>${warn}${optional}${planItemsHtml(false)}<div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">Previsione della giornata <span class="pill ok">Modifica</span></h2>${warn}${optional}${planItemsHtml(false)}<div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -2429,7 +2429,8 @@ function act(a, el) {
     case "pl-add": {
       // "Albume 135 g + JUST WHEY (GymBeam) 15 g": il cibo e i grammi, con il + per l'abbinamento
       const testo = (document.getElementById("pl-q") || {}).value || "";
-      const pasto = (document.getElementById("pl-pasto") || {}).value || "cena";
+      const pasto = (document.getElementById("pl-pasto") || {}).value || "";
+      if (!pasto) return toast("Scegli prima il pasto: colazione, pranzo, spuntino o cena");
       const pezzi = testo.split("+").map((x) => x.trim()).filter(Boolean);
       const voci = [];
       pezzi.forEach((pz) => {
