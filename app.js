@@ -3171,7 +3171,10 @@ document.addEventListener("click", (e) => {
     if (swipeY === null) return;
     const dy = e.changedTouches[0].clientY - swipeY;
     swipeY = null;
-    if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo)) closeDialog();
+    // lo swipe che arriva in cima, dove c'e la X, chiude la finestra
+    const yFine = e.changedTouches[0].clientY;
+    const inAltoVicino = yFine < 140;
+    if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialog();
   }, { passive: true });
 }
 document.addEventListener("input", (e) => {
