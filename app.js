@@ -266,7 +266,11 @@ const mealRank = (line) => {
   const pasto = pastoDiPreferito(n);
   return PASTI.indexOf(pasto);
 };
-const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
+const sortPlanLines = (text) => {
+  const righe = (text || "").split("\n").filter((x) => x.trim());
+  if (S.planManual) return righe; // l'ordine l'hai scelto tu con le frecce
+  return righe.map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
+};
 
 function refreshForecast() {
   if (!S.profile) return; // primo avvio: prima il profilo, poi la previsione
@@ -1249,7 +1253,7 @@ function planItemsHtml() {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const it = parseDiary(x)[0];
     const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts"><button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
+    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts"><button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button><button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2378,6 +2382,16 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
+    case "plan-up":
+    case "plan-down": {
+      // sposto la riga nell'ordine che vedi: l'ordine scelto da te resta quello
+      const righe = sortPlanLines(S.plannedDinner);
+      const i = +el.dataset.i, j = el.dataset.act === "plan-up" ? i - 1 : i + 1;
+      if (j < 0 || j >= righe.length) break;
+      [righe[i], righe[j]] = [righe[j], righe[i]];
+      S.plannedDinner = righe.join("\n"); S.planManual = true; save(); render();
+      break;
+    }
     case "fav-g": {
       const nome = el.dataset.name;
       view.favGramsKey = view.favGramsKey === nome ? undefined : nome;
@@ -2697,7 +2711,7 @@ function act(a, el) {
         }
       }
       S.autoAll = S.autoAll.filter((l) => tutte.includes(l)); S.autoLines = S.autoAll;
-      S.plannedDinner = tutte.join("\n");
+      S.plannedDinner = tutte.join("\n"); S.planManual = false;
       toast([tolteC ? `tolte ${tolteC} voci per i carboidrati` : "", tolte ? `tolte ${tolte} voci non bloccate` : "", ridotte.length ? `ridotte: ${ridotte.join(", ")}` : ""].filter(Boolean).join("; ") || "Proposte automatiche aggiornate");
       break;
     }
