@@ -2456,6 +2456,13 @@ function act(a, el) {
       // "per forza": la riga resta bloccata e Rigenera non la toglie
       const perForza = !!(document.getElementById("pl-forza") && document.getElementById("pl-forza").checked);
       const nuovaRiga = [primo, ...righe.slice(1)].join(" con ") + (perForza ? ", bloccato" : "");
+      // avviso prima di aggiungere: se la riga supera le calorie rimaste, chiedo conferma
+      {
+        const kNuova = parseDiary(nuovaRiga).reduce((a, x) => a + x.kcal, 0);
+        const kPrevisione = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+        const kRimaste = targets(view.date).kcal - totals(view.date).kcal - kPrevisione;
+        if (kNuova > kRimaste && !confirm(`Questo cibo vale ${Math.round(kNuova)} kcal, ma ne restano ${Math.round(kRimaste)} per oggi. Lo aggiungo lo stesso?`)) return toast("Non aggiunto");
+      }
       S.plannedDinner = [S.plannedDinner, nuovaRiga].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       // la casella torna vuota, cosi si vede che il cibo e stato inserito
@@ -2845,10 +2852,11 @@ function act(a, el) {
       const target = lines[+el.dataset.i];
       if (target) {
         // tolgo la riga e le sue copie (stesso cibo, anche con grammi o nome scritti in modo diverso)
-        const grp = foodGroup(foodKey(target));
+        // solo questa riga (e il suo stesso nome): le altre righe della previsione restano
+        const grp = foodKey(target);
         unblock([target]);
-        S.plannedDinner = lines.filter((l) => foodGroup(foodKey(l)) !== grp).join("\n");
-        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodGroup(foodKey(l)) !== grp);
+        S.plannedDinner = lines.filter((l) => foodKey(l) !== grp).join("\n");
+        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodKey(l) !== grp);
       } else S.plannedDinner = lines.join("\n");
       break;
     }
