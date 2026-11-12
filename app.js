@@ -1303,7 +1303,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
+  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<button class="btn primary wide" data-act="plan-regen">Rigenera</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
