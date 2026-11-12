@@ -320,7 +320,8 @@ function refreshForecast() {
   const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
   if (snap === S.forecastSnap && !overNow) return;
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
-  if (S.planManual) return;
+  // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
+  if (S.planManual || (S.plannedDinner || "").trim()) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
