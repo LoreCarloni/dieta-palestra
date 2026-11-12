@@ -3291,10 +3291,13 @@ document.addEventListener("click", (e) => {
     const lungo = Date.now() - swipeT > 450;
     const selezione = (window.getSelection && window.getSelection().toString().length > 0);
     swipeY = null;
-    if (swipeTesto || lungo || selezione || !swipeIntestazione) return;
+    if (swipeTesto || lungo || selezione) return;
     const yFine = e.changedTouches[0].clientY;
     const inAltoVicino = yFine < 140;
-    if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialogAnimata();
+    // dall'alto verso il basso, quando la finestra e gia in cima: si chiude
+    if (dy > 80 && swipeInCima) { closeDialogAnimata(); return; }
+    // verso l'alto: solo dall'intestazione o se la finestra non scorre, cosi non interferisce con la lista
+    if (swipeIntestazione && ((dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino))) closeDialogAnimata();
   }, { passive: true });
 }
 // con la tastiera aperta la finestra si adatta allo spazio che resta e il campo scritto resta visibile
