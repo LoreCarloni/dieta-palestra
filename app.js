@@ -3290,6 +3290,24 @@ document.addEventListener("click", (e) => {
     if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialogAnimata();
   }, { passive: true });
 }
+// con la tastiera aperta la finestra si adatta allo spazio che resta e il campo scritto resta visibile
+{
+  const d0 = () => document.getElementById("dlg");
+  const adatta = () => {
+    const vv = window.visualViewport;
+    const d = d0();
+    if (!d || !vv) return;
+    const altezza = Math.round(vv.height * 0.92);
+    d.style.maxHeight = altezza + "px";
+    d.style.top = Math.max(8, Math.round(vv.offsetTop + (vv.height - altezza) / 2)) + "px";
+  };
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", adatta);
+  document.addEventListener("focusin", (e) => {
+    if (!e.target.closest || !e.target.closest("#dlg")) return;
+    setTimeout(() => { adatta(); e.target.scrollIntoView({ block: "center", behavior: "smooth" }); }, 350);
+  });
+  d0().addEventListener("close", () => { d0().style.maxHeight = ""; d0().style.top = ""; });
+}
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
