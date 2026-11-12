@@ -1203,7 +1203,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // lo yogurt si propone a confezione intera (150 g)
     if (/yogurt/i.test(hit.name)) g = g >= 100 ? 150 : 0;
     if (pol) g = Math.min(g, 15);
-    if (g < 30) return;
+    if (g < (/olio/i.test(hit.name) ? 10 : 30)) return;
     add(hit.name, g, per); picked++;
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
