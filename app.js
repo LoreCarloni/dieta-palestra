@@ -966,7 +966,7 @@ function favCardHtml() {
   const righe = (S.favFoods || []).map((r, i) => ({ r, i }));
   const bloc = (pasto) => {
     const elenco = righe.filter(({ r }) => pastoDiPreferito(norm(r.split(" + ")[0])) === pasto);
-    const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+    const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-blocca" data-i="${i}">Blocca oggi</button><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
     const previsione = planItemsHtml(true, pasto);
     const hasPrevisione = previsione && !previsione.includes("Scrivi colazione");
     return `<h4 class="pasto-titolo">${pasto[0].toUpperCase() + pasto.slice(1)}</h4>${corpo}${hasPrevisione ? `<div class="pasto-previsione">${previsione}</div>` : ""}`;
@@ -2465,6 +2465,25 @@ function act(a, el) {
       // la riga appena aggiunta si evidenzia e si mostra nella finestra
       setTimeout(() => { const el = document.querySelector(".plan-item.nuovo"); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" }); }, 150);
       setTimeout(() => { S.lastAdded = null; document.querySelectorAll(".plan-item.nuovo").forEach((x) => x.classList.remove("nuovo")); }, 4000);
+      break;
+    }
+    case "fav-blocca": {
+      // il preferito va nella previsione di oggi, nel suo pasto, come riga bloccata
+      const riga = (S.favFoods || [])[+el.dataset.i];
+      if (!riga) break;
+      const pezzi = riga.split("+").map((x) => x.trim()).filter(Boolean);
+      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
+      if (!trovati.length) return toast("Non trovo questo cibo nel database");
+      const pasto = pastoDiPreferito(norm(pezzi[0]));
+      const righe = trovati.map((x) => {
+        const g = (S.favGrams || {})[x.pz] || (/whey|polvere/i.test(x.pz) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
+        return `${x.hit.name}, ${g} g`;
+      });
+      const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
+      const nuova = [primo, ...righe.slice(1)].join(" con ") + ", bloccato";
+      S.plannedDinner = [S.plannedDinner, nuova].filter((x) => x && x.trim()).join("\n");
+      S.planManual = false;
+      save(); toast(`${trovati[0].hit.name} bloccato per ${pasto}`); render();
       break;
     }
     case "pl-pick": {
