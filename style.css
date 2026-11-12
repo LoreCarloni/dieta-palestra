@@ -400,3 +400,8 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 .plan-tap .pill { flex: 0 0 auto; }
 /* la riga appena aggiunta si evidenzia per qualche secondo */
 .plan-item.nuovo { background: var(--accent-soft); border-radius: 10px; transition: background 0.6s ease; }
+/* la casella per aggiungere un cibo a un pasto: su una riga pulita */
+.fav-add { flex-wrap: wrap; }
+#pl-q { flex: 1 1 100%; }
+#pl-pasto { flex: 1 1 45%; }
+#pl-g { flex: 0 0 auto; }
