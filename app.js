@@ -1197,11 +1197,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
+    // l'olio e un cucchiaio (10 g): non dipende dal budget dei grassi
+    if (/olio/i.test(hit.name)) g = 10;
     if (/cotoletta/i.test(hit.name)) g = Math.min(g, 60);
     // lo yogurt si propone a confezione intera (150 g)
     if (/yogurt/i.test(hit.name)) g = g >= 100 ? 150 : 0;
     if (pol) g = Math.min(g, 15);
-    if (g < 30) return;
+    if (g < (/olio/i.test(hit.name) ? 10 : 30)) return;
     add(hit.name, g, per); picked++;
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
