@@ -3124,6 +3124,22 @@ document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-act]");
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
+// la finestra si chiude con lo swipe verso l'alto, quando e arrivata in fondo (o non ha scorrimento)
+{
+  let swipeY = null, swipeInFondo = false;
+  const d0 = () => document.getElementById("dlg");
+  d0().addEventListener("touchstart", (e) => {
+    swipeY = e.touches[0].clientY;
+    const d = d0();
+    swipeInFondo = d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
+  }, { passive: true });
+  d0().addEventListener("touchend", (e) => {
+    if (swipeY === null) return;
+    const dy = e.changedTouches[0].clientY - swipeY;
+    swipeY = null;
+    if (dy < -80 && swipeInFondo) closeDialog();
+  }, { passive: true });
+}
 document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
