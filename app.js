@@ -2795,6 +2795,11 @@ function act(a, el) {
           return l;
         });
       }
+      // controllo finale: se resta sopra, tolgo le righe non bloccate dalla fine finche entra
+      while (sopra() && tutte.some((l) => !/bloccato/i.test(l))) {
+        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
+        tutte.splice(i, 1); tolte++;
+      }
       // proteine: se ne mancano per il target e restano calorie, aggiungo albume fino al tetto di 400 g in totale (poche calorie, quasi zero carboidrati)
       {
         const kcalRiga2 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
