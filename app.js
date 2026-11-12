@@ -2845,10 +2845,11 @@ function act(a, el) {
       const target = lines[+el.dataset.i];
       if (target) {
         // tolgo la riga e le sue copie (stesso cibo, anche con grammi o nome scritti in modo diverso)
-        const grp = foodGroup(foodKey(target));
+        // solo questa riga (e il suo stesso nome): le altre righe della previsione restano
+        const grp = foodKey(target);
         unblock([target]);
-        S.plannedDinner = lines.filter((l) => foodGroup(foodKey(l)) !== grp).join("\n");
-        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodGroup(foodKey(l)) !== grp);
+        S.plannedDinner = lines.filter((l) => foodKey(l) !== grp).join("\n");
+        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodKey(l) !== grp);
       } else S.plannedDinner = lines.join("\n");
       break;
     }
