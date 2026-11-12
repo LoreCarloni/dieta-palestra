@@ -1265,7 +1265,7 @@ function planItemsHtml(conFrecce = true) {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const it = parseDiary(x)[0];
     const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
+    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2443,7 +2443,12 @@ function act(a, el) {
       S.planManual = false;
       // la casella torna vuota, cosi si vede che il cibo e stato inserito
       const campoPl = document.getElementById("pl-q"); if (campoPl) campoPl.value = "";
+      const nuovaRiga = [primo, ...righe.slice(1)].join(" con ");
+      S.lastAdded = nuovaRiga;
       save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`); render();
+      // la riga appena aggiunta si evidenzia e si mostra nella finestra
+      setTimeout(() => { const el = document.querySelector(".plan-item.nuovo"); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" }); }, 150);
+      setTimeout(() => { S.lastAdded = null; document.querySelectorAll(".plan-item.nuovo").forEach((x) => x.classList.remove("nuovo")); }, 4000);
       break;
     }
     case "pl-pick": {
