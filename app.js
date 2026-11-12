@@ -1719,8 +1719,11 @@ function dayComment(k) {
     const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name)) && !NOT_FOR_DIET.test(f.name)).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
     if (pick) {
       const gap = Math.round(tg.protein - t.p - pl.p);
-      const n = Math.min(3, Math.ceil(gap / pick.p));
-      newFood = { name: pick.name, gap, n, covered: Math.round(n * pick.p), rest: Math.max(0, gap - Math.round(n * pick.p)) };
+      // la porzione e quella che usi tu (es. 135 g di albume), altrimenti 100 g
+      const porzione = (S.favGrams || {})[pick.name] || 100;
+      const proteinePorzione = pick.p * porzione / 100;
+      const n = Math.min(3, Math.ceil(gap / proteinePorzione));
+      newFood = { name: pick.name, gap, n, porzione, covered: Math.round(n * proteinePorzione), rest: Math.max(0, gap - Math.round(n * proteinePorzione)) };
     }
   }
   // tutto il percorso dall'inizio dell'uso dell'app
@@ -1769,7 +1772,7 @@ function commentHtml(k) {
   const rest = c.lines.filter((l) => !dinner.includes(l));
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Dall'inizio: ${j.over} giorni con sgarri su ${j.days} tracciati (${j.pct}%).</p>` : "";
-  const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da 100 g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
+  const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da ${c.newFood.porzione} g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
   return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
