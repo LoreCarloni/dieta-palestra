@@ -3254,7 +3254,7 @@ document.addEventListener("click", (e) => {
 });
 // la finestra si chiude con lo swipe, ma non se stai selezionando o copiando un testo
 {
-  let swipeY = null, swipeInCima = false, swipeInFondo = false, swipeT = 0, swipeTesto = false;
+  let swipeY = null, swipeInCima = false, swipeInFondo = false, swipeT = 0, swipeTesto = false, swipeIntestazione = false;
   const d0 = () => document.getElementById("dlg");
   d0().addEventListener("touchstart", (e) => {
     swipeY = e.touches[0].clientY;
@@ -3264,6 +3264,9 @@ document.addEventListener("click", (e) => {
     swipeInFondo = d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
     // campi di testo e pressione lunga (per selezionare) non sono swipe
     swipeTesto = !!(e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"));
+    // lo swipe chiude solo se parte dall'intestazione (dove c'e la X) o se la finestra non scorre: cosi non interferisce con lo scorrimento della lista
+    const rd = d.getBoundingClientRect();
+    swipeIntestazione = (swipeY - rd.top) < 90 || d.scrollHeight <= d.clientHeight + 4;
   }, { passive: true });
   d0().addEventListener("touchend", (e) => {
     if (swipeY === null) return;
@@ -3271,7 +3274,7 @@ document.addEventListener("click", (e) => {
     const lungo = Date.now() - swipeT > 450;
     const selezione = (window.getSelection && window.getSelection().toString().length > 0);
     swipeY = null;
-    if (swipeTesto || lungo || selezione) return;
+    if (swipeTesto || lungo || selezione || !swipeIntestazione) return;
     const yFine = e.changedTouches[0].clientY;
     const inAltoVicino = yFine < 140;
     if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialogAnimata();
