@@ -2850,10 +2850,11 @@ function act(a, el) {
       if (target) {
         // tolgo la riga e le sue copie (stesso cibo, anche con grammi o nome scritti in modo diverso)
         // solo questa riga (e il suo stesso nome): le altre righe della previsione restano
-        const grp = foodKey(target);
+        // tolgo esattamente la riga toccata (anche se ce ne sono altre uguali)
+        const idx = +el.dataset.i;
         unblock([target]);
-        S.plannedDinner = lines.filter((l) => foodKey(l) !== grp).join("\n");
-        if (S.autoLines) S.autoLines = S.autoLines.filter((l) => foodKey(l) !== grp);
+        S.plannedDinner = lines.filter((_, k) => k !== idx).join("\n");
+        if (S.autoLines) { const j = S.autoLines.indexOf(target); if (j >= 0) S.autoLines.splice(j, 1); }
       } else S.plannedDinner = lines.join("\n");
       break;
     }
