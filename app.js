@@ -1216,7 +1216,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   // tacchino: solo la cotoletta di famiglia, con i suoi valori; niente petto generico
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
-  if (needP > 5 && momCut && momCut.p > 0) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
+  // la cotoletta non si ripropone se e gia nella previsione (anche se bloccata o con il pasto scritto)
+  if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4) {
@@ -1303,7 +1304,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<button class="btn primary wide" data-act="plan-regen">Rigenera</button>`;
+  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<button class="btn primary wide" data-act="plan-regen">Rigenera</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
@@ -2448,11 +2449,13 @@ function act(a, el) {
         return `${x.hit.name}, ${g} g`;
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
-      S.plannedDinner = [S.plannedDinner, [primo, ...righe.slice(1)].join(" con ")].filter((x) => x && x.trim()).join("\n");
+      // "per forza": la riga resta bloccata e Rigenera non la toglie
+      const perForza = !!(document.getElementById("pl-forza") && document.getElementById("pl-forza").checked);
+      const nuovaRiga = [primo, ...righe.slice(1)].join(" con ") + (perForza ? ", bloccato" : "");
+      S.plannedDinner = [S.plannedDinner, nuovaRiga].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       // la casella torna vuota, cosi si vede che il cibo e stato inserito
       const campoPl = document.getElementById("pl-q"); if (campoPl) campoPl.value = "";
-      const nuovaRiga = [primo, ...righe.slice(1)].join(" con ");
       S.lastAdded = nuovaRiga;
       save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`); render();
       // la riga appena aggiunta si evidenzia e si mostra nella finestra
