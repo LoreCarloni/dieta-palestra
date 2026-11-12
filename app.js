@@ -1189,7 +1189,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
-    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi, per); picked++; return; }
+    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
     if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
@@ -2780,7 +2780,7 @@ function act(a, el) {
       {
         const kcalRiga2 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
         const pSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
-        const kSum = tutte.reduce((a, l) => a + kcalRiga2(l), 0);
+        const kSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + y.kcal, 0), 0);
         const pMancano = targets(view.date).protein - totals(view.date).p - pSum;
         const kRimaste = leftK - kSum;
         const albumeGia = tutte.filter((l) => /^albume\b/i.test(l.trim())).reduce((a, l) => a + gRiga(l), 0);
