@@ -243,21 +243,28 @@ let scrollToId = null;
 // Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
 // Ordine della giornata: colazione, pranzo, spuntini, cena. Usato sia per mostrare sia per segnare come mangiati.
 // ordine naturale della giornata, senza categorie: pasta, albume, piatto con carne, verdura con olio, poi le proteine abbinate
+// i pasti della giornata: colazione, pranzo, spuntino, cena
+const PASTI = ["colazione", "pranzo", "spuntino", "cena"];
+// il pasto di default di un cibo, dal nome
+const pastoDiDefault = (nome) => {
+  if (/yogurt/.test(nome)) return "colazione";
+  if (/pasta|riso|pane/.test(nome)) return "pranzo";
+  if (/albume|latte|fiocchi|cereal/.test(nome)) return "spuntino";
+  return "cena";
+};
+// il pasto scelto da te per un preferito (Modifica previsione), altrimenti quello di default
+const pastoDiPreferito = (nome) => {
+  const n = norm(nome).trim();
+  const riga = (S.favFoods || []).find((r) => { const primo = norm(r.split(" + ")[0]).trim(); return primo && n.startsWith(primo); });
+  if (riga && S.favSlot && S.favSlot[riga]) return S.favSlot[riga];
+  return pastoDiDefault(n);
+};
 const mealRank = (line) => {
-  // per una riga abbinata conta il primo cibo ("Cetrioli, con Olio" e un piatto di cetrioli)
+  // per una riga abbinata conta il primo cibo
   const n = foodKey(line).split(/ con /)[0];
-  // lo yogurt, con la sua polvere, e la colazione: prima di tutto
-  if (/yogurt/.test(n)) return 0;
-  if (/pasta|riso|pane/.test(n)) return 1;
-  if (/^albume/.test(n)) return 2;
-  if (/whey|polvere/.test(n)) return 5;
-  if (/albume/.test(n)) return 2;
-  if (/yogurt|latte|fiocchi|cereal/.test(n)) return 2;
-  if (/cotoletta|pollo|tacchino|carne|pesce/.test(n)) return 3;
-  if (/cetriol|olio|verdura|insalata|pomodor|zucchin/.test(n)) return 4;
-  // frutta dopo la cena
-  if (/cachi|kaki|banana|mela|frutta|pera|arancia|kiwi/.test(n)) return 7;
-  return 6;
+  if (/cachi|kaki|banana|mela|frutta|pera|arancia|kiwi/.test(n)) return 4; // frutta dopo la cena
+  const pasto = pastoDiPreferito(n);
+  return PASTI.indexOf(pasto);
 };
 const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
 
@@ -951,8 +958,13 @@ function favRefresh() {
 }
 function favCardHtml() {
   const pair = view.favPair;
-  const rows = (S.favFoods || []).map((r, i) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
-  return `<section class="fav-section"><h3>I miei cibi preferiti</h3><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${rows || '<p class="muted small">Nessun preferito ancora.</p>'}</section>`;
+  const righe = (S.favFoods || []).map((r, i) => ({ r, i }));
+  const bloc = (pasto) => {
+    const elenco = righe.filter(({ r }) => pastoDiPreferito(norm(r.split(" + ")[0])) === pasto);
+    const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+    return `<h4 class="pasto-titolo">${pasto[0].toUpperCase() + pasto.slice(1)}</h4>${corpo}`;
+  };
+  return `<section class="fav-section"><h3>I miei cibi preferiti</h3><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${PASTI.map(bloc).join("")}</section>`;
 }
 function renderProfile(first) {
   const p = S.profile || { sex: "m", age: 35, height: 175, weight: 85, goalWeight: 75, rate: 0.5, activity: 1.2, trainDays: 3, level: "principiante" };
@@ -3204,6 +3216,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "fv-q") { const btn = document.querySelector('[data-act=fv-search]'); if (btn && e.target.value.trim().length >= 2) btn.click(); }
 });
 document.addEventListener("change", (e) => {
+  if (e.target.classList && e.target.classList.contains("fav-slot")) { S.favSlot = S.favSlot || {}; S.favSlot[e.target.dataset.r] = e.target.value; save(); favRefresh(); }
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
   const t = e.target;
   if (t.id === "label-file") { readLabel(t.files[0]); t.value = ""; return; }
