@@ -319,6 +319,8 @@ function refreshForecast() {
   // se la previsione supera il rimanente va sempre ricontrollata, anche senza nuovi cibi
   const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
   if (snap === S.forecastSnap && !overNow) return;
+  // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
+  if (S.planManual) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
@@ -2843,6 +2845,7 @@ function act(a, el) {
         const idx = +el.dataset.i;
         unblock([target]);
         S.plannedDinner = lines.filter((_, k) => k !== idx).join("\n");
+        S.planManual = true;
         if (S.autoLines) { const j = S.autoLines.indexOf(target); if (j >= 0) S.autoLines.splice(j, 1); }
       } else S.plannedDinner = lines.join("\n");
       break;
