@@ -1307,7 +1307,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn primary wide" data-act="plan-regen">Ricalcola il resto</button>`;
+  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn primary wide" data-act="plan-regen">Ricalcola il resto</button><button class="btn wide" data-act="plan-done">Fatto, le modifiche sono salvate</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
@@ -2477,6 +2477,11 @@ function act(a, el) {
       campo.value = parti.map((x) => x.trim()).filter(Boolean).join(" + ") + " + ";
       document.getElementById("pl-list").innerHTML = "";
       campo.focus();
+      break;
+    }
+    case "plan-done": {
+      // le modifiche si salvano man mano: questo pulsante solo chiude la finestra
+      closeDialog(); render();
       break;
     }
     case "fav-g": {
