@@ -248,6 +248,7 @@ const mealRank = (line) => {
   // lo yogurt, con la sua polvere, e la colazione: prima di tutto
   if (/yogurt/.test(n)) return 0;
   if (/pasta|riso|pane/.test(n)) return 1;
+  if (/^albume/.test(n)) return 2;
   if (/whey|polvere/.test(n) || / con /.test(n)) return 5;
   if (/albume/.test(n)) return 2;
   if (/yogurt|latte|fiocchi|cereal/.test(n)) return 2;
@@ -1129,8 +1130,17 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const albPz = trovati.find((x) => /albume/i.test(x.pz));
       const nBicchieri = Math.max(0, ...pezzi.map((pz) => (S.favGlasses || {})[pz] || 0)) || (albPz ? bicchieriSugg(albPz.hit) : 0);
       if (nBicchieri > 0) {
+        // ogni bicchiere e una riga sola: "Albume, bicchiere 1, 135 g con JUST WHEY, 15 g"
+        const alb = trovati.find((x) => /albume/i.test(x.pz));
+        const altri = trovati.filter((x) => x !== alb);
         for (let k = 1; k <= nBicchieri; k++) {
-          trovati.forEach((x) => { const fis = (S.favGrams || {})[x.pz] || base0(x.pz); add(`${x.hit.name}, bicchiere ${k}`, fis, [x.hit.kcal, x.hit.p, x.hit.c, x.hit.f]); });
+          const parti = [alb, ...altri].filter(Boolean).map((x, j) => {
+            const fis = (S.favGrams || {})[x.pz] || base0(x.pz);
+            const nome = j === 0 ? `${x.hit.name}, bicchiere ${k}` : x.hit.name;
+            return { testo: `${nome}, ${fis} g`, x, fis };
+          });
+          parti.forEach((q) => { needK -= q.x.hit.kcal * q.fis / 100; needP -= q.x.hit.p * q.fis / 100; needC -= q.x.hit.c * q.fis / 100; });
+          out.push(parti.map((q) => q.testo).join(" con "));
         }
         picked++;
         return;
