@@ -2780,7 +2780,7 @@ function act(a, el) {
       {
         const kcalRiga2 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
         const pSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + (y.p || 0), 0), 0);
-        const kSum = tutte.reduce((a, l) => a + kcalRiga2(l), 0);
+        const kSum = tutte.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + y.kcal, 0), 0);
         const pMancano = targets(view.date).protein - totals(view.date).p - pSum;
         const kRimaste = leftK - kSum;
         const albumeGia = tutte.filter((l) => /^albume\b/i.test(l.trim())).reduce((a, l) => a + gRiga(l), 0);
