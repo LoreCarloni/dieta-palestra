@@ -302,17 +302,7 @@ function refreshForecast() {
     if (gen.length) { S.autoLines = gen; S.plannedDinner = gen.join("\n"); save(); }
     return;
   }
-  // se la previsione supera il rimanente, tolgo le proposte automatiche anche se il ricalcolo non e attivo
-  {
-    const tgo = targets(k), to = totals(k);
-    const plannedNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
-    const autoRe0 = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
-    if (plannedNow > tgo.kcal - to.kcal) {
-      const before = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
-      const after = before.filter((x) => !(autoRe0.test(x.trim()) && !/bloccato/i.test(x)));
-      if (after.length !== before.length) { S.plannedDinner = after.join("\n"); S.autoLines = []; save(); }
-    }
-  }
+  // la previsione gia scritta non viene tolta da sola: la ricalcola solo Rigenera
   if (!S.autoForecast) return;
   const t = totals(k), tg = targets(k);
   const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
@@ -320,7 +310,8 @@ function refreshForecast() {
   const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
   if (snap === S.forecastSnap && !overNow) return;
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
-  if (S.planManual) return;
+  // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
+  if (S.planManual || (S.plannedDinner || "").trim()) return;
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
