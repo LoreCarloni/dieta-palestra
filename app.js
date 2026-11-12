@@ -333,6 +333,8 @@ function refreshForecast() {
 }
 
 function render() {
+  // la casella per aggiungere un cibo tiene quello che hai scritto anche se la pagina si ridisegna
+  const casella = ["pl-q", "pl-g", "pl-pasto", "pl-forza"].map((id) => { const el = document.getElementById(id); return el ? [id, el.type === "checkbox" ? el.checked : el.value] : null; }).filter(Boolean);
   refreshForecast();
   // se la finestra della previsione e aperta, la ridisegno con le ultime modifiche
   if (view.dialogPlan && dlg().open) { const y = dlg().scrollTop; const q = (document.getElementById("pl-q") || {}).value || ""; openDialog(planDialogHtml()); dlg().scrollTop = y; const nq = document.getElementById("pl-q"); if (nq) nq.value = q; }
@@ -341,6 +343,7 @@ function render() {
   const main = $("#main");
   if (!S.profile && view.tab !== "fumo" && view.tab !== "giornata") { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
   main.innerHTML = { fumo: () => renderFumo(), giornata: () => renderGiornata(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  casella.forEach(([id, v]) => { const el = document.getElementById(id); if (!el) return; if (el.type === "checkbox") el.checked = v; else el.value = v; });
   window.scrollTo(0, resetScroll ? 0 : keepY);
   if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   resetScroll = false;
