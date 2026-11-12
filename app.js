@@ -245,6 +245,8 @@ let scrollToId = null;
 // ordine naturale della giornata, senza categorie: pasta, albume, piatto con carne, verdura con olio, poi le proteine abbinate
 const mealRank = (line) => {
   const n = foodKey(line);
+  // lo yogurt, con la sua polvere, e la colazione: prima di tutto
+  if (/yogurt/.test(n)) return 0;
   if (/pasta|riso|pane/.test(n)) return 1;
   if (/whey|polvere/.test(n) || / con /.test(n)) return 5;
   if (/albume/.test(n)) return 2;
