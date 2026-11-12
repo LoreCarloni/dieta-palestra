@@ -260,6 +260,9 @@ const pastoDiPreferito = (nome) => {
   return pastoDiDefault(n);
 };
 const mealRank = (line) => {
+  // se la riga ha il pasto scritto tra parentesi, e quello che conta: "Albume (cena), 135 g"
+  const tag = String(line).toLowerCase().match(/\((colazione|pranzo|spuntino|cena)\)/);
+  if (tag) return PASTI.indexOf(tag[1]);
   // per una riga abbinata conta il primo cibo
   const n = foodKey(line).split(/ con /)[0];
   if (/cachi|kaki|banana|mela|frutta|pera|arancia|kiwi/.test(n)) return 4; // frutta dopo la cena
@@ -1229,13 +1232,13 @@ function renderPbList(q) {
   const list = q.trim() ? searchFoods(q.trim()).slice(0, 8) : [];
   box.innerHTML = list.map((f) => `<button class="item" data-act="pb-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
-function renderFavList(q, boxId) {
+function renderFavList(q, boxId, azione = "fav-pick") {
   const box = document.getElementById(boxId);
   if (!box) return;
   // stessa ricerca di Rigenera: cerca nei propri alimenti e nel database, con parole anche separate
   // prima gli alimenti verificati (etichetta, tabella ufficiale, codice a barre), poi gli altri
   const list = q.trim() ? searchFoods(q.trim()).filter((f) => !f.perServing).filter((f, i, a) => a.findIndex((y) => norm(y.name) === norm(f.name)) === i).sort((a, b) => (isVerified(b) ? 1 : 0) - (isVerified(a) ? 1 : 0)).slice(0, 8) : [];
-  box.innerHTML = list.map((f) => `<button class="item" data-act="fav-pick" data-name="${esc(f.name)}"><span>${esc(f.name)} ${sourceBadge(f)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
+  box.innerHTML = list.map((f) => `<button class="item" data-act="${azione}" data-name="${esc(f.name)}"><span>${esc(f.name)} ${sourceBadge(f)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 function renderPvList(q) {
   const box = $("#pv-list");
@@ -1295,7 +1298,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
+  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
@@ -2417,6 +2420,18 @@ function act(a, el) {
       S.plannedDinner = righe.join("\n"); S.planManual = true; save(); render();
       break;
     }
+    case "pl-pick": {
+      const nome = el.dataset.name;
+      const pasto = (document.getElementById("pl-pasto") || {}).value || "cena";
+      const f = allFoods().find((x) => x.name === nome);
+      const g = f && f.portion > 0 ? Math.min(200, f.portion) : 100;
+      // il pasto sta nel nome della riga, cosi lo stesso cibo puo comparire in piu pasti
+      const riga = `${nome} (${pasto}), ${g} g`;
+      S.plannedDinner = [S.plannedDinner, riga].filter((x) => x && x.trim()).join("\n");
+      S.planManual = false;
+      save(); toast(`Aggiunto a ${pasto}`); render();
+      break;
+    }
     case "fav-g": {
       const nome = el.dataset.name;
       view.favGramsKey = view.favGramsKey === nome ? undefined : nome;
@@ -3226,6 +3241,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
   if (e.target.id === "fav-new") renderFavList(e.target.value, "fav-list");
+  if (e.target.id === "pl-q") renderFavList(e.target.value, "pl-list", "pl-pick");
   if (e.target.id === "fav-pair") renderFavList(e.target.value, "fav-list-pair");
 
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
