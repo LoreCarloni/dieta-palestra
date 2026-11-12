@@ -971,8 +971,10 @@ function favCardHtml() {
   const bloc = (pasto) => {
     const elenco = righe.filter(({ r }) => pastoDiPreferito(norm(r.split(" + ")[0])) === pasto);
     const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
-    if (!elenco.length) return ""; // niente titoli vuoti
-    return `<h4 class="pasto-titolo">${pasto[0].toUpperCase() + pasto.slice(1)}</h4>${corpo}`;
+    const previsione = planItemsHtml(true, pasto);
+    const hasPrevisione = previsione && !previsione.includes("Scrivi colazione");
+    if (!elenco.length && !hasPrevisione) return ""; // niente titoli vuoti
+    return `<h4 class="pasto-titolo">${pasto[0].toUpperCase() + pasto.slice(1)}</h4>${corpo}${hasPrevisione ? `<div class="pasto-previsione">${previsione}</div>` : ""}`;
   };
   return `<section class="fav-section"><h3>I miei cibi preferiti</h3><div class="field"><input id="fav-new" type="search" placeholder="Scrivi un cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list" class="list"></div>${PASTI.map(bloc).join("")}</section>`;
 }
@@ -1255,10 +1257,12 @@ function planLeggeHtml() {
   if (!righe.length) return `<p class="muted small">Tocca il titolo per creare la previsione.</p>`;
   return righe.map((x) => { const it = parseDiary(x)[0]; return `<div class="plan-item"><span class="plan-name">${esc(x.replace(/,?\s*bloccato\b/i, ""))}</span> ${it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : ""}</div>`; }).join("");
 }
-function planItemsHtml(conFrecce = true) {
+function planItemsHtml(conFrecce = true, pastoFiltro = null) {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
+  const pastoDiRiga = (x) => { const r = mealRank(x); return PASTI[Math.min(3, r < 0 ? 3 : r)]; };
   return lines.map((x, i) => {
+    if (pastoFiltro && pastoDiRiga(x) !== pastoFiltro) return "";
     // nome completo senza grammi e senza la scritta "bloccato", cosi anche i nomi con parentesi (JUST WHEY (GymBeam)) si riconoscono
     const key = foodKey(x).replace(/:.*$/, "").trim();
     const fd = byName(key);
@@ -1300,7 +1304,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
+  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
