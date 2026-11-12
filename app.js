@@ -2871,7 +2871,17 @@ function act(a, el) {
       if (over) toast("Calorie già superate: la previsione non propone altri cibi. Recupererai nei prossimi giorni.");
       // solo le righe bloccate restano fisse: le altre vengono ricalcolate, come in Rigenera
       const bloccate = (S.plannedDinner || "").split("\n").filter((l) => /bloccato/i.test(l)).join("\n");
-      S.plannedDinner = over ? "" : autoPlan("", bloccate, kTd);
+      let nuova = over ? "" : autoPlan("", bloccate, kTd);
+      // la previsione non supera le calorie rimaste: tolgo le righe non bloccate dalla fine finche entra
+      const kRim = targets(kTd).kcal - totals(kTd).kcal;
+      const kDi = (righe) => righe.reduce((a, l) => a + parseDiary(l).reduce((x, y) => x + y.kcal, 0), 0);
+      let righeNuove = nuova.split("\n").filter((x) => x.trim());
+      while (!over && kDi(righeNuove) > kRim && righeNuove.some((l) => !/bloccato/i.test(l))) {
+        let i = righeNuove.length - 1;
+        while (/bloccato/i.test(righeNuove[i])) i--;
+        righeNuove.splice(i, 1);
+      }
+      S.plannedDinner = righeNuove.join("\n");
       S.autoLines = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
       save(); closeDialog(); render();
       break;
