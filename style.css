@@ -394,3 +394,4 @@ h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-si
 /* la finestra sale dal basso, come un foglio di iPhone */
 @keyframes sheet-in { from { transform: translateY(40%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 dialog[open] { animation: sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+dialog { overscroll-behavior: contain; touch-action: pan-y; }
