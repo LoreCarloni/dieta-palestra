@@ -335,7 +335,7 @@ function refreshForecast() {
 function render() {
   refreshForecast();
   // se la finestra della previsione e aperta, la ridisegno con le ultime modifiche
-  if (view.dialogPlan && dlg().open) { const y = dlg().scrollTop; openDialog(planDialogHtml()); dlg().scrollTop = y; }
+  if (view.dialogPlan && dlg().open) { const y = dlg().scrollTop; const q = (document.getElementById("pl-q") || {}).value || ""; openDialog(planDialogHtml()); dlg().scrollTop = y; const nq = document.getElementById("pl-q"); if (nq) nq.value = q; }
   const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
