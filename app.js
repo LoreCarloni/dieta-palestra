@@ -2702,16 +2702,16 @@ function act(a, el) {
       break;
     }
     case "plan-fav": {
-      // segna o toglie il preferito direttamente dalla previsione
+      // il preferito della riga va nella lista "I miei cibi preferiti": lo aggiunge o lo toglie
       const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
       if (!line) break;
-      const k2 = foodKey(line).replace(/:.*$/, "").trim();
-      const f = allFoods().find((x) => norm(x.name).trim().toLowerCase() === k2);
-      if (!f) return toast("Prima inserisci l'alimento con valori");
-      const mine = S.customFoods.find((x) => norm(x.name).trim() === norm(f.name).trim());
-      if (mine) { mine.fav = !mine.fav; }
-      else { S.customFoods.push({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion || 100, src: f.src || "Database", fav: true }); }
-      save(); toast(mine && !mine.fav ? "Tolto dai preferiti" : "Aggiunto ai preferiti");
+      const nome = foodKey(line).replace(/:.*$/, "").split(/ con /)[0].trim();
+      const primo = (line.split(/ con /)[0] || "").replace(/,?\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\(.*?\)\s*$/, "").trim();
+      const voce = (S.favFoods || []).find((r) => norm(r.split(" + ")[0]).trim() === norm(primo).trim() || norm(r.split(" + ")[0]).includes(norm(primo)));
+      S.favFoods = S.favFoods || [];
+      if (voce) { S.favFoods = S.favFoods.filter((r) => r !== voce); save(); toast("Tolto dai preferiti"); }
+      else { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
+      favRefresh();
       break;
     }
     case "plan-values": {
