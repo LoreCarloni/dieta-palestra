@@ -2441,7 +2441,9 @@ function act(a, el) {
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
       S.plannedDinner = [S.plannedDinner, [primo, ...righe.slice(1)].join(" con ")].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
-      save(); toast(`Aggiunto a ${pasto}`); render();
+      // la casella torna vuota, cosi si vede che il cibo e stato inserito
+      const campoPl = document.getElementById("pl-q"); if (campoPl) campoPl.value = "";
+      save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`); render();
       break;
     }
     case "pl-pick": {
