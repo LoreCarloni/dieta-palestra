@@ -2455,20 +2455,17 @@ function act(a, el) {
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
       // "per forza": la riga resta bloccata e Rigenera non la toglie
       const perForza = !!(document.getElementById("pl-forza") && document.getElementById("pl-forza").checked);
-      const nuovaRiga = [primo, ...righe.slice(1)].join(" con ") + (perForza ? ", bloccato" : "");
-      // avviso prima di aggiungere: se la riga supera le calorie rimaste, chiedo conferma
-      {
-        const kNuova = parseDiary(nuovaRiga).reduce((a, x) => a + x.kcal, 0);
-        const kPrevisione = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
-        const kRimaste = targets(view.date).kcal - totals(view.date).kcal - kPrevisione;
-        if (kNuova > kRimaste && !confirm(`Questo cibo vale ${Math.round(kNuova)} kcal, ma ne restano ${Math.round(kRimaste)} per oggi. Lo aggiungo lo stesso?`)) return toast("Non aggiunto");
-      }
+      // il cibo aggiunto a mano resta fisso, e Ricalcola il resto adatta il resto alle calorie rimaste
+      const nuovaRiga = [primo, ...righe.slice(1)].join(" con ") + ", bloccato";
       S.plannedDinner = [S.plannedDinner, nuovaRiga].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       // la casella torna vuota, cosi si vede che il cibo e stato inserito
       const campoPl = document.getElementById("pl-q"); if (campoPl) campoPl.value = "";
       S.lastAdded = nuovaRiga;
-      save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`); render();
+      save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`);
+      // ricalcolo automatico del resto, senza conferme
+      act("plan-regen", { dataset: {} });
+      render();
       // la riga appena aggiunta si evidenzia e si mostra nella finestra
       setTimeout(() => { const el = document.querySelector(".plan-item.nuovo"); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" }); }, 150);
       setTimeout(() => { S.lastAdded = null; document.querySelectorAll(".plan-item.nuovo").forEach((x) => x.classList.remove("nuovo")); }, 4000);
