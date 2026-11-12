@@ -930,7 +930,8 @@ function favIsProteic(nome) {
 function favHit(nome) {
   const n = norm(nome).trim();
   const pasta = /pasta/.test(n);
-  const trovati = searchFoods(pasta ? "pasta integrale" : nome).filter((x) => !x.perServing);
+  // alimenti senza valori (kcal vuote o zero) non contano: si usa il primo con i valori
+  const trovati = searchFoods(pasta ? "pasta integrale" : nome).filter((x) => !x.perServing && x.kcal > 0);
   return trovati.find((x) => (pasta ? /pasta/.test(norm(x.name)) && /cruda/.test(norm(x.name)) : norm(x.name).includes(n)))
     // se il nome scritto non c'e uguale nel database, prendo il primo alimento che corrisponde alle parole scritte
     || (!pasta ? trovati[0] : null)
