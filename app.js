@@ -1277,6 +1277,8 @@ function openDialog(html) {
   const d = dlg();
   $("#dlg-body").innerHTML = html;
   if (!d.open) d.showModal();
+  // con la finestra aperta la pagina dietro resta ferma
+  document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden";
   const f = d.querySelector("[autofocus]");
   if (f) setTimeout(() => f.focus(), 50);
 }
@@ -1294,7 +1296,7 @@ function closeDialogAnimata() {
 function planDialogHtml() {
   return `<h3>Previsione della giornata</h3>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
 }
-function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); }
+function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
 
 function recentFoods() {
