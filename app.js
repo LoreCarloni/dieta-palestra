@@ -2441,9 +2441,10 @@ function act(a, el) {
     case "pl-pick": {
       // il cibo scelto va nel campo; con + abbina ne aggiungi un altro e poi premi Aggiungi
       const campo = document.getElementById("pl-q");
-      const base = campo.value.trim();
-      const nuovo = el.dataset.name;
-      campo.value = base && !/\+\s*$/.test(base) ? `${base} + ${nuovo}` : `${base}${nuovo}`;
+      // l'ultima parola scritta viene sostituita dal cibo scelto; poi il + pronto per il secondo cibo
+      const parti = campo.value.split("+");
+      parti[parti.length - 1] = el.dataset.name;
+      campo.value = parti.map((x) => x.trim()).filter(Boolean).join(" + ") + " + ";
       document.getElementById("pl-list").innerHTML = "";
       campo.focus();
       break;
