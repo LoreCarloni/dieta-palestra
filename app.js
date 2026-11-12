@@ -3197,21 +3197,26 @@ document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-act]");
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
-// la finestra si chiude con lo swipe: dal alto verso il basso quando e in cima, oppure verso l'alto quando e in fondo
+// la finestra si chiude con lo swipe, ma non se stai selezionando o copiando un testo
 {
-  let swipeY = null, swipeInCima = false, swipeInFondo = false;
+  let swipeY = null, swipeInCima = false, swipeInFondo = false, swipeT = 0, swipeTesto = false;
   const d0 = () => document.getElementById("dlg");
   d0().addEventListener("touchstart", (e) => {
     swipeY = e.touches[0].clientY;
+    swipeT = Date.now();
     const d = d0();
     swipeInCima = d.scrollTop <= 2;
     swipeInFondo = d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
+    // campi di testo e pressione lunga (per selezionare) non sono swipe
+    swipeTesto = !!(e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"));
   }, { passive: true });
   d0().addEventListener("touchend", (e) => {
     if (swipeY === null) return;
     const dy = e.changedTouches[0].clientY - swipeY;
+    const lungo = Date.now() - swipeT > 450;
+    const selezione = (window.getSelection && window.getSelection().toString().length > 0);
     swipeY = null;
-    // lo swipe che arriva in cima, dove c'e la X, chiude la finestra
+    if (swipeTesto || lungo || selezione) return;
     const yFine = e.changedTouches[0].clientY;
     const inAltoVicino = yFine < 140;
     if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialogAnimata();
