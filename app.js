@@ -2782,18 +2782,7 @@ function act(a, el) {
       const kcalRiga = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
       const gRiga = (l) => { const m = l.match(/(\d+)\s*g\b/); return m ? Number(m[1]) : 0; };
       let ridotte = [];
-      if (sopra()) {
-        tutte = tutte.map((l, i) => {
-          if (!sopra() || !/bloccato/i.test(l) || !gRiga(l) || !kcalRiga(l)) return l;
-          const altre = tutte.filter((_, k) => k !== i).reduce((a, x) => a + kcalRiga(x), 0);
-          const budget = Math.max(0, leftK - altre);
-          const perG = kcalRiga(l) / gRiga(l);
-          let g = Math.floor(budget / perG / 10) * 10;
-          if (g >= 30) { ridotte.push(l.split(",")[0]); return l.replace(/(\d+)\s*g\b/, `${g} g`).replace(/(\d+)\s*kcal/i, `${Math.round(g * perG)} kcal`); }
-          if (/pasta/i.test(l)) { const kc = Math.round(budget); ridotte.push("pasta sostituita con pane"); return `Pane bianco, ${Math.max(10, Math.round(kc / 2.7 / 10) * 10)} g ${Math.round(kc / 2.7 / 10) * 10 * 2.7} kcal bloccato`; }
-          return l;
-        });
-      }
+      // le righe bloccate restano come le hai scritte: non le cambio
       // proteine: se ne mancano per il target e restano calorie, aggiungo albume fino al tetto di 400 g in totale (poche calorie, quasi zero carboidrati)
       {
         const kcalRiga2 = (l) => { const m = l.match(/(\d+)\s*kcal/i); return m ? Number(m[1]) : 0; };
