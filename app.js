@@ -1298,7 +1298,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
+  return `<h3>Previsione della giornata</h3><div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><select id="pl-pasto">${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
@@ -2418,6 +2418,24 @@ function act(a, el) {
       if (j < 0 || j >= righe.length) break;
       [righe[i], righe[j]] = [righe[j], righe[i]];
       S.plannedDinner = righe.join("\n"); S.planManual = true; save(); render();
+      break;
+    }
+    case "pl-add": {
+      // "Albume + JUST WHEY (GymBeam)": un cibo, oppure un abbinamento con il segno +
+      const testo = (document.getElementById("pl-q") || {}).value || "";
+      const pasto = (document.getElementById("pl-pasto") || {}).value || "cena";
+      const pezzi = testo.split("+").map((x) => x.trim()).filter(Boolean);
+      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
+      if (!trovati.length || trovati.length !== pezzi.length) return toast("Scegli un cibo dall'elenco");
+      const righe = trovati.map((x) => {
+        const g = /whey|polvere/i.test(x.pz) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100);
+        return `${x.hit.name}, ${g} g`;
+      });
+      // il pasto sta sulla prima riga; l'abbinamento si scrive come "A, 135 g con B, 15 g"
+      const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
+      S.plannedDinner = [S.plannedDinner, [primo, ...righe.slice(1)].join(" con ")].filter((x) => x && x.trim()).join("\n");
+      S.planManual = false;
+      save(); toast(`Aggiunto a ${pasto}`); render();
       break;
     }
     case "pl-pick": {
