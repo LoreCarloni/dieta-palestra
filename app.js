@@ -1272,6 +1272,16 @@ function openDialog(html) {
   const f = d.querySelector("[autofocus]");
   if (f) setTimeout(() => f.focus(), 50);
 }
+// chiusura con scorrimento e dissolvenza, come un foglio di iPhone
+function closeDialogAnimata() {
+  const d = dlg();
+  if (!d.open) return;
+  const dopo = () => { d.style.transition = ""; d.style.transform = ""; d.style.opacity = ""; closeDialog(); };
+  d.style.transition = "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.28s ease";
+  d.style.transform = "translateY(110%)";
+  d.style.opacity = "0";
+  setTimeout(dopo, 280);
+}
 function closeDialog() { if (dlg().open) dlg().close(); }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
 
@@ -3188,7 +3198,7 @@ document.addEventListener("click", (e) => {
     // lo swipe che arriva in cima, dove c'e la X, chiude la finestra
     const yFine = e.changedTouches[0].clientY;
     const inAltoVicino = yFine < 140;
-    if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialog();
+    if ((dy > 80 && swipeInCima) || (dy < -80 && swipeInFondo) || (dy < -80 && inAltoVicino)) closeDialogAnimata();
   }, { passive: true });
 }
 document.addEventListener("input", (e) => {
