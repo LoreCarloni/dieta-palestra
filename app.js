@@ -2439,15 +2439,13 @@ function act(a, el) {
       break;
     }
     case "pl-pick": {
-      const nome = el.dataset.name;
-      const pasto = (document.getElementById("pl-pasto") || {}).value || "cena";
-      const f = allFoods().find((x) => x.name === nome);
-      const g = f && f.portion > 0 ? Math.min(200, f.portion) : 100;
-      // il pasto sta nel nome della riga, cosi lo stesso cibo puo comparire in piu pasti
-      const riga = `${nome} (${pasto}), ${g} g`;
-      S.plannedDinner = [S.plannedDinner, riga].filter((x) => x && x.trim()).join("\n");
-      S.planManual = false;
-      save(); toast(`Aggiunto a ${pasto}`); render();
+      // il cibo scelto va nel campo; con + abbina ne aggiungi un altro e poi premi Aggiungi
+      const campo = document.getElementById("pl-q");
+      const base = campo.value.trim();
+      const nuovo = el.dataset.name;
+      campo.value = base && !/\+\s*$/.test(base) ? `${base} + ${nuovo}` : `${base}${nuovo}`;
+      document.getElementById("pl-list").innerHTML = "";
+      campo.focus();
       break;
     }
     case "fav-g": {
@@ -3259,7 +3257,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "f-search") renderFoodList(e.target.value);
   if (e.target.id === "pv-search") renderPvList(e.target.value);
   if (e.target.id === "fav-new") renderFavList(e.target.value, "fav-list");
-  if (e.target.id === "pl-q") renderFavList(e.target.value, "pl-list", "pl-pick");
+  if (e.target.id === "pl-q") renderFavList(e.target.value.split("+").pop(), "pl-list", "pl-pick");
   if (e.target.id === "fav-pair") renderFavList(e.target.value, "fav-list-pair");
 
   if (e.target.id === "q-n") { const f = JSON.parse(dlg().dataset.food); $("#q-g").value = Math.round((num1(e.target.value) || 0) * f.piece); }
