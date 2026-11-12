@@ -2435,7 +2435,7 @@ function act(a, el) {
       const trovati = voci.map((v) => ({ ...v, hit: favHit(v.nome) }));
       if (!trovati.length || trovati.some((x) => !x.hit)) return toast("Scegli un cibo dall'elenco");
       const righe = trovati.map((x) => {
-        const g = x.g ? Number(String(x.g).replace(",", ".")) : (/whey|polvere/i.test(x.nome) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
+        const g = x.g ? Number(String(x.g).replace(",", ".")) : (/whey|polvere/i.test(x.nome) ? 15 : /olio/i.test(x.nome) ? 10 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
         return `${x.hit.name}, ${g} g`;
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
