@@ -253,6 +253,8 @@ const mealRank = (line) => {
   if (/yogurt|latte|fiocchi|cereal/.test(n)) return 2;
   if (/cotoletta|pollo|tacchino|carne|pesce/.test(n)) return 3;
   if (/cetriol|olio|verdura|insalata|pomodor|zucchin/.test(n)) return 4;
+  // frutta dopo la cena
+  if (/cachi|kaki|banana|mela|frutta|pera|arancia|kiwi/.test(n)) return 7;
   return 6;
 };
 const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
