@@ -1140,14 +1140,16 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
-      // ogni cibo dell'abbinamento e una riga con il nome dell'altro cibo accanto: "Cetrioli, con Olio extravergine d'oliva, 200 g"
-      combo.forEach((x) => {
+      // un abbinamento e una sola riga: primo il cibo principale (non la polvere), poi "con" l'altro cibo, ciascuno con i suoi grammi
+      const ordinati = [...combo].sort((a, b) => (/whey|polvere/i.test(a.pz) ? 1 : 0) - (/whey|polvere/i.test(b.pz) ? 1 : 0));
+      const parti = ordinati.map((x) => {
         const fis = (S.favGrams || {})[x.pz];
         const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
-        const altro = trovati.find((y) => y.pz !== x.pz);
-        const etichetta = altro ? `${x.hit.name}, con ${altro.hit.name}` : x.hit.name;
-        add(etichetta, fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g), x.per);
+        const gr = fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g);
+        needK -= x.per[0] * gr / 100; needP -= x.per[1] * gr / 100; needC -= x.per[2] * gr / 100;
+        return `${x.hit.name}, ${gr} g`;
       });
+      if (!out.some((l) => l.startsWith(parti[0].split(",")[0] + ","))) out.push(parti.join(" con "));
       picked++;
       return;
     }
@@ -1838,7 +1840,13 @@ function parseDiary(text) {
     raw.replace(/([.!])\s+(?=[A-ZÀ-Ý])/g, "$1\n").split("\n").forEach((x) => lines.push(x));
   });
   let pendingName = null; // nome di un alimento scritto su una riga senza calorie, con le calorie sulla riga dopo
+  // una riga "Yogurt, 150 g con JUST WHEY, 15 g" sono due alimenti: li conto separatamente
+  const righe = [];
   lines.forEach((raw) => {
+    const pezzi = raw.split(/(?<=\d\s*g)\s+con\s+(?=[A-ZÀ-Ý])/);
+    pezzi.forEach((x) => righe.push(x));
+  });
+  righe.forEach((raw) => {
     // via elenchi e punti (1. 2) •) ma non i numeri delle calorie (70 kcal)
     let line = raw.replace(/^[\s\-•*·]*(\d+[.)]\s+|[\-•*·]\s*)(?=\S)/, "").trim();
     if (!line) return;
