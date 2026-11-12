@@ -244,12 +244,13 @@ let scrollToId = null;
 // Ordine della giornata: colazione, pranzo, spuntini, cena. Usato sia per mostrare sia per segnare come mangiati.
 // ordine naturale della giornata, senza categorie: pasta, albume, piatto con carne, verdura con olio, poi le proteine abbinate
 const mealRank = (line) => {
-  const n = foodKey(line);
+  // per una riga abbinata conta il primo cibo ("Cetrioli, con Olio" e un piatto di cetrioli)
+  const n = foodKey(line).split(/ con /)[0];
   // lo yogurt, con la sua polvere, e la colazione: prima di tutto
   if (/yogurt/.test(n)) return 0;
   if (/pasta|riso|pane/.test(n)) return 1;
   if (/^albume/.test(n)) return 2;
-  if (/whey|polvere/.test(n) || / con /.test(n)) return 5;
+  if (/whey|polvere/.test(n)) return 5;
   if (/albume/.test(n)) return 2;
   if (/yogurt|latte|fiocchi|cereal/.test(n)) return 2;
   if (/cotoletta|pollo|tacchino|carne|pesce/.test(n)) return 3;
