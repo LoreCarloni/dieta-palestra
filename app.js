@@ -3265,7 +3265,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "fv-q") { const btn = document.querySelector('[data-act=fv-search]'); if (btn && e.target.value.trim().length >= 2) btn.click(); }
 });
 document.addEventListener("change", (e) => {
-  if (e.target.classList && e.target.classList.contains("fav-slot")) { S.favSlot = S.favSlot || {}; S.favSlot[e.target.dataset.r] = e.target.value; save(); favRefresh(); }
+  if (e.target.classList && e.target.classList.contains("fav-slot")) { S.favSlot = S.favSlot || {}; S.favSlot[e.target.dataset.r] = e.target.value; S.planManual = false; S.plannedDinner = sortPlanLines(S.plannedDinner).join("\n"); save(); favRefresh(); render(); }
   if (e.target.id === "ed-qty") scaleEdit(e.target.value);
   const t = e.target;
   if (t.id === "label-file") { readLabel(t.files[0]); t.value = ""; return; }
