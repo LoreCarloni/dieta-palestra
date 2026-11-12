@@ -2421,17 +2421,23 @@ function act(a, el) {
       break;
     }
     case "pl-add": {
-      // "Albume + JUST WHEY (GymBeam)": un cibo, oppure un abbinamento con il segno +
+      // "Albume 135 g + JUST WHEY (GymBeam) 15 g": il cibo e i grammi, con il + per l'abbinamento
       const testo = (document.getElementById("pl-q") || {}).value || "";
       const pasto = (document.getElementById("pl-pasto") || {}).value || "cena";
       const pezzi = testo.split("+").map((x) => x.trim()).filter(Boolean);
-      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
-      if (!trovati.length || trovati.length !== pezzi.length) return toast("Scegli un cibo dall'elenco");
+      const voci = [];
+      pezzi.forEach((pz) => {
+        const g = (pz.match(/(\d+(?:[.,]\d+)?)\s*g\b/i) || [])[1];
+        const nome = pz.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, "").trim();
+        if (!nome && g && voci.length) { voci[voci.length - 1].g = g; return; }
+        if (nome) voci.push({ nome, g });
+      });
+      const trovati = voci.map((v) => ({ ...v, hit: favHit(v.nome) }));
+      if (!trovati.length || trovati.some((x) => !x.hit)) return toast("Scegli un cibo dall'elenco");
       const righe = trovati.map((x) => {
-        const g = /whey|polvere/i.test(x.pz) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100);
+        const g = x.g ? Number(String(x.g).replace(",", ".")) : (/whey|polvere/i.test(x.nome) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
         return `${x.hit.name}, ${g} g`;
       });
-      // il pasto sta sulla prima riga; l'abbinamento si scrive come "A, 135 g con B, 15 g"
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
       S.plannedDinner = [S.plannedDinner, [primo, ...righe.slice(1)].join(" con ")].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
@@ -2443,7 +2449,8 @@ function act(a, el) {
       const campo = document.getElementById("pl-q");
       // l'ultima parola scritta viene sostituita dal cibo scelto; poi il + pronto per il secondo cibo
       const parti = campo.value.split("+");
-      parti[parti.length - 1] = el.dataset.name;
+      const gScritti = (parti[parti.length - 1].match(/(\d+(?:[.,]\d+)?)\s*g\b/i) || [])[1];
+      parti[parti.length - 1] = el.dataset.name + (gScritti ? ` ${gScritti} g` : "");
       campo.value = parti.map((x) => x.trim()).filter(Boolean).join(" + ") + " + ";
       document.getElementById("pl-list").innerHTML = "";
       campo.focus();
