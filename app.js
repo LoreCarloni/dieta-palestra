@@ -1189,7 +1189,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
-    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi, per); picked++; return; }
+    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
     if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
