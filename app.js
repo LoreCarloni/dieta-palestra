@@ -2460,6 +2460,13 @@ function act(a, el) {
       S.planManual = false;
       // la casella torna vuota, cosi si vede che il cibo e stato inserito
       const campoPl = document.getElementById("pl-q"); if (campoPl) campoPl.value = "";
+      // avviso prima di aggiungere: se la riga supera le calorie rimaste, chiedo conferma
+      {
+        const kNuova = parseDiary(nuovaRiga).reduce((a, x) => a + x.kcal, 0);
+        const kPrevisione = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+        const kRimaste = targets(view.date).kcal - totals(view.date).kcal - kPrevisione;
+        if (kNuova > kRimaste && !confirm(`Questo cibo vale ${Math.round(kNuova)} kcal, ma ne restano ${Math.round(kRimaste)} per oggi. Lo aggiungo lo stesso?`)) return toast("Non aggiunto");
+      }
       S.lastAdded = nuovaRiga;
       save(); toast(`Aggiunto a ${pasto}: ${righe.map((r) => r.split(",")[0]).join(" con ")}`); render();
       // la riga appena aggiunta si evidenzia e si mostra nella finestra
