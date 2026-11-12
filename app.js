@@ -331,6 +331,8 @@ function refreshForecast() {
 
 function render() {
   refreshForecast();
+  // se la finestra della previsione e aperta, la ridisegno con le ultime modifiche
+  if (view.dialogPlan && dlg().open) { const y = dlg().scrollTop; openDialog(planDialogHtml()); dlg().scrollTop = y; }
   const keepY = window.scrollY;
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
@@ -1241,6 +1243,12 @@ function renderPvList(q) {
   box.innerHTML = list.map((f) => `<button class="item" data-act="pv-pick" data-name="${esc(f.name)}"><span>${esc(f.name)}</span><span class="muted small">${r0(f.kcal)} kcal per 100 g</span></button>`).join("");
 }
 // Righe della previsione in ordine di giornata: colazione, pranzo, spuntino, cena (senza titoli).
+// la previsione sulla pagina principale: solo lettura, le modifiche sono nella finestra Modifica previsione
+function planLeggeHtml() {
+  const righe = sortPlanLines(S.plannedDinner);
+  if (!righe.length) return `<p class="muted small">Tocca il titolo per creare la previsione.</p>`;
+  return righe.map((x) => { const it = parseDiary(x)[0]; return `<div class="plan-item"><span class="plan-name">${esc(x.replace(/,?\s*bloccato\b/i, ""))}</span> ${it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : ""}</div>`; }).join("");
+}
 function planItemsHtml() {
   const lines = sortPlanLines(S.plannedDinner);
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
@@ -1263,7 +1271,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ?`<p class="warn-line">${left <= 0 ? `Il target di oggi è già superato: la previsione aggiunge ${r0(planned)} kcal.` : `Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}.`} Togli qualche riga con × oppure mangia meno.</p>` : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">Previsione della giornata</h2>${warn}${optional}${planItemsHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">Previsione della giornata</h2>${warn}${optional}${planLeggeHtml()}<div class="btns"><button class="btn primary" data-act="fv-open">Aggiungi cibo o piatto</button>${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1282,7 +1290,11 @@ function closeDialogAnimata() {
   d.style.opacity = "0";
   setTimeout(dopo, 280);
 }
-function closeDialog() { if (dlg().open) dlg().close(); }
+// la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
+function planDialogHtml() {
+  return `<h3>Previsione della giornata</h3>${favCardHtml()}<h4 class="pasto-titolo">Previsione di oggi</h4>${planItemsHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`;
+}
+function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
 
 function recentFoods() {
@@ -2443,7 +2455,8 @@ function act(a, el) {
       break;
     }
     case "myplan-edit": {
-      openDialog(`<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn primary wide" data-act="pv-auto">Crea la previsione</button>`);
+      view.dialogPlan = true;
+      openDialog(planDialogHtml());
       renderPvList("");
       renderPbList("");
       return;
