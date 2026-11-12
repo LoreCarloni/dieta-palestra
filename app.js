@@ -242,12 +242,16 @@ let scrollToId = null;
 // Previsione automatica: quando cambiano i cibi mangiati di oggi, la parte generata si ricalcola sul rimanente.
 // Se le calorie sono gia superate, non propone altro. Le righe scritte a mano non vengono toccate.
 // Ordine della giornata: colazione, pranzo, spuntini, cena. Usato sia per mostrare sia per segnare come mangiati.
+// ordine naturale della giornata, senza categorie: pasta, albume, piatto con carne, verdura con olio, poi le proteine abbinate
 const mealRank = (line) => {
   const n = foodKey(line);
-  if (/yogurt|latte|cereal|polvere|albume|fiocchi|colazione|caffe|cappuccino/.test(n)) return 0;
-  if (/pasta|riso|pane|pranzo/.test(n)) return 1;
-  if (/frutta|mela|banana|spuntino|merenda|mandorl|noci|pistacchi/.test(n)) return 2;
-  return 3;
+  if (/pasta|riso|pane/.test(n)) return 1;
+  if (/whey|polvere/.test(n) || / con /.test(n)) return 5;
+  if (/albume/.test(n)) return 2;
+  if (/yogurt|latte|fiocchi|cereal/.test(n)) return 2;
+  if (/cotoletta|pollo|tacchino|carne|pesce/.test(n)) return 3;
+  if (/cetriol|olio|verdura|insalata|pomodor|zucchin/.test(n)) return 4;
+  return 6;
 };
 const sortPlanLines = (text) => (text || "").split("\n").filter((x) => x.trim()).map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
 
