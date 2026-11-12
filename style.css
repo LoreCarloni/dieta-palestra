@@ -395,3 +395,6 @@ h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-si
 @keyframes sheet-in { from { transform: translateY(40%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 dialog[open] { animation: sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
 dialog { overscroll-behavior: contain; touch-action: pan-y; }
+/* il titolo della previsione resta dentro il tasto, anche con la scritta Modifica */
+.plan-tap { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; text-align: center; white-space: normal; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+.plan-tap .pill { flex: 0 0 auto; }
