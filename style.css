@@ -405,3 +405,5 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 #pl-q { flex: 1 1 100%; }
 #pl-pasto { flex: 1 1 45%; }
 #pl-g { flex: 0 0 auto; }
+/* l'opzione per forza ha una riga tutta sua, cosi la scritta si legge per intero */
+.fav-add label { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; white-space: normal; }
