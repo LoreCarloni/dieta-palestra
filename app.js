@@ -939,7 +939,7 @@ function favHit(nome) {
     || (() => {
       const parole = norm(nome).split(/[^a-z0-9]+/).filter((w) => w.length > 2);
       let migliore = null, punti = 0;
-      allFoods().filter((x) => !x.perServing).forEach((x) => {
+      allFoods().filter((x) => !x.perServing && x.kcal > 0).forEach((x) => {
         const p = parole.filter((w) => norm(x.name).includes(w)).length;
         if (p > punti) { punti = p; migliore = x; }
       });
