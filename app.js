@@ -941,6 +941,19 @@ function renderCoach() {
 function favIsProteic(nome) {
   return !!favHit(nome);
 }
+// quantita decisa dall'app quando lasci i grammi vuoti: quello che entra nelle calorie e nei carboidrati rimasti
+function gramiAutomatici(hit) {
+  const per = [hit.kcal, hit.p, hit.c, hit.f];
+  const tg = targets(todayKey()), t = totals(todayKey());
+  const pianoK = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+  const kLeft = tg.kcal - t.kcal - pianoK;
+  const cLeft = tg.carbs - t.c;
+  let g = 200;
+  if (per[0] > 0) g = Math.min(g, Math.floor(Math.max(0, kLeft) / (per[0] / 100) / 10) * 10);
+  if (per[2] > 0) g = Math.min(g, Math.floor(Math.max(0, cLeft) / (per[2] / 100) / 10) * 10);
+  if (!(g >= 10)) g = hit.portion > 0 ? Math.min(200, hit.portion) : 100;
+  return g;
+}
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 function favHit(nome) {
   nome = String(nome).replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").trim(); // il pasto scritto tra parentesi non fa parte del nome
@@ -2496,7 +2509,7 @@ function act(a, el) {
       if (!trovati.length) return toast("Non trovo questo cibo nel database");
       const pasto = pastoDiPreferito(norm(pezzi[0]));
       const righe = trovati.map((x) => {
-        const g = (S.favGrams || {})[x.pz] || (/whey|polvere/i.test(x.pz) ? 15 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
+        const g = (S.favGrams || {})[x.pz] || (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
         return `${x.hit.name}, ${g} g`;
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
@@ -2540,7 +2553,7 @@ function act(a, el) {
         if (v > 0) S.favGrams[nome] = v; else delete S.favGrams[nome];
         // la riga gia nella previsione prende la stessa quantita (senza grammi scritti torna la porzione del database)
         const hit = favHit(nome);
-        const grammi = v > 0 ? v : (hit && hit.portion > 0 ? Math.min(200, hit.portion) : 100);
+        const grammi = v > 0 ? v : (hit ? gramiAutomatici(hit) : 100);
         S.plannedDinner = (S.plannedDinner || "").split("\n").map((l) => {
           if (!l.trim() || !hit || !norm(l).includes(norm(hit.name).trim())) return l;
           return l.replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${grammi}$2g`);
