@@ -2535,8 +2535,16 @@ function act(a, el) {
     case "fav-g-save": {
       S.favGrams = S.favGrams || {};
       document.querySelectorAll(".fav-gin").forEach((inp) => {
+        const nome = inp.dataset.name;
         const v = Math.round(Number(inp.value));
-        if (v > 0) S.favGrams[inp.dataset.name] = v; else delete S.favGrams[inp.dataset.name];
+        if (v > 0) S.favGrams[nome] = v; else delete S.favGrams[nome];
+        // la riga gia nella previsione prende la stessa quantita (senza grammi scritti torna la porzione del database)
+        const hit = favHit(nome);
+        const grammi = v > 0 ? v : (hit && hit.portion > 0 ? Math.min(200, hit.portion) : 100);
+        S.plannedDinner = (S.plannedDinner || "").split("\n").map((l) => {
+          if (!l.trim() || !hit || !norm(l).includes(norm(hit.name).trim())) return l;
+          return l.replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${grammi}$2g`);
+        }).join("\n");
       });
       S.favGlasses = S.favGlasses || {};
       document.querySelectorAll(".fav-glass").forEach((inp) => {
