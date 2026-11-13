@@ -485,8 +485,9 @@ function ensureMomCutlet() {
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   // se la cotoletta c'e ma senza valori, le riprendo dalla ricetta (anche dopo che l'app l'ha gia aggiunta)
   { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && (S.momVersione !== 3 || !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0))) { Object.assign(c0, MOM_CUTLET_VALORI); c0.src = "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato"; S.momVersione = 3; save(); } }
+  // se la cotoletta di famiglia manca dagli alimenti personali, la rimetto con i suoi valori
+  if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) { S.customFoods.push({ ...MOM_CUTLET }); save(); }
   if (S.momCutletAdded) return;
-  if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   fixMomCutletValues();
   fixAllCotolette();
   S.momCutletAdded = true; save();
