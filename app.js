@@ -1170,7 +1170,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
-      if (trovati.some((x) => escluso(x.hit.name, k))) return; // un ingrediente tolto da te: l'abbinamento non torna
+      if (trovati.some((x) => escluso(x.hit.name, k))) return;
+      if (needP <= 5 && trovati.some((x) => x.hit.p >= 8 && x.hit.c <= 20)) return; // proteine gia raggiunte // un ingrediente tolto da te: l'abbinamento non torna
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
@@ -1223,6 +1224,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     }
     const hit = favHit(nome);
     if (hit && escluso(hit.name, k)) return;
+    // proteine gia raggiunte: non propongo cibi proteici (albume, yogurt, polvere)
+    if (hit && needP <= 5 && hit.p >= 8 && hit.c <= 20) return;
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
