@@ -381,12 +381,14 @@ function habitDialog() {
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
 // Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
-const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90, src: "Stima, non verificata (ricetta di famiglia)" };
+const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 107, p: 17.2, c: 3.0, f: 2.8, portion: 170, src: "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
 // Pasta zucca e pancetta salvato prima dell'elenco ingredienti: ricostruisco gli ingredienti dichiarati (una sola volta, i valori salvati restano)
 // Cotoletta di tacchino della mamma: una cotoletta di 90 g. Un giro: 300 g di tacchino, 2 uova, 40 g di pane grattugiato, 30 g di parmigiano, 10 g di olio, circa 4 cotolette.
-const MOM_CUTLET_VALORI = { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 };
+// Ricetta di famiglia: 2 cotolette con 200 g di fesa di tacchino cruda, 1 uovo, 15 g di parmigiano e pane grattugiato (20 g).
+// Il preparato che avanza nel piatto si butta: si conta circa il 70% di uovo, parmigiano e pane. Una cotoletta pesa circa 170 g.
+const MOM_CUTLET_VALORI = { kcal: 107, p: 17.2, c: 3.0, f: 2.8, portion: 170 };
 // Tutte le cotolette di tacchino (della mamma): nei giorni passati, negli alimenti personali e nella previsione. Una sola volta.
 const COTOLETTA_RE = /cotolett.*(tacchino|mamma)|(tacchino|mamma).*cotolett/i;
 // Righe della previsione con la cotoletta: ricalcolo le kcal sui grammi della riga, qualunque sia il formato.
@@ -406,12 +408,12 @@ function fixAllCotolette() {
 }
 function fixAllCotolette() {
   if (S.cotolettaTuttiOk) return;
-  const vals = (g) => ({ kcal: Math.round(g * 2.18), p: Math.round(g * 0.249 * 10) / 10, c: Math.round(g * 0.076 * 10) / 10, f: Math.round(g * 0.086 * 10) / 10 });
+  const vals = (g) => ({ kcal: Math.round(g * MOM_CUTLET_VALORI.kcal / 100), p: Math.round(g * MOM_CUTLET_VALORI.p / 100 * 10) / 10, c: Math.round(g * MOM_CUTLET_VALORI.c / 100 * 10) / 10, f: Math.round(g * MOM_CUTLET_VALORI.f / 100 * 10) / 10 });
   Object.values(S.days || {}).forEach((d) => (d.meals || []).forEach((m) => {
     if (COTOLETTA_RE.test(m.name) && m.g) Object.assign(m, vals(m.g));
   }));
-  (S.customFoods || []).forEach((f) => { if (COTOLETTA_RE.test(f.name)) Object.assign(f, { kcal: 218, p: 24.9, c: 7.6, f: 8.6, portion: 90 }); });
-  const riga = (txt) => String(txt || "").replace(/(Cotoletta di tacchino \(come la fa mamma\),\s*)(\d+)\s*g(\s*stima)?\s*(\d+)\s*kcal/gi, (_, pre, g, st) => `${pre}${g} g${st || ""} ${Math.round(Number(g) * 2.18)} kcal`);
+  (S.customFoods || []).forEach((f) => { if (COTOLETTA_RE.test(f.name)) Object.assign(f, { kcal: MOM_CUTLET_VALORI.kcal, p: MOM_CUTLET_VALORI.p, c: MOM_CUTLET_VALORI.c, f: MOM_CUTLET_VALORI.f, portion: MOM_CUTLET_VALORI.portion }); });
+  const riga = (txt) => String(txt || "").replace(/(Cotoletta di tacchino \(come la fa mamma\),\s*)(\d+)\s*g(\s*stima)?\s*(\d+)\s*kcal/gi, (_, pre, g, st) => `${pre}${g} g${st || ""} ${Math.round(Number(g) * MOM_CUTLET_VALORI.kcal / 100)} kcal`);
   if (S.plannedDinner) S.plannedDinner = riga(S.plannedDinner);
   Object.values(S.plansByDay || {}).forEach((pd) => { if (pd && pd.p) pd.p = riga(pd.p); });
   S.cotolettaTuttiOk = true; save();
@@ -482,7 +484,7 @@ function ensureMomCutlet() {
   if (!S.gustiPersonali) return; // solo sul dispositivo dell'autore
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   // se la cotoletta c'e ma senza valori, le riprendo dalla ricetta (anche dopo che l'app l'ha gia aggiunta)
-  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0)) { Object.assign(c0, MOM_CUTLET_VALORI); save(); } }
+  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && (S.momVersione !== 2 || !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0))) { Object.assign(c0, MOM_CUTLET_VALORI); c0.src = "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato"; S.momVersione = 2; save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   fixMomCutletValues();
