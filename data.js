@@ -1,6 +1,7 @@
 // Database alimenti: valori per 100 g (kcal, proteine, carboidrati, grassi) e porzione tipica in grammi.
 // Valori medi indicativi (tabelle CREA ed etichette comuni).
 const FOODS = [
+  ["Focaccia", 300, 8, 50, 9, 80, "Cereali e derivati", "Stima (non verificata): focaccia genovese o da forno, valori medi"],
   // Colazione e latticini
   ["Latte parzialmente scremato", 46, 3.5, 5, 1.5, 200, "Colazione", "CREA 2019: Latte di vacca, pastorizzato, parzialmente scremato"],
   ["Latte intero", 64, 3.3, 4.9, 3.6, 200, "Colazione", "CREA 2019: Latte di vacca, pastorizzato, intero"],
