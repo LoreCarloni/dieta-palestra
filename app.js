@@ -1147,9 +1147,6 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
   const pranzoFinito = k === todayKey() && new Date().getHours() >= 15;
   (S.favFoods || []).forEach((nome) => {
-    if (pranzoFinito && /pasta|riso/i.test(nome)) return; // dopo le 15 niente pasta e riso
-    // ogni preferito si propone solo nel suo pasto, e solo finche quel pasto deve ancora arrivare
-    if (pastoFinito(pastoDiPreferito(norm(nome.split(" + ")[0])), k)) return;
     if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
