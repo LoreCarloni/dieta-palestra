@@ -1233,7 +1233,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // dopo le 15 niente pasta: i carboidrati arrivano dal pane
     const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5);
     if (pg >= 40 && !pranzoPassato) add("Pasta integrale", pg, PAS);
-    else { const bg = Math.round((needC / 0.595) / 5) * 5; if (bg > 0) add("Pane bianco", bg, [268, 8.1, 59.5, 0.5]); }
+    else { const bg = Math.min(100, Math.round((needC / 0.595) / 5) * 5); if (bg > 0) add("Pane bianco", bg, [268, 8.1, 59.5, 0.5]); }
   }
   // verdura: riempie senza calorie, solo quando le proteine sono coperte e restano calorie; altrimenti ci pensa la carne
   if (needP <= 5 && needK > 30) out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
