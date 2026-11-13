@@ -1738,12 +1738,13 @@ function dayComment(k) {
     }
   }
   const st7 = periodStats(k, 7);
-  if (st7.tracked >= 3) {
+  if (st7.tracked >= 2) {
     const perWeek = (st7.balance * 7) / 7700;
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
     const sg7 = overview(k, 7).over.length;
-    const pace = perWeek > 0.05 ? "Con questo ritmo il peso stimato tende a salire." : sg7 >= 2 ? `Ci sono ${sg7} sgarri nei 7 giorni, quindi la stima è incerta.` : sg7 === 1 ? "Lo sgarro di questa settimana pesa sulla stima: il ritmo non è ancora affidabile." : "Con questo ritmo il peso stimato può scendere: continua così nelle misurazioni del lunedì.";
-    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${pace}` });
+    const giorni = `Hai registrato ${st7.tracked} giorni su 7.`;
+    const pace = perWeek > 0.05 ? "Con questo ritmo il peso stimato tende a salire." : sg7 >= 2 ? `Ci sono ${sg7} sgarri nei 7 giorni, quindi la stima è incerta.` : sg7 === 1 ? "Lo sgarro di questa settimana pesa sulla stima: il ritmo non è ancora affidabile." : st7.tracked === 7 ? "Con questo ritmo il peso stimato può scendere: continua così nelle misurazioni del lunedì." : "Se continui così e registri tutti i 7 giorni, il peso stimato può scendere.";
+    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 || st7.tracked < 7 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${giorni} ${pace}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
