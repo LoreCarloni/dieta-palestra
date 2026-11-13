@@ -321,7 +321,7 @@ function refreshForecast() {
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
-  const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+  const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
   const prev = new Set([...(S.autoLines || []), ...(S.autoAll || [])]);
   const kept = (S.plannedDinner || "").split("\n").filter((x) => x.trim() && !prev.has(x) && !(autoRe.test(x.trim()) && !/bloccato/i.test(x)));
   const gen = tg.kcal - t.kcal <= 0 ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), k).split("\n").filter((x) => x.trim());
@@ -1136,7 +1136,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     add(fv.name, g, fv.per); picked++;
   });
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
+  const pranzoFinito = k === todayKey() && new Date().getHours() >= 15;
   (S.favFoods || []).forEach((nome) => {
+    if (pranzoFinito && /pasta|riso|pane/i.test(nome)) return; // dopo le 15 niente pranzo
     if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
@@ -2766,7 +2768,7 @@ function act(a, el) {
     }
     case "plan-regen": {
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
-      const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|verdura cotta senza condimento)\b/i;
+      const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
       // Rigenera ricalcola tutto: resta solo cio che hai bloccato, le altre righe (anche quelle non proposte dall'app) vengono rifatte
       const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l));
