@@ -2770,7 +2770,8 @@ function act(a, el) {
       // apre il modulo con il nome dell'alimento: si inseriscono i macro corretti (etichetta, codice a barre o foto)
       const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
       if (!line) break;
-      const nm = line.replace(/,?\s*bloccato\b/ig, "").replace(/:.*$/, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, "").replace(/,\s*$/, "").trim();
+      // il nome senza il pasto tra parentesi: "Cotoletta ... (cena)" diventa "Cotoletta ..."
+      const nm = line.replace(/,?\s*bloccato\b/ig, "").replace(/:.*$/, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)\s*$/ig, "").replace(/,\s*$/, "").trim();
       dlg().dataset.slot = "giorno";
       return customFoodDialog(nm);
     }
