@@ -267,7 +267,8 @@ const pastoDiRiga = (line) => PASTI[Math.min(3, Math.max(0, mealRank(line)))];
 // il pasto scelto da te per un preferito (Modifica previsione), altrimenti quello di default
 const pastoDiPreferito = (nome) => {
   const n = norm(nome).trim();
-  const riga = (S.favFoods || []).find((r) => { const primo = norm(r.split(" + ")[0]).trim(); return primo && n.startsWith(primo); });
+  const gruppo = foodGroup(n);
+  const riga = (S.favFoods || []).find((r) => foodGroup(r.split(" + ")[0]) === gruppo);
   if (riga && S.favSlot && S.favSlot[riga]) return S.favSlot[riga];
   return pastoDiDefault(n);
 };
