@@ -1235,12 +1235,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
-  // la pasta e il pane sono un pranzo: dopo le 15 di oggi non vengono proposti
-  const pranzoPassato = k === todayKey() && new Date().getHours() >= 15;
   if (needC > 4) {
-    // dopo le 15 niente pasta: i carboidrati arrivano dal pane
     const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5);
-    if (pg >= 40 && !pranzoPassato) add("Pasta integrale", pg, PAS);
+    if (pg >= 40) add("Pasta integrale", pg, PAS); // la pasta si blocca per il pasto scelto, come ogni altro cibo
     else { const bg = Math.min(100, Math.round((needC / 0.595) / 5) * 5); if (bg > 0) add("Pane bianco", bg, [268, 8.1, 59.5, 0.5]); }
   }
   // verdura: riempie senza calorie, solo quando le proteine sono coperte e restano calorie; altrimenti ci pensa la carne
