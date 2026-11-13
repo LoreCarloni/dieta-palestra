@@ -381,14 +381,14 @@ function habitDialog() {
     <button class="btn ghost wide" data-act="habit-later">Più tardi</button>`);
 }
 // Cotoletta di tacchino fatta come la prepara mamma: una sola volta, come alimento personale modificabile.
-const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 107, p: 17.2, c: 3.0, f: 2.8, portion: 170, src: "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato" };
+const MOM_CUTLET = { name: "Cotoletta di tacchino (come la fa mamma)", kcal: 133, p: 22.0, c: 2.9, f: 3.6, portion: 130, src: "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato" };
 // Proteine in polvere: alimento personale, da confermare con l'etichetta del prodotto.
 const PROTEIN_POWDER = { name: "Proteine in polvere", kcal: 380, p: 78, c: 6, f: 5, portion: 10, src: "Stima, da controllare sull'etichetta" };
 // Pasta zucca e pancetta salvato prima dell'elenco ingredienti: ricostruisco gli ingredienti dichiarati (una sola volta, i valori salvati restano)
 // Cotoletta di tacchino della mamma: una cotoletta di 90 g. Un giro: 300 g di tacchino, 2 uova, 40 g di pane grattugiato, 30 g di parmigiano, 10 g di olio, circa 4 cotolette.
-// Ricetta di famiglia: 2 cotolette con 200 g di fesa di tacchino cruda, 1 uovo, 15 g di parmigiano e pane grattugiato (20 g).
-// Il preparato che avanza nel piatto si butta: si conta circa il 70% di uovo, parmigiano e pane. Una cotoletta pesa circa 170 g.
-const MOM_CUTLET_VALORI = { kcal: 107, p: 17.2, c: 3.0, f: 2.8, portion: 170 };
+// Ricetta di famiglia: 2 cotolette con 200 g di fesa di tacchino cruda, 1 uovo, 15 g di parmigiano e 15 g di pane grattugiato.
+// Il preparato che avanza nel piatto si butta: si conta circa il 70% di uovo, parmigiano e pane. Una cotoletta pesa circa 130 g.
+const MOM_CUTLET_VALORI = { kcal: 133, p: 22.0, c: 2.9, f: 3.6, portion: 130 };
 // Tutte le cotolette di tacchino (della mamma): nei giorni passati, negli alimenti personali e nella previsione. Una sola volta.
 const COTOLETTA_RE = /cotolett.*(tacchino|mamma)|(tacchino|mamma).*cotolett/i;
 // Righe della previsione con la cotoletta: ricalcolo le kcal sui grammi della riga, qualunque sia il formato.
@@ -484,7 +484,7 @@ function ensureMomCutlet() {
   if (!S.gustiPersonali) return; // solo sul dispositivo dell'autore
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   // se la cotoletta c'e ma senza valori, le riprendo dalla ricetta (anche dopo che l'app l'ha gia aggiunta)
-  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && (S.momVersione !== 2 || !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0))) { Object.assign(c0, MOM_CUTLET_VALORI); c0.src = "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato"; S.momVersione = 2; save(); } }
+  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && (S.momVersione !== 3 || !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0))) { Object.assign(c0, MOM_CUTLET_VALORI); c0.src = "Ricetta di famiglia: 2 cotolette, 200 g di tacchino, 1 uovo, 15 g di parmigiano, pane grattugiato"; S.momVersione = 3; save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   fixMomCutletValues();
