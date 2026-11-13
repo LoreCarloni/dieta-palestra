@@ -940,6 +940,7 @@ function favIsProteic(nome) {
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 function favHit(nome) {
+  nome = String(nome).replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").trim(); // il pasto scritto tra parentesi non fa parte del nome
   const n = norm(nome).trim();
   const pasta = /pasta/.test(n);
   // alimenti senza valori (kcal vuote o zero) non contano: si usa il primo con i valori
@@ -1254,6 +1255,7 @@ function renderPbList(q) {
 function renderFavList(q, boxId, azione = "fav-pick") {
   const box = document.getElementById(boxId);
   if (!box) return;
+  q = String(q).replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "");
   // stessa ricerca di Rigenera: cerca nei propri alimenti e nel database, con parole anche separate
   // prima gli alimenti verificati (etichetta, tabella ufficiale, codice a barre), poi gli altri
   const list = q.trim() ? searchFoods(q.trim()).filter((f) => !f.perServing).filter((f, i, a) => a.findIndex((y) => norm(y.name) === norm(f.name)) === i).sort((a, b) => (isVerified(b) ? 1 : 0) - (isVerified(a) ? 1 : 0)).slice(0, 8) : [];
