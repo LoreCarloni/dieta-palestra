@@ -2516,7 +2516,8 @@ function act(a, el) {
       const nuova = [primo, ...righe.slice(1)].join(" con ") + ", bloccato";
       // stesso cibo gia nella previsione: la sostituisco con la riga bloccata, senza doppioni
       const nomi = trovati.map((x) => norm(x.hit.name).trim());
-      const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !(nomi.some((n) => norm(l).includes(n)) && !/bloccato/i.test(l)));
+      // stesso cibo gia nella previsione (bloccato o no): la riga nuova la sostituisce, senza doppioni
+      const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !nomi.some((n) => norm(l).includes(n)));
       S.plannedDinner = [...tolte, nuova].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       save(); toast(`${trovati[0].hit.name} bloccato per ${pasto}`); render();
