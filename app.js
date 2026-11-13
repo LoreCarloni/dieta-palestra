@@ -2515,9 +2515,10 @@ function act(a, el) {
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
       const nuova = [primo, ...righe.slice(1)].join(" con ") + ", bloccato";
       // stesso cibo gia nella previsione: la sostituisco con la riga bloccata, senza doppioni
-      const nomi = trovati.map((x) => norm(x.hit.name).trim());
+      const gruppi = trovati.map((x) => foodGroup(x.hit.name));
       // stesso cibo gia nella previsione (bloccato o no): la riga nuova la sostituisce, senza doppioni
-      const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !nomi.some((n) => norm(l).includes(n)));
+      // stesso alimento = stesso gruppo di parole (es. "Yogurt greco 0%" e "Yogurt greco (Esselunga)")
+      const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !gruppi.includes(foodGroup(foodKey(l))));
       S.plannedDinner = [...tolte, nuova].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       save(); toast(`${trovati[0].hit.name} bloccato per ${pasto}`); render();
