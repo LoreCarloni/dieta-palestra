@@ -261,10 +261,14 @@ const pastoDiDefault = (nome) => {
 // l'ora dopo la quale un pasto di oggi non viene piu proposto
 const PASTO_FINO_ALLE = { colazione: 11, pranzo: 15, spuntino: 18, cena: 23 };
 const pastoFinito = (pasto, k) => k === todayKey() && new Date().getHours() >= PASTO_FINO_ALLE[pasto];
+// cibi che hai tolto dalla previsione: non vengono riproposti da soli (puoi rimetterli tu, con Blocca)
+const escluso = (nome) => (S.escluse || []).some((k) => k.split("|")[0] === foodGroup(nome));
+const pastoDiRiga = (line) => PASTI[Math.min(3, Math.max(0, mealRank(line)))];
 // il pasto scelto da te per un preferito (Modifica previsione), altrimenti quello di default
 const pastoDiPreferito = (nome) => {
   const n = norm(nome).trim();
-  const riga = (S.favFoods || []).find((r) => { const primo = norm(r.split(" + ")[0]).trim(); return primo && n.startsWith(primo); });
+  const gruppo = foodGroup(n);
+  const riga = (S.favFoods || []).find((r) => foodGroup(r.split(" + ")[0]) === gruppo);
   if (riga && S.favSlot && S.favSlot[riga]) return S.favSlot[riga];
   return pastoDiDefault(n);
 };
@@ -1122,6 +1126,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
+    if (escluso(name)) return; // tolto da te: non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
     if (out.some((l) => l.startsWith(name + ","))) return;
     out.push(`${name}, ${g} g`);
@@ -1165,6 +1170,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
+      if (trovati.some((x) => escluso(x.hit.name))) return; // un ingrediente tolto da te: l'abbinamento non torna
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
@@ -1216,6 +1222,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       return;
     }
     const hit = favHit(nome);
+    if (hit && escluso(hit.name)) return;
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
@@ -2906,6 +2913,10 @@ function act(a, el) {
         unblock([target]);
         S.plannedDinner = lines.filter((_, k) => k !== idx).join("\n");
         S.planManual = true;
+        // il cibo tolto da questo pasto non torna qui
+        S.escluse = S.escluse || [];
+        const chiave = foodGroup(foodKey(target)) + "|" + pastoDiRiga(target);
+        if (!S.escluse.includes(chiave)) S.escluse.push(chiave);
         if (S.autoLines) { const j = S.autoLines.indexOf(target); if (j >= 0) S.autoLines.splice(j, 1); }
       } else S.plannedDinner = lines.join("\n");
       break;
