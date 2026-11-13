@@ -261,8 +261,8 @@ const pastoDiDefault = (nome) => {
 // l'ora dopo la quale un pasto di oggi non viene piu proposto
 const PASTO_FINO_ALLE = { colazione: 11, pranzo: 15, spuntino: 18, cena: 23 };
 const pastoFinito = (pasto, k) => k === todayKey() && new Date().getHours() >= PASTO_FINO_ALLE[pasto];
-// cibi che hai tolto dalla previsione: non vengono riproposti da soli (puoi rimetterli tu, con Blocca)
-const escluso = (nome) => (S.escluse || []).some((k) => k.split("|")[0] === foodGroup(nome));
+// cibi che hai scelto di non proporre per una giornata (tasto "Non oggi"): non tornano quel giorno
+const escluso = (nome, giorno = todayKey()) => ((S.escluseGiorno || {})[giorno] || []).includes(foodGroup(nome));
 const pastoDiRiga = (line) => PASTI[Math.min(3, Math.max(0, mealRank(line)))];
 // il pasto scelto da te per un preferito (Modifica previsione), altrimenti quello di default
 const pastoDiPreferito = (nome) => {
@@ -1126,7 +1126,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
-    if (escluso(name)) return; // tolto da te: non lo riporto
+    if (escluso(name, k)) return; // scelto da te: oggi non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
     if (out.some((l) => l.startsWith(name + ","))) return;
     out.push(`${name}, ${g} g`);
@@ -1170,7 +1170,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
-      if (trovati.some((x) => escluso(x.hit.name))) return; // un ingrediente tolto da te: l'abbinamento non torna
+      if (trovati.some((x) => escluso(x.hit.name, k))) return; // un ingrediente tolto da te: l'abbinamento non torna
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
@@ -1222,7 +1222,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       return;
     }
     const hit = favHit(nome);
-    if (hit && escluso(hit.name)) return;
+    if (hit && escluso(hit.name, k)) return;
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
@@ -1307,7 +1307,7 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const it = parseDiary(x)[0];
     const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
+    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-no-oggi" data-i="${i}">Non oggi</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -2455,6 +2455,18 @@ function act(a, el) {
       if (qn !== "Stima") rememberFood({ name: qn, kcal: kc, p, c: qc, f: qf, portion: null, perServing: true });
       closeDialog(); toast("Aggiunto"); break;
     }
+    case "plan-no-oggi": {
+      // tolgo la riga e non la ripropongo per questa giornata
+      const righe = sortPlanLines(S.plannedDinner);
+      const target = righe[+el.dataset.i];
+      if (!target) break;
+      S.escluseGiorno = S.escluseGiorno || {};
+      const giorno = view.date;
+      S.escluseGiorno[giorno] = [...(S.escluseGiorno[giorno] || []), foodGroup(foodKey(target))];
+      S.plannedDinner = righe.filter((_, k) => k !== +el.dataset.i).join("\n");
+      S.planManual = true; save(); toast("Non lo ripropongo per oggi"); render();
+      break;
+    }
     case "plan-up":
     case "plan-down": {
       // sposto la riga nell'ordine che vedi: l'ordine scelto da te resta quello
@@ -2913,10 +2925,7 @@ function act(a, el) {
         unblock([target]);
         S.plannedDinner = lines.filter((_, k) => k !== idx).join("\n");
         S.planManual = true;
-        // il cibo tolto da questo pasto non torna qui
-        S.escluse = S.escluse || [];
-        const chiave = foodGroup(foodKey(target)) + "|" + pastoDiRiga(target);
-        if (!S.escluse.includes(chiave)) S.escluse.push(chiave);
+
         if (S.autoLines) { const j = S.autoLines.indexOf(target); if (j >= 0) S.autoLines.splice(j, 1); }
       } else S.plannedDinner = lines.join("\n");
       break;
