@@ -482,7 +482,7 @@ function ensureMomCutlet() {
   if (!S.gustiPersonali) return; // solo sul dispositivo dell'autore
   if (!S.momPortionFixed) { const c = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c) { c.portion = 230; S.momPortionFixed = true; save(); } }
   // se la cotoletta c'e ma senza valori, le riprendo dalla ricetta (anche dopo che l'app l'ha gia aggiunta)
-  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && !(c0.kcal > 0)) { Object.assign(c0, MOM_CUTLET_VALORI); save(); } }
+  { const c0 = S.customFoods.find((x) => x.name === MOM_CUTLET.name); if (c0 && !(c0.kcal > 0 && c0.p > 0 && c0.c > 0 && c0.f > 0)) { Object.assign(c0, MOM_CUTLET_VALORI); save(); } }
   if (S.momCutletAdded) return;
   if (!S.customFoods.some((x) => x.name === MOM_CUTLET.name)) S.customFoods.push({ ...MOM_CUTLET });
   fixMomCutletValues();
