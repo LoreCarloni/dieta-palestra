@@ -2502,7 +2502,10 @@ function act(a, el) {
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
       const nuova = [primo, ...righe.slice(1)].join(" con ") + ", bloccato";
-      S.plannedDinner = [S.plannedDinner, nuova].filter((x) => x && x.trim()).join("\n");
+      // stesso cibo gia nella previsione: la sostituisco con la riga bloccata, senza doppioni
+      const nomi = trovati.map((x) => norm(x.hit.name).trim());
+      const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !(nomi.some((n) => norm(l).includes(n)) && !/bloccato/i.test(l)));
+      S.plannedDinner = [...tolte, nuova].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
       save(); toast(`${trovati[0].hit.name} bloccato per ${pasto}`); render();
       break;
