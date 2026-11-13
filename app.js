@@ -258,6 +258,9 @@ const pastoDiDefault = (nome) => {
   if (/albume|latte|fiocchi|cereal/.test(nome)) return "spuntino";
   return "cena";
 };
+// l'ora dopo la quale un pasto di oggi non viene piu proposto
+const PASTO_FINO_ALLE = { colazione: 11, pranzo: 15, spuntino: 18, cena: 23 };
+const pastoFinito = (pasto, k) => k === todayKey() && new Date().getHours() >= PASTO_FINO_ALLE[pasto];
 // il pasto scelto da te per un preferito (Modifica previsione), altrimenti quello di default
 const pastoDiPreferito = (nome) => {
   const n = norm(nome).trim();
@@ -1145,6 +1148,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const pranzoFinito = k === todayKey() && new Date().getHours() >= 15;
   (S.favFoods || []).forEach((nome) => {
     if (pranzoFinito && /pasta|riso/i.test(nome)) return; // dopo le 15 niente pasta e riso
+    // ogni preferito si propone solo nel suo pasto, e solo finche quel pasto deve ancora arrivare
+    if (pastoFinito(pastoDiPreferito(norm(nome.split(" + ")[0])), k)) return;
     if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
