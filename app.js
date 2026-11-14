@@ -1125,6 +1125,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const ff = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.f, 0), 0);
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
+  const gia = (n) => out.some((l) => norm(l).includes(norm(n).split(" ")[0]));
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
     if (escluso(name, k)) return; // scelto da te: oggi non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
@@ -1171,7 +1172,6 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.some((x) => escluso(x.hit.name, k))) return;
-      if (needP <= 5 && trovati.some((x) => x.hit.p >= 8 && x.hit.c <= 20)) return; // proteine gia raggiunte // un ingrediente tolto da te: l'abbinamento non torna
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
@@ -1205,7 +1205,6 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         return;
       }
       // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
-      if (cCombo > 15) { if (needC <= 0) return; }
       const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
       const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
       if (fatt < 0.3) return;
@@ -1225,7 +1224,6 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const hit = favHit(nome);
     if (hit && escluso(hit.name, k)) return;
     // proteine gia raggiunte: non propongo cibi proteici (albume, yogurt, polvere)
-    if (hit && needP <= 5 && hit.p >= 8 && hit.c <= 20) return;
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
@@ -1251,14 +1249,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
   // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
   if (S.gustiPersonali) {
-  if (needP > 5 && !out.some((l) => /yogurt/i.test(l))) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
+  if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
   if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
-  if (needC > 4) {
+  if (needC > 4 && !gia("Pasta") && !gia("Pane")) {
     // carboidrati aggiunti solo se stanno nelle calorie rimaste: mai oltre il fabbisogno della giornata
     const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5, Math.floor(Math.max(0, needK) / 3.4 / 5) * 5);
     if (pg >= 40) add("Pasta integrale", pg, PAS); // la pasta si blocca per il pasto scelto, come ogni altro cibo
@@ -2855,11 +2853,11 @@ function act(a, el) {
       const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
       let carbTot = () => tutte.reduce((a, l) => a + carbRiga(l), 0);
       let tolteC = 0;
-      while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && carbRiga(l) > 0)) {
+      while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && carbRiga(l) > 0)) {
         // tolgo prima la voce con piu carboidrati e meno proteine
         let best = -1, bc = -Infinity;
         const punteggio = (l) => { const x = parseDiary(l).reduce((a, y) => ({ c: a.c + (y.c || 0), p: a.p + (y.p || 0) }), { c: 0, p: 0 }); return x.c - 2 * x.p; };
-        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && carbRiga(l) > 0 && punteggio(l) > bc) { bc = punteggio(l); best = k; } });
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && carbRiga(l) > 0 && punteggio(l) > bc) { bc = punteggio(l); best = k; } });
         tutte.splice(best, 1); tolteC++;
       }
       if (carbTot() > cLim) {
@@ -2869,8 +2867,8 @@ function act(a, el) {
       const carbExcess = Math.max(0, carbTot() - targets(view.date).carbs);
       S.carbDebt = S.carbDebt || {}; S.carbDebt[view.date] = Math.round(carbExcess);
       let tolte = 0;
-      while (sopra() && tutte.some((l) => !/bloccato/i.test(l))) {
-        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
+      while (sopra() && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l))) {
+        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l) && !preferito(l))[1];
         tutte.splice(i, 1); tolte++;
       }
       // se resta sopra, riduco le voci bloccate al massimo che entra; la pasta sotto 30 g diventa pane bianco
