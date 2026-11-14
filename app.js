@@ -3363,10 +3363,15 @@ function act(a, el) {
 
 
 // ---------- Eventi ----------
+// il pulsante toccato all'inizio e quello su cui arriva il clic: se il DOM e cambiato nel frattempo (per esempio dopo Rigenera) l'azione sui preferiti non parte
+let pressoEl = null;
+document.addEventListener("pointerdown", (e) => { pressoEl = e.target.closest("[data-act]"); }, true);
 document.addEventListener("click", (e) => {
   const nav = e.target.closest(".nav button");
   if (nav) { resetScroll = true; view.tab = nav.dataset.tab; view.mEdit = null; if (view.tab === "oggi") view.date = todayKey(); return render(); }
   const el = e.target.closest("[data-act]");
+  if (el && ["fav-pick", "plan-fav"].includes(el.dataset.act) && pressoEl && pressoEl !== el) { e.preventDefault(); pressoEl = null; return; }
+  pressoEl = null;
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
 // la finestra si chiude con lo swipe, ma non se stai selezionando o copiando un testo
