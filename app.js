@@ -70,7 +70,15 @@ if (S.measureDay === undefined) S.measureDay = 1;
   }));
   if (fixed) save();
 }
+// un preferito non puo comparire due volte nella previsione (per esempio bloccato e non bloccato): tengo la riga bloccata
+function tieniUnPreferito(righe) {
+  const chiaveRiga = (l) => norm(l.split(" con ")[0].replace(/,?\s*bloccat[ao]\b/ig, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").replace(/,\s*[\d.,]+\s*g.*$/i, "")).trim();
+  const migliori = new Map();
+  righe.forEach((l) => { if (!rigaPreferita(l)) return; const k = chiaveRiga(l); const prev = migliori.get(k); if (!prev || (/bloccat/i.test(l) && !/bloccat/i.test(prev))) migliori.set(k, l); });
+  return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
+}
 function save() {
+  if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).join("\n");
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
 
@@ -1178,7 +1186,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   });
   // cibi preferiti (sezione Profilo): Rigenera sceglie fra questi, decide lui la quantita, senza superare calorie e carboidrati
   const pranzoFinito = k === todayKey() && new Date().getHours() >= 15;
-  (S.favFoods || []).forEach((nome) => {
+  // l'albume per ultimo: i bicchieri si calcolano sulle proteine che restano dopo gli altri preferiti
+  [...(S.favFoods || [])].sort((a, b) => (/albume/i.test(a) ? 1 : 0) - (/albume/i.test(b) ? 1 : 0)).forEach((nome) => {
     if (eatenToday.has(norm(nome).trim())) return;
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
