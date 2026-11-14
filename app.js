@@ -2608,7 +2608,7 @@ function act(a, el) {
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
       } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
         toast("Questo cibo è già nei preferiti");
-      } else {
+      } else if (window.confirm(`Aggiungo ${nome} ai miei preferiti?`)) {
         S.favFoods.push(nome);
       }
       save(); favRefresh();
@@ -2817,7 +2817,7 @@ function act(a, el) {
       S.favFoods = S.favFoods || [];
       if (voce) { S.favFoods = S.favFoods.filter((r) => r !== voce); save(); toast("Tolto dai preferiti"); }
       else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(primo); return norm(pz) === norm(primo) || (!!a && !!b && a.name === b.name); }))) { toast("Questo cibo è già nei preferiti"); }
-      else { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
+      else if (window.confirm(`Aggiungo ${primo} ai miei preferiti?`)) { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
       favRefresh();
       break;
     }
