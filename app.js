@@ -983,6 +983,8 @@ function favHit(nome) {
 }
 // cibi che ti piacciono: fissi, senza grammi e senza legame con il giorno. Rigenera sceglie fra questi.
 S.favFoods = S.favFoods || [];
+// una volta sola: tolgo i doppioni identici gia salvati (stesso nome, stesso abbinamento)
+S.favFoods = S.favFoods.filter((r, i, a) => a.findIndex((x) => String(x).toLowerCase().replace(/\s+/g, " ").trim() === String(r).toLowerCase().replace(/\s+/g, " ").trim()) === i);
 // dopo una modifica dei preferiti: se la finestra e aperta la ridisegno, altrimenti aggiorno la pagina
 function favRefresh() {
   const sez = document.querySelector(".fav-section");
