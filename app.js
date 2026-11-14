@@ -1342,7 +1342,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn wide" data-act="plan-done">Fatto, le modifiche sono salvate</button>`;
+  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn wide" data-act="plan-done">Chiudi</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
