@@ -1001,7 +1001,7 @@ function favCardHtml() {
   const righe = (S.favFoods || []).map((r, i) => ({ r, i }));
   const bloc = (pasto) => {
     const elenco = righe.filter(({ r }) => pastoDiPreferito(norm(r.split(" + ")[0])) === pasto);
-    const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-blocca" data-i="${i}">Blocca oggi</button><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => favIsProteic(x) && x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
+    const corpo = elenco.map(({ r, i }) => `<div class="fav-row">${r.split(" + ").map((x) => { const fd = searchFoods(x).find((y) => !y.perServing && norm(y.name) === norm(x).trim()) || searchFoods(x).find((y) => !y.perServing); return `<span class="fav-food">${esc(x)} ${fd ? sourceBadge(fd) : ""}${favIsProteic(x) ? ` <button class="pa" data-act="fav-g" data-name="${esc(x)}">${(S.favGrams || {})[x] ? `${(S.favGrams || {})[x]} g` : "grammi"}</button>` : ""}</span>`; }).join('<span class="fav-plus">+</span>')}<span class="fav-tools"><select class="fav-slot" data-r="${esc(r)}">${PASTI.map((p) => `<option value="${p}" ${p === pasto ? "selected" : ""}>${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="pa" data-act="fav-blocca" data-i="${i}">Blocca oggi</button><button class="pa" data-act="fav-plus" data-i="${i}">+ abbina</button><button class="pa" data-act="fav-del" data-i="${i}" aria-label="Togli">×</button></span>${view.favGramsKey && r.split(" + ").some((x) => x === view.favGramsKey) ? `<div class="fav-grams"><div class="field"><label class="muted small">${esc(view.favGramsKey)}, grammi</label><input class="fav-gin" type="number" inputmode="decimal" data-name="${esc(view.favGramsKey)}" value="${(S.favGrams || {})[view.favGramsKey] || ""}" placeholder="per esempio 150"></div><button class="btn primary" data-act="fav-g-save">Salva</button></div>` : ""}${pair === i ? `<div class="field"><input id="fav-pair" type="search" placeholder="Scrivi il secondo cibo e scegli dall'elenco" autocomplete="off"></div><div id="fav-list-pair" class="list"></div>` : ""}</div>`).join("");
     const previsione = planItemsHtml(true, pasto);
     const hasPrevisione = previsione && !previsione.includes("Scrivi colazione");
     return `<h4 class="pasto-titolo">${pasto[0].toUpperCase() + pasto.slice(1)}</h4>${corpo}${hasPrevisione ? `<div class="pasto-previsione">${previsione}</div>` : ""}`;
@@ -1080,11 +1080,15 @@ const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.fi
 // I cibi che mangi piu spesso negli ultimi 30 giorni, con la porzione tipica (mediana dei grammi).
 // chiave dell'alimento: le prime due parole significative (fiocchi d'avena = fiocchi di avena integrali)
 const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.length > 2).slice(0, 2).join(" ");
+// riga gia nella previsione che corrisponde a un tuo preferito (anche con il nome del database)
+function rigaPreferita(l) {
+  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
+}
 function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
   // i preferiti scelti da te entrano sempre per primi, senza aspettare la cronologia
-  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name))
+  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name) && (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(x.name).trim() || (!!h && h.name === x.name); })))
     .map((x) => ({ name: x.name, g: x.portion || 100, per: [x.kcal, x.p, x.c, x.f] }));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
@@ -1125,6 +1129,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const ff = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.f, 0), 0);
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
+  const gia = (n) => { const w = norm(n).split(" ")[0]; return out.some((l) => norm(l).includes(w)) || planText.split("\n").some((l) => l.trim() && norm(l).includes(w)); };
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
     if (escluso(name, k)) return; // scelto da te: oggi non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
@@ -1151,6 +1156,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let picked = 0;
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
+    // se il cibo e tra i tuoi preferiti, lo decidi tu (grammi e abbinamento): qui non lo propongo
+    if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return h && h.name === fv.name; }))) return;
     // il preferito e il cibo, non la quantita: la porzione abituale e solo un massimo, e si scende se le calorie o i carboidrati non entrano
     const gMax = /cotoletta/i.test(hit.name) ? Math.min(60, fv.g) : fv.g;
     const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
@@ -1171,8 +1178,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.some((x) => escluso(x.hit.name, k))) return;
-      if (needP <= 5 && trovati.some((x) => x.hit.p >= 8 && x.hit.c <= 20)) return; // proteine gia raggiunte // un ingrediente tolto da te: l'abbinamento non torna
-      if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
+      if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => (l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(x.pz.toLowerCase() + ",")) && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
       const base = (pz) => {
@@ -1195,7 +1201,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         for (let k = 1; k <= nBicchieri; k++) {
           const parti = [alb, ...altri].filter(Boolean).map((x, j) => {
             const fis = (S.favGrams || {})[x.pz] || base0(x.pz);
-            const nome = j === 0 ? `${x.hit.name}, bicchiere ${k}` : x.hit.name;
+            const nome = j === 0 ? `${x.pz}, bicchiere ${k}` : x.pz;
             return { testo: `${nome}, ${fis} g`, x, fis };
           });
           parti.forEach((q) => { needK -= q.x.hit.kcal * q.fis / 100; needP -= q.x.hit.p * q.fis / 100; needC -= q.x.hit.c * q.fis / 100; });
@@ -1205,10 +1211,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         return;
       }
       // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
-      if (cCombo > 15) { if (needC <= 0) return; }
-      const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
-      const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
-      if (fatt < 0.3) return;
+      // i preferiti restano come li hai impostati: nessuna riduzione dei grammi
+      const fatt = 1;
       // un abbinamento e una sola riga: primo il cibo principale (non la polvere), poi "con" l'altro cibo, ciascuno con i suoi grammi
       const ordinati = [...combo].sort((a, b) => (/whey|polvere/i.test(a.pz) ? 1 : 0) - (/whey|polvere/i.test(b.pz) ? 1 : 0));
       const parti = ordinati.map((x) => {
@@ -1216,7 +1220,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
         const gr = fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g);
         needK -= x.per[0] * gr / 100; needP -= x.per[1] * gr / 100; needC -= x.per[2] * gr / 100;
-        return `${x.hit.name}, ${gr} g`;
+        return `${x.pz}, ${gr} g`;
       });
       if (!out.some((l) => l.startsWith(parti[0].split(",")[0] + ","))) out.push(parti.join(" con "));
       picked++;
@@ -1225,14 +1229,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const hit = favHit(nome);
     if (hit && escluso(hit.name, k)) return;
     // proteine gia raggiunte: non propongo cibi proteici (albume, yogurt, polvere)
-    if (hit && needP <= 5 && hit.p >= 8 && hit.c <= 20) return;
-    if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
+    if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(nome.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
-    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
-    if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
+    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${nome}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
+    if (fissi) { addSum(nome, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
@@ -1250,15 +1253,15 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const yog = byName("Yogurt greco 0%");
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
   // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
-  if (S.gustiPersonali) {
-  if (needP > 5 && !out.some((l) => /yogurt/i.test(l))) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
+  if (S.gustiPersonali && !(S.favFoods || []).length) { // con una lista di preferiti, la previsione usa solo quelli
+  if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
   if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
-  if (needC > 4) {
+  if (needC > 4 && !gia("Pasta") && !gia("Pane")) {
     // carboidrati aggiunti solo se stanno nelle calorie rimaste: mai oltre il fabbisogno della giornata
     const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5, Math.floor(Math.max(0, needK) / 3.4 / 5) * 5);
     if (pg >= 40) add("Pasta integrale", pg, PAS); // la pasta si blocca per il pasto scelto, come ogni altro cibo
@@ -1344,7 +1347,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn wide" data-act="plan-done">Fatto, le modifiche sono salvate</button>`;
+  return `<h3>Previsione della giornata</h3>${favCardHtml()}<button class="btn wide" data-act="plan-done">Chiudi</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
@@ -1738,12 +1741,13 @@ function dayComment(k) {
     }
   }
   const st7 = periodStats(k, 7);
-  if (st7.tracked >= 3) {
+  if (st7.tracked >= 2) {
     const perWeek = (st7.balance * 7) / 7700;
     const word = perWeek > 0 ? `sale di circa ${r1(perWeek)} kg a settimana` : `scende di circa ${r1(-perWeek)} kg a settimana`;
     const sg7 = overview(k, 7).over.length;
-    const pace = perWeek > 0.05 ? "Con questo ritmo il peso stimato tende a salire." : sg7 >= 2 ? `Ci sono ${sg7} sgarri nei 7 giorni, quindi la stima è incerta.` : sg7 === 1 ? "Lo sgarro di questa settimana pesa sulla stima: il ritmo non è ancora affidabile." : "Con questo ritmo il peso stimato può scendere: continua così nelle misurazioni del lunedì.";
-    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${pace}` });
+    const giorni = `Hai registrato ${st7.tracked} giorni su 7.`;
+    const pace = perWeek > 0.05 ? "Con questo ritmo il peso stimato tende a salire." : sg7 >= 2 ? `Ci sono ${sg7} sgarri nei 7 giorni, quindi la stima è incerta.` : sg7 === 1 ? "Lo sgarro di questa settimana pesa sulla stima: il ritmo non è ancora affidabile." : st7.tracked === 7 ? "Se continui così vedrai presto i risultati." : "Se continui così e registri tutti i 7 giorni, vedrai presto i risultati.";
+    lines.push({ lvl: perWeek > 0.05 || sg7 >= 2 ? "bad" : sg7 === 1 || st7.tracked < 7 ? "warn" : "good", text: `Ritmo degli ultimi 7 giorni: il peso stimato ${word}. ${giorni} ${pace}` });
   }
   const tips = [];
   if (fOver > tg.fat * 0.1) tips.push(`riduci le fonti di grassi in cima, ${top("f", 2).map((x) => shortName(x.name)).join(" e ")}, e misura l'olio`);
@@ -2602,6 +2606,8 @@ function act(a, el) {
       if (view.favPair !== undefined) {
         const i = view.favPair; view.favPair = undefined;
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
+      } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
+        toast("Questo cibo è già nei preferiti");
       } else {
         S.favFoods.push(nome);
       }
@@ -2807,9 +2813,10 @@ function act(a, el) {
       if (!line) break;
       const nome = foodKey(line).replace(/:.*$/, "").split(/ con /)[0].trim();
       const primo = (line.split(/ con /)[0] || "").replace(/,?\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\(.*?\)\s*$/, "").trim();
-      const voce = (S.favFoods || []).find((r) => norm(r.split(" + ")[0]).trim() === norm(primo).trim() || norm(r.split(" + ")[0]).includes(norm(primo)));
+      const voce = (S.favFoods || []).find((r) => rigaPreferita(primo) && r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(primo).trim() || (!!h && norm(h.name) === norm(primo)) || norm(pz).includes(norm(primo)); }));
       S.favFoods = S.favFoods || [];
       if (voce) { S.favFoods = S.favFoods.filter((r) => r !== voce); save(); toast("Tolto dai preferiti"); }
+      else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(primo); return norm(pz) === norm(primo) || (!!a && !!b && a.name === b.name); }))) { toast("Questo cibo è già nei preferiti"); }
       else { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
       favRefresh();
       break;
@@ -2828,7 +2835,7 @@ function act(a, el) {
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
       // Rigenera ricalcola tutto: resta solo cio che hai bloccato, le altre righe (anche quelle non proposte dall'app) vengono rifatte
-      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l));
+      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l) || rigaPreferita(l));
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
@@ -2841,15 +2848,24 @@ function act(a, el) {
       // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
       const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
       // priorita ai carboidrati: entro il 20% in piu del target, il resto va tolto (non bloccato) o ridotto
-      const cLim = targets(view.date).carbs * 1.2 - totals(view.date).c;
+      const cLim = targets(view.date).carbs * 1.05 - totals(view.date).c;
+      // stesso criterio per le proteine: sopra il target del 10 per cento tolgo le voci non bloccate con piu proteine
+      const proteRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.p || 0), 0);
+      const pLim = targets(view.date).protein * 1.1 - totals(view.date).p;
+      const preferito = rigaPreferita;
+      while (tutte.reduce((a, l) => a + proteRiga(l), 0) > pLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > 0)) {
+        let best = -1, bp = -Infinity;
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > bp) { bp = proteRiga(l); best = k; } });
+        tutte.splice(best, 1);
+      }
       const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
       let carbTot = () => tutte.reduce((a, l) => a + carbRiga(l), 0);
       let tolteC = 0;
-      while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && carbRiga(l) > 0)) {
+      while (carbTot() > cLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && carbRiga(l) > 0)) {
         // tolgo prima la voce con piu carboidrati e meno proteine
         let best = -1, bc = -Infinity;
         const punteggio = (l) => { const x = parseDiary(l).reduce((a, y) => ({ c: a.c + (y.c || 0), p: a.p + (y.p || 0) }), { c: 0, p: 0 }); return x.c - 2 * x.p; };
-        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && carbRiga(l) > 0 && punteggio(l) > bc) { bc = punteggio(l); best = k; } });
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && carbRiga(l) > 0 && punteggio(l) > bc) { bc = punteggio(l); best = k; } });
         tutte.splice(best, 1); tolteC++;
       }
       if (carbTot() > cLim) {
@@ -2859,8 +2875,8 @@ function act(a, el) {
       const carbExcess = Math.max(0, carbTot() - targets(view.date).carbs);
       S.carbDebt = S.carbDebt || {}; S.carbDebt[view.date] = Math.round(carbExcess);
       let tolte = 0;
-      while (sopra() && tutte.some((l) => !/bloccato/i.test(l))) {
-        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l))[1];
+      while (sopra() && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l))) {
+        const i = tutte.map((l, k) => [l, k]).reverse().find(([l]) => !/bloccato/i.test(l) && !preferito(l))[1];
         tutte.splice(i, 1); tolte++;
       }
       // se resta sopra, riduco le voci bloccate al massimo che entra; la pasta sotto 30 g diventa pane bianco
@@ -3350,10 +3366,15 @@ function act(a, el) {
 
 
 // ---------- Eventi ----------
+// il pulsante toccato all'inizio e quello su cui arriva il clic: se il DOM e cambiato nel frattempo (per esempio dopo Rigenera) l'azione sui preferiti non parte
+let pressoEl = null;
+document.addEventListener("pointerdown", (e) => { pressoEl = e.target.closest("[data-act]"); }, true);
 document.addEventListener("click", (e) => {
   const nav = e.target.closest(".nav button");
   if (nav) { resetScroll = true; view.tab = nav.dataset.tab; view.mEdit = null; if (view.tab === "oggi") view.date = todayKey(); return render(); }
   const el = e.target.closest("[data-act]");
+  if (el && ["fav-pick", "plan-fav"].includes(el.dataset.act) && pressoEl && pressoEl !== el) { e.preventDefault(); pressoEl = null; return; }
+  pressoEl = null;
   if (el) { e.preventDefault(); act(el.dataset.act, el); }
 });
 // la finestra si chiude con lo swipe, ma non se stai selezionando o copiando un testo
@@ -3482,6 +3503,8 @@ document.addEventListener("submit", (e) => {
   render();
 });
 document.addEventListener("keydown", (e) => {
+  // nelle caselle dei preferiti e della previsione Invio non sceglie nulla: i preferiti li aggiungi solo tu con un tocco
+  if (e.key === "Enter" && ["fav-new", "pl-q"].includes(e.target.id)) { e.preventDefault(); return; }
   if (e.key === "Enter" && dlg().open && e.target.tagName === "INPUT") {
     const primary = dlg().querySelector(".btn.primary");
     if (primary) { e.preventDefault(); primary.click(); }
