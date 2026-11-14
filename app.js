@@ -1088,7 +1088,7 @@ function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
   // i preferiti scelti da te entrano sempre per primi, senza aspettare la cronologia
-  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name))
+  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name) && (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(x.name).trim() || (!!h && h.name === x.name); })))
     .map((x) => ({ name: x.name, g: x.portion || 100, per: [x.kcal, x.p, x.c, x.f] }));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
@@ -1253,7 +1253,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const yog = byName("Yogurt greco 0%");
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
   // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
-  if (S.gustiPersonali) {
+  if (S.gustiPersonali && !(S.favFoods || []).length) { // con una lista di preferiti, la previsione usa solo quelli
   if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
@@ -2606,6 +2606,8 @@ function act(a, el) {
       if (view.favPair !== undefined) {
         const i = view.favPair; view.favPair = undefined;
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
+      } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
+        toast("Questo cibo è già nei preferiti");
       } else {
         S.favFoods.push(nome);
       }
@@ -2811,9 +2813,10 @@ function act(a, el) {
       if (!line) break;
       const nome = foodKey(line).replace(/:.*$/, "").split(/ con /)[0].trim();
       const primo = (line.split(/ con /)[0] || "").replace(/,?\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\(.*?\)\s*$/, "").trim();
-      const voce = (S.favFoods || []).find((r) => norm(r.split(" + ")[0]).trim() === norm(primo).trim() || norm(r.split(" + ")[0]).includes(norm(primo)));
+      const voce = (S.favFoods || []).find((r) => rigaPreferita(primo) && r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(primo).trim() || (!!h && norm(h.name) === norm(primo)) || norm(pz).includes(norm(primo)); }));
       S.favFoods = S.favFoods || [];
       if (voce) { S.favFoods = S.favFoods.filter((r) => r !== voce); save(); toast("Tolto dai preferiti"); }
+      else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(primo); return norm(pz) === norm(primo) || (!!a && !!b && a.name === b.name); }))) { toast("Questo cibo è già nei preferiti"); }
       else { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
       favRefresh();
       break;
