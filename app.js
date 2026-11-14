@@ -2844,7 +2844,7 @@ function act(a, el) {
       // stesso criterio per le proteine: sopra il target del 10 per cento tolgo le voci non bloccate con piu proteine
       const proteRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.p || 0), 0);
       const pLim = targets(view.date).protein * 1.1 - totals(view.date).p;
-      const preferito = (l) => (S.favFoods || []).some((r) => { const n = norm(r.split(" + ")[0]).trim(); return n.length > 2 && norm(l).includes(n); });
+      const preferito = (l) => (S.favFoods || []).some((r) => { const pz = r.split(" + ")[0]; const h = favHit(pz); const n = norm(h ? h.name : pz).trim(); return n.length > 2 && norm(l).includes(n); });
       while (tutte.reduce((a, l) => a + proteRiga(l), 0) > pLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > 0)) {
         let best = -1, bp = -Infinity;
         tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > bp) { bp = proteRiga(l); best = k; } });
