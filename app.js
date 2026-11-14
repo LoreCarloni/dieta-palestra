@@ -3503,6 +3503,8 @@ document.addEventListener("submit", (e) => {
   render();
 });
 document.addEventListener("keydown", (e) => {
+  // nelle caselle dei preferiti e della previsione Invio non sceglie nulla: i preferiti li aggiungi solo tu con un tocco
+  if (e.key === "Enter" && ["fav-new", "pl-q"].includes(e.target.id)) { e.preventDefault(); return; }
   if (e.key === "Enter" && dlg().open && e.target.tagName === "INPUT") {
     const primary = dlg().querySelector(".btn.primary");
     if (primary) { e.preventDefault(); primary.click(); }
