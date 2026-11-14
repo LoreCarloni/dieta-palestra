@@ -1152,6 +1152,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let picked = 0;
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
+    // se il cibo e tra i tuoi preferiti, lo decidi tu (grammi e abbinamento): qui non lo propongo
+    if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return h && h.name === fv.name; }))) return;
     // il preferito e il cibo, non la quantita: la porzione abituale e solo un massimo, e si scende se le calorie o i carboidrati non entrano
     const gMax = /cotoletta/i.test(hit.name) ? Math.min(60, fv.g) : fv.g;
     const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
@@ -1195,7 +1197,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         for (let k = 1; k <= nBicchieri; k++) {
           const parti = [alb, ...altri].filter(Boolean).map((x, j) => {
             const fis = (S.favGrams || {})[x.pz] || base0(x.pz);
-            const nome = j === 0 ? `${x.hit.name}, bicchiere ${k}` : x.hit.name;
+            const nome = j === 0 ? `${x.pz}, bicchiere ${k}` : x.pz;
             return { testo: `${nome}, ${fis} g`, x, fis };
           });
           parti.forEach((q) => { needK -= q.x.hit.kcal * q.fis / 100; needP -= q.x.hit.p * q.fis / 100; needC -= q.x.hit.c * q.fis / 100; });
@@ -1205,9 +1207,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         return;
       }
       // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
-      const fattC = needC > 0 && cCombo > 0 ? Math.min(1, (needC + 3) / cCombo) : 1;
-      const fatt = Math.min(1, kCombo > 0 ? (needK + 150) / kCombo : 1, fattC);
-      if (fatt < 0.3) return;
+      // i preferiti restano come li hai impostati: nessuna riduzione dei grammi
+      const fatt = 1;
       // un abbinamento e una sola riga: primo il cibo principale (non la polvere), poi "con" l'altro cibo, ciascuno con i suoi grammi
       const ordinati = [...combo].sort((a, b) => (/whey|polvere/i.test(a.pz) ? 1 : 0) - (/whey|polvere/i.test(b.pz) ? 1 : 0));
       const parti = ordinati.map((x) => {
@@ -1215,7 +1216,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
         const gr = fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g);
         needK -= x.per[0] * gr / 100; needP -= x.per[1] * gr / 100; needC -= x.per[2] * gr / 100;
-        return `${x.hit.name}, ${gr} g`;
+        return `${x.pz}, ${gr} g`;
       });
       if (!out.some((l) => l.startsWith(parti[0].split(",")[0] + ","))) out.push(parti.join(" con "));
       picked++;
@@ -1229,8 +1230,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
-    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${hit.name}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
-    if (fissi) { addSum(hit.name, fissi, per); picked++; return; }
+    if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${nome}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
+    if (fissi) { addSum(nome, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
     let g = Math.min(200, perG(0), perG(2), perG(3));
@@ -2844,7 +2845,7 @@ function act(a, el) {
       // stesso criterio per le proteine: sopra il target del 10 per cento tolgo le voci non bloccate con piu proteine
       const proteRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.p || 0), 0);
       const pLim = targets(view.date).protein * 1.1 - totals(view.date).p;
-      const preferito = (l) => (S.favFoods || []).some((r) => { const pz = r.split(" + ")[0]; const h = favHit(pz); const n = norm(h ? h.name : pz).trim(); return n.length > 2 && norm(l).includes(n); });
+      const preferito = (l) => (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
       while (tutte.reduce((a, l) => a + proteRiga(l), 0) > pLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > 0)) {
         let best = -1, bp = -Infinity;
         tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > bp) { bp = proteRiga(l); best = k; } });
