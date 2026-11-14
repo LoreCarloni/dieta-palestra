@@ -3634,5 +3634,13 @@ ensureRagu();
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+// all'avvio: se una voce della lista e ripetuta (stesso cibo, anche con nome o tag diversi), resta la prima
+function pulisciPreferiti() {
+  const chiave = (r) => r.split(" + ").map((pz0) => { const pz = pz0.replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, ""); const h = favHit(pz); return norm(h ? h.name : pz).trim(); }).join("|");
+  const visti = new Set();
+  const nuova = (S.favFoods || []).filter((r) => { const k = chiave(r); if (visti.has(k)) return false; visti.add(k); return true; });
+  if (nuova.length !== (S.favFoods || []).length) { S.favFoods = nuova; save(); }
+}
+pulisciPreferiti();
 applyHabits(todayKey());
 render();
