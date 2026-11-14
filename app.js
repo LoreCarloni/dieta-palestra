@@ -1080,6 +1080,10 @@ const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.fi
 // I cibi che mangi piu spesso negli ultimi 30 giorni, con la porzione tipica (mediana dei grammi).
 // chiave dell'alimento: le prime due parole significative (fiocchi d'avena = fiocchi di avena integrali)
 const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.length > 2).slice(0, 2).join(" ");
+// riga gia nella previsione che corrisponde a un tuo preferito (anche con il nome del database)
+function rigaPreferita(l) {
+  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
+}
 function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
@@ -1125,7 +1129,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const ff = fixed.reduce((q, x) => q + x.items.reduce((w, i) => w + i.f, 0), 0);
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
-  const gia = (n) => out.some((l) => norm(l).includes(norm(n).split(" ")[0]));
+  const gia = (n) => { const w = norm(n).split(" ")[0]; return out.some((l) => norm(l).includes(w)) || planText.split("\n").some((l) => l.trim() && norm(l).includes(w)); };
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
     if (escluso(name, k)) return; // scelto da te: oggi non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
@@ -1174,7 +1178,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (pezzi.length > 1) {
       const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
       if (trovati.some((x) => escluso(x.hit.name, k))) return;
-      if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") && !/bloccato/i.test(l)))) return;
+      if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => (l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(x.pz.toLowerCase() + ",")) && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
       // quantita di partenza di ogni cibo: la porzione del database (una confezione, un bicchiere, un misurino), altrimenti 100 g
       const base = (pz) => {
@@ -1225,7 +1229,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const hit = favHit(nome);
     if (hit && escluso(hit.name, k)) return;
     // proteine gia raggiunte: non propongo cibi proteici (albume, yogurt, polvere)
-    if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ","))) return;
+    if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(nome.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
     const fissi = (S.favGrams || {})[nome];
@@ -2828,7 +2832,7 @@ function act(a, el) {
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
       // Rigenera ricalcola tutto: resta solo cio che hai bloccato, le altre righe (anche quelle non proposte dall'app) vengono rifatte
-      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l));
+      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l) || rigaPreferita(l));
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
@@ -2845,7 +2849,7 @@ function act(a, el) {
       // stesso criterio per le proteine: sopra il target del 10 per cento tolgo le voci non bloccate con piu proteine
       const proteRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.p || 0), 0);
       const pLim = targets(view.date).protein * 1.1 - totals(view.date).p;
-      const preferito = (l) => (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
+      const preferito = rigaPreferita;
       while (tutte.reduce((a, l) => a + proteRiga(l), 0) > pLim && tutte.some((l) => !/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > 0)) {
         let best = -1, bp = -Infinity;
         tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && !preferito(l) && proteRiga(l) > bp) { bp = proteRiga(l); best = k; } });
