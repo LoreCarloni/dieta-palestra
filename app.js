@@ -283,7 +283,12 @@ const mealRank = (line) => {
   return PASTI.indexOf(pasto);
 };
 const sortPlanLines = (text) => {
-  const righe = (text || "").split("\n").filter((x) => x.trim());
+  let righe = (text || "").split("\n").filter((x) => x.trim());
+  // un preferito compare una volta sola nella previsione: se e ripetuto, resta la riga bloccata (o la prima)
+  const chiaveRiga = (l) => norm(l.split(" con ")[0].replace(/,?\s*bloccat[ao]\b/ig, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").replace(/,\s*[\d.,]+\s*g.*$/i, "")).trim();
+  const migliori = new Map();
+  righe.forEach((l) => { if (!rigaPreferita(l)) return; const k = chiaveRiga(l); const prev = migliori.get(k); if (!prev || (/bloccat/i.test(l) && !/bloccat/i.test(prev))) migliori.set(k, l); });
+  righe = righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
   if (S.planManual) return righe; // l'ordine l'hai scelto tu con le frecce
   return righe.map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
 };
