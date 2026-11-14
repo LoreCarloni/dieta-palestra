@@ -72,6 +72,7 @@ const FOODS = [
   ["Lenticchie secche", 319, 22.7, 51.1, 1, 60, "Legumi", "CREA 2019: Lenticchie, secche"],
   // Verdure
   ["Insalata", 22, 1.8, 2.2, 0.4, 100, "Verdure", "CREA 2019: Lattuga, fresca"],
+  ["Verdura cotta senza condimento", 20, 1.3, 4, 0, 150, "Verdure", "Stima (non verificata): verdura cotta senza condimento, valori medi"],
   ["Zucchine", 16, 1.5, 1.7, 0.1, 200, "Verdure", "CREA 2019: Zucchine, crude"],
   ["Melanzane", 23, 1, 2.6, 0.4, 200, "Verdure", "CREA 2019: Melanzane, crude"],
   ["Peperoni", 26, 0.9, 4.2, 0.3, 200, "Verdure", "CREA 2019: Peperoni, crudi"],
