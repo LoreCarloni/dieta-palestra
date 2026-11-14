@@ -2842,7 +2842,15 @@ function act(a, el) {
       // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
       const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
       // priorita ai carboidrati: entro il 20% in piu del target, il resto va tolto (non bloccato) o ridotto
-      const cLim = targets(view.date).carbs * 1.2 - totals(view.date).c;
+      const cLim = targets(view.date).carbs * 1.05 - totals(view.date).c;
+      // stesso criterio per le proteine: sopra il target del 10 per cento tolgo le voci non bloccate con piu proteine
+      const proteRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.p || 0), 0);
+      const pLim = targets(view.date).protein * 1.1 - totals(view.date).p;
+      while (tutte.reduce((a, l) => a + proteRiga(l), 0) > pLim && tutte.some((l) => !/bloccato/i.test(l) && proteRiga(l) > 0)) {
+        let best = -1, bp = -Infinity;
+        tutte.forEach((l, k) => { if (!/bloccato/i.test(l) && proteRiga(l) > bp) { bp = proteRiga(l); best = k; } });
+        tutte.splice(best, 1);
+      }
       const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
       let carbTot = () => tutte.reduce((a, l) => a + carbRiga(l), 0);
       let tolteC = 0;
