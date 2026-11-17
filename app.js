@@ -3656,5 +3656,6 @@ function pulisciPreferiti() {
   if (nuova.length !== (S.favFoods || []).length) { S.favFoods = nuova; save(); }
 }
 pulisciPreferiti();
+if (S.plannedDinner) save(); // all'avvio ripulisco anche la previsione gia salvata
 applyHabits(todayKey());
 render();
