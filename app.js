@@ -78,7 +78,7 @@ function tieniUnPreferito(righe) {
   return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
 }
 function save() {
-  if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).join("\n");
+  if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).filter((l) => /bloccat/i.test(l) || parseDiary(l).reduce((a, x) => a + x.kcal, 0) > 0).join("\n"); // le righe senza calorie (per esempio un albume senza valori) non restano
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
 
