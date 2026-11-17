@@ -1736,7 +1736,7 @@ function dayComment(k) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
     const parts = [];
-    if (rem <= 0) parts.push(`Il budget di oggi è già coperto dai pasti registrati: non serve aggiungere altro. Se mangi ancora, scegli solo verdura.`);
+    if (rem <= 0) parts.push(`Hai superato il budget di oggi di ${r0(-rem)} kcal: non aggiungere altro cibo.`);
     else if (rem < 250) parts.push(`Restano solo ${r0(rem)} kcal. Verdura e una fonte magra come 150 g di petto di pollo o pesce bianco, senza condimenti.`);
     else {
       const prot = remP > 15 ? `circa ${Math.min(250, Math.round(remP / 0.233 / 10) * 10)} g di petto di pollo o pesce bianco` : "una fonte magra di proteine";
@@ -1746,7 +1746,7 @@ function dayComment(k) {
     lines.push({ lvl: "tip", text: parts.join(" ") });
   }
   const remCarb = tg.carbs - t.c - pl.c;
-  if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25) {
+  if (!d.closed && k === todayKey() && !overPlanned && remCarb > 25 && tg.kcal - t.kcal > 0 && tg.protein - t.p - pl.p > 0) {
     // grammi reali da mettere nel piatto: pasta a secco, legumi cotti o una fetta di pane
     if (pranzoLibero) {
       lines.push({ lvl: "tip", text: `Restano circa ${r0(remCarb)} g di carboidrati. A pranzo ${lunchCarbText(Math.min(Math.max(0, remCarb - 20) * 0.6, 63))}, tenendo 20 g per un dolce o uno spuntino. A cena al massimo una fetta di pane da 30 g.` });
