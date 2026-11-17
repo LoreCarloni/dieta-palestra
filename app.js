@@ -1732,6 +1732,9 @@ function dayComment(k) {
     const n = Math.max(1, Math.round(c / 15));
     return `${n} fett${n > 1 ? "e" : "a"} di pane da 30 g`;
   };
+  // cibi molto grassi: un avviso neutro, con la quantita, senza giudizi
+  const grassi = d.meals.filter((m) => m.g > 0 && m.f / m.g * 100 >= 20 && !/olio|burro|strutto/i.test(m.name)).map((m) => m.name);
+  if (grassi.length) lines.push({ lvl: "warn", text: `Attenzione ai grassi: ${grassi.slice(0, 2).join(" e ")} ha più di 20 g di grassi ogni 100 g. Una porzione piccola pesa molto sulle calorie di oggi.` });
   if (!d.closed && k === todayKey() && !overPlanned && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
