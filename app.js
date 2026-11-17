@@ -2193,6 +2193,7 @@ function qtyDialog(f, slot) {
     ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
     <div class="field"><label>${f.parts ? "Quanto ne mangi adesso (grammi del piatto)" : "Quantità in grammi"}</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || (f.parts ? Math.round(f.parts.reduce((a, x) => a + (+x.g || 0), 0)) : 100) || 100}"${f.piece ? "" : " autofocus"}></div>
     <div class="chips">${f.parts ? "" : [0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
+    <div class="field"><label for="q-pz">Quanti ne mangi uguali (es. 3 bicchieri)</label><input id="q-pz" type="text" inputmode="numeric" value="1"></div>
     <div id="q-prev" class="preview"></div>
     <button class="btn primary wide" data-act="save-food">Aggiungi</button>`);
   dlg().dataset.food = JSON.stringify(f);
@@ -2438,8 +2439,10 @@ function act(a, el) {
       if (!(g > 0)) return toast("Inserisci la quantità");
       const ref = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion, cat: f.cat };
       rememberFood({ name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion });
-      day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, f.name), name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
-      closeDialog(); toast("Aggiunto"); break;
+      // quanti uguali: ogni pezzo e una voce separata (3 bicchieri = 3 voci da 130 g)
+      const pz = Math.min(20, Math.max(1, Math.round(num1(val("#q-pz")) || 1)));
+      for (let i = 0; i < pz; i++) day(k, true).meals.push({ id: uid(), slot: slotFor(dlg().dataset.slot, f.name), name: f.name, g, kcal: (f.kcal * g) / 100, p: (f.p * g) / 100, c: (f.c * g) / 100, f: (f.f * g) / 100, ref });
+      closeDialog(); toast(pz > 1 ? `${pz} aggiunti` : "Aggiunto"); break;
     }
     case "custom-food": dlg().dataset.slot = "giorno"; return customFoodDialog();
     case "habit-add": dlg().dataset.slot = "giorno"; return customFoodDialog(el.dataset.name);
