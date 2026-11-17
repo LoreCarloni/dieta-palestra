@@ -569,7 +569,7 @@ function renderToday() {
   const todo = checklist.filter((c) => !c.ok).length;
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
-  const mealsHtml = `${(view.foodsOpen ? d.meals : []).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)} ${(() => { const fd = allFoods().find((f) => norm(f.name).trim() === norm(m.name).trim()); return fd ? sourceBadge(fd) : ""; })()}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
+  const mealsHtml = `${(view.foodsOpen ? d.meals : []).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)} ${(() => { const fd = allFoods().find((f) => norm(f.name).trim() === norm(m.name).trim()); return fd ? sourceBadge(fd) : ""; })()}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="dup-entry" data-id="${m.id}">Duplica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
 
   return `
@@ -3078,6 +3078,17 @@ function act(a, el) {
         m.ref = { name: cur.name, kcal: cur.kcal, p: cur.p, c: cur.c, f: cur.f, portion: cur.portion, cat: cur.cat };
       });
       toast(`${ch.length} ${ch.length === 1 ? "alimento aggiornato" : "alimenti aggiornati"}`); break;
+    }
+    case "dup-entry": {
+      // una copia in piu della stessa voce (per esempio il terzo bicchiere di albume)
+      const d = day(k, true);
+      const m = d.meals.find((x) => x.id === el.dataset.id);
+      if (!m) break;
+      const copia = JSON.parse(JSON.stringify(m));
+      copia.id = uid();
+      const i = d.meals.indexOf(m);
+      d.meals.splice(i + 1, 0, copia);
+      break;
     }
     case "edit-entry": return editDialog(el.dataset.kind, el.dataset.id, k);
     case "ed-date-set": $("#ed-date").value = el.dataset.d; return;
