@@ -1735,7 +1735,8 @@ function dayComment(k) {
   };
   // cibi molto grassi: un avviso neutro, con la quantita, senza giudizi
   const grassi = d.meals.filter((m) => m.g > 0 && m.f / m.g * 100 >= 20 && !/olio|burro|strutto/i.test(m.name)).map((m) => m.name);
-  if (grassi.length) lines.push({ lvl: "warn", text: `Attenzione ai grassi: ${grassi.slice(0, 2).join(" e ")} ha più di 20 g di grassi ogni 100 g. Una porzione piccola pesa molto sulle calorie di oggi.` });
+  grassi.slice(0, 2).forEach((nome) => lines.push({ lvl: "bad", text: `Oggi ${nome} è troppo grasso: più di 20 g di grassi ogni 100 g. Una porzione piccola pesa molto sulle calorie.` }));
+  d.meals.filter((m) => m.g > 0 && m.c / m.g * 100 >= 30).slice(0, 2).forEach((m) => lines.push({ lvl: "bad", text: `${m.name} è troppo ricco di zuccheri e carboidrati: più di 30 g ogni 100 g.` }));
   if (!d.closed && k === todayKey() && !overPlanned && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
@@ -1839,12 +1840,12 @@ function commentHtml(k) {
   const dinner = [];
   const rest0 = c.lines.filter((l) => !dinner.includes(l));
   // prima le cause dello sgarro: il cibo o la voce che ha fatto superare il target
-  const causa = rest0.filter((l) => l.lvl === "bad" || /voci più pesanti|Attenzione ai grassi|sopra il target|superato il target/i.test(l.text));
+  const causa = rest0.filter((l) => l.lvl === "bad" || /voci più pesanti|troppo grasso|troppo ricco|sopra il target|superato il target/i.test(l.text));
   const rest = rest0.filter((l) => !causa.includes(l));
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Dall'inizio: ${j.over} giorni con sgarri su ${j.days} tracciati (${j.pct}%).</p>` : "";
   const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da ${c.newFood.porzione} g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
-  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${head}${causa.map(advice).join("")}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${causa.map(advice).join("")}${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
