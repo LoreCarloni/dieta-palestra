@@ -328,20 +328,21 @@ function refreshForecast() {
     if (gen.length) { S.autoLines = gen; S.plannedDinner = gen.join("\n"); save(); }
     return;
   }
+  const t = totals(k), tg = targets(k);
+  // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
+  if (!future && k === todayKey() && tg.kcal - t.kcal <= 0 && (S.plannedDinner || "").trim()) {
+    const righeTutte = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
+    const tenute = righeTutte.filter((l) => /bloccat/i.test(l));
+    if (tenute.length !== righeTutte.length) { S.plannedDinner = tenute.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
+  }
   // la previsione gia scritta non viene tolta da sola: la ricalcola solo Rigenera
   if (!S.autoForecast) return;
-  const t = totals(k), tg = targets(k);
   const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
   // se la previsione supera il rimanente va sempre ricontrollata, anche senza nuovi cibi
   const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
   if (snap === S.forecastSnap && !overNow && (S.plannedDinner || "").trim()) return; // previsione vuota: la ricalcolo sempre
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
   // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
-  // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
-  if (!future && k === todayKey() && tg.kcal - t.kcal <= 0 && (S.plannedDinner || "").trim()) {
-    const tenute = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && /bloccat/i.test(l));
-    if (tenute.length !== (S.plannedDinner || "").split("\n").filter((l) => l.trim()).length) { S.plannedDinner = tenute.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
-  }
   if (tg.kcal - t.kcal <= 0 && !(S.plannedDinner || "").trim()) return; // gia oltre il target: non propongo nulla
   if ((S.plannedDinner || "").trim()) return; // con una previsione gia scritta la cambia solo Rigenera; se e vuota la ricostruisco dai preferiti
   S.forecastSnap = snap;
