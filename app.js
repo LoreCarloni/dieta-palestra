@@ -304,7 +304,21 @@ const sortPlanLines = (text) => {
 
 // le righe della previsione come le vedi a schermo (senza doppioni): i totali devono usare solo queste
 function vistaPrevisione() {
-  return sortPlanLines(S.plannedDinner || "").join("\n");
+  // le righe non bloccate non vanno oltre le calorie e i carboidrati rimasti di oggi: quelle in piu non si vedono ne si contano
+  const righe = sortPlanLines(S.plannedDinner || "");
+  const k = todayKey();
+  const mangiati = day(k).meals || [];
+  const tg = targets(k);
+  const kM = mangiati.reduce((a, m) => a + (m.kcal || 0), 0), cM = mangiati.reduce((a, m) => a + (m.c || 0), 0);
+  const kRiga = (l) => parseDiary(l).reduce((a, x) => a + x.kcal, 0), cRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
+  const remK = tg.kcal - kM, remC = tg.carbs - cM;
+  let kP = righe.reduce((a, l) => a + kRiga(l), 0), cP = righe.reduce((a, l) => a + cRiga(l), 0);
+  const out = righe.slice();
+  for (let i = out.length - 1; i >= 0 && (kP > remK || cP > remC); i--) {
+    if (/bloccat/i.test(out[i])) continue;
+    kP -= kRiga(out[i]); cP -= cRiga(out[i]); out.splice(i, 1);
+  }
+  return out.join("\n");
 }
 function refreshForecast() {
   if (!S.profile) return; // primo avvio: prima il profilo, poi la previsione
@@ -1340,7 +1354,7 @@ function planLeggeHtml() {
   return righe.map((x) => { const it = parseDiary(x)[0]; return `<div class="plan-item"><span class="plan-name">${esc(x.replace(/,?\s*bloccato\b/i, ""))}</span> ${it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : ""}</div>`; }).join("");
 }
 function planItemsHtml(conFrecce = true, pastoFiltro = null) {
-  const lines = sortPlanLines(S.plannedDinner);
+  const lines = vistaPrevisione().split("\n").filter((x) => x.trim());
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
   const pastoDiRiga = (x) => { const r = mealRank(x); return PASTI[Math.min(3, r < 0 ? 3 : r)]; };
   return lines.map((x, i) => {
