@@ -337,6 +337,11 @@ function refreshForecast() {
   if (snap === S.forecastSnap && !overNow && (S.plannedDinner || "").trim()) return; // previsione vuota: la ricalcolo sempre
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
   // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
+  // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
+  if (!future && k === todayKey() && tg.kcal - t.kcal <= 0 && (S.plannedDinner || "").trim()) {
+    const tenute = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && /bloccat/i.test(l));
+    if (tenute.length !== (S.plannedDinner || "").split("\n").filter((l) => l.trim()).length) { S.plannedDinner = tenute.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
+  }
   if (tg.kcal - t.kcal <= 0 && !(S.plannedDinner || "").trim()) return; // gia oltre il target: non propongo nulla
   if ((S.plannedDinner || "").trim()) return; // con una previsione gia scritta la cambia solo Rigenera; se e vuota la ricostruisco dai preferiti
   S.forecastSnap = snap;
