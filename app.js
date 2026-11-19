@@ -335,11 +335,14 @@ function refreshForecast() {
     const rimaste = tg.kcal - t.kcal;
     const righe = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
     const kcalRiga = (l) => parseDiary(l).reduce((a, x) => a + x.kcal, 0);
+    const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
+    const remC = tg.carbs - t.c;
     let tot = righe.reduce((a, l) => a + kcalRiga(l), 0);
+    let totC = righe.reduce((a, l) => a + carbRiga(l), 0);
     let cambiate = false;
-    for (let i = righe.length - 1; i >= 0 && tot > rimaste; i--) {
+    for (let i = righe.length - 1; i >= 0 && (tot > rimaste || totC > remC); i--) {
       if (/bloccat/i.test(righe[i])) continue;
-      tot -= kcalRiga(righe[i]); righe.splice(i, 1); cambiate = true;
+      tot -= kcalRiga(righe[i]); totC -= carbRiga(righe[i]); righe.splice(i, 1); cambiate = true;
     }
     if (cambiate) { S.plannedDinner = righe.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
   }
