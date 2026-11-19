@@ -334,10 +334,10 @@ function refreshForecast() {
   const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
   // se la previsione supera il rimanente va sempre ricontrollata, anche senza nuovi cibi
   const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
-  if (snap === S.forecastSnap && !overNow) return;
+  if (snap === S.forecastSnap && !overNow && (S.plannedDinner || "").trim()) return; // previsione vuota: la ricalcolo sempre
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
   // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
-  if (S.planManual || (S.plannedDinner || "").trim()) return;
+  if ((S.plannedDinner || "").trim()) return; // con una previsione gia scritta la cambia solo Rigenera; se e vuota la ricostruisco dai preferiti
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
   // via le proposte automatiche vecchie (albume, yogurt, tacchino, pane, verdura): si ricalcolano sul rimanente
