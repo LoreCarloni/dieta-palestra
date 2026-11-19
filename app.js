@@ -1355,6 +1355,7 @@ function planLeggeHtml() {
 }
 function planItemsHtml(conFrecce = true, pastoFiltro = null) {
   const lines = vistaPrevisione().split("\n").filter((x) => x.trim());
+  if (!lines.length && (S.plannedDinner || "").trim()) return `<p class="muted small">Hai già superato calorie o carboidrati di oggi: la previsione non propone altro cibo. Le righe bloccate, se ci sono, restano visibili.</p>`;
   if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
   const pastoDiRiga = (x) => { const r = mealRank(x); return PASTI[Math.min(3, r < 0 ? 3 : r)]; };
   return lines.map((x, i) => {
