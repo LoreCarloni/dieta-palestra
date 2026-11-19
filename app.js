@@ -337,6 +337,7 @@ function refreshForecast() {
   if (snap === S.forecastSnap && !overNow && (S.plannedDinner || "").trim()) return; // previsione vuota: la ricalcolo sempre
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
   // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
+  if (tg.kcal - t.kcal <= 0 && !(S.plannedDinner || "").trim()) return; // gia oltre il target: non propongo nulla
   if ((S.plannedDinner || "").trim()) return; // con una previsione gia scritta la cambia solo Rigenera; se e vuota la ricostruisco dai preferiti
   S.forecastSnap = snap;
   // tolgo le righe generate in precedenza, tengo quelle scritte a mano, poi aggiungo le nuove
