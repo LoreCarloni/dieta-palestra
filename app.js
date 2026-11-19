@@ -2009,7 +2009,7 @@ function parseDiary(text) {
     const nameOnly = line.split(/[,:(]/)[0].replace(/\b(circa|una|un|uno|mezza|mezzo|porzione|piatto|di|da)\b/gi, "").replace(/\d+(?:[.,]\d+)?\s*%?|%/g, "").trim();
     // "Calorie", "Proteine", "Grassi" ecc. sono intestazioni dei macro, non alimenti: non vanno cercati nel database
     const MACRO_LABEL = /^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale|p|c|g|f)$/i;
-    const dbHit = !k && !MACRO_LABEL.test(nameOnly.trim()) && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? searchFoods(nameOnly).find((x) => !x.perServing) : null;
+    const dbHit = !k && !MACRO_LABEL.test(nameOnly.trim()) && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? (searchFoods(nameOnly).find((x) => !x.perServing) || favHit(nameOnly)) : null;
     const gramLine = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
     const dbG = dbHit ? (gramLine ? num1(gramLine[1]) : /porzione/i.test(line) ? dbHit.portion : null) : null;
     if (dbHit && dbG) {
