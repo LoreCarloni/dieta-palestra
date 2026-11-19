@@ -317,7 +317,7 @@ function vistaPrevisione() {
   for (let i = out.length - 1; i >= 0 && (kP > remK || cP > remC); i--) {
     if (/bloccat/i.test(out[i])) continue;
     // se sono sopra solo i carboidrati, i cibi senza carboidrati (proteine, grassi) restano
-    if (kP <= remK && cRiga(out[i]) === 0) continue;
+    if (kP <= remK && cRiga(out[i]) <= 3) continue;
     kP -= kRiga(out[i]); cP -= cRiga(out[i]); out.splice(i, 1);
   }
   return out.join("\n");
@@ -1314,6 +1314,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
   if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   }
+  // proteine magre senza carboidrati per tutti: fesa di tacchino cruda, se mancano ancora proteine e restano calorie
+  if (needP > 5 && needK > 120 && !gia("Fesa")) { const fg = Math.min(200, Math.max(100, Math.ceil(needP / 0.24 / 10) * 10), Math.floor(needK / 1.07 / 10) * 10); if (fg >= 100) add("Fesa di tacchino (cruda)", fg, [107, 24, 0, 1.2]); }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
   if (needC > 4 && !gia("Pasta") && !gia("Pane")) {
