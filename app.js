@@ -174,7 +174,7 @@ function planFor(k) {
 // macro della giornata contando anche la cena prevista
 function plannedHtml(k, t, tg) {
   if (!S.plannedDinner || k < todayKey() || S.days[k]?.closed) return "";
-  const pd = parseDiary(S.plannedDinner);
+  const pd = parseDiary(vistaPrevisione());
   if (!pd.length) return "";
   const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
   const left = Math.round(tg.kcal - t.kcal - dk);
@@ -296,11 +296,16 @@ const sortPlanLines = (text) => {
   const chiaveRiga = (l) => norm(l.split(" con ")[0].replace(/,?\s*bloccat[ao]\b/ig, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").replace(/,\s*[\d.,]+\s*g.*$/i, "")).trim();
   const migliori = new Map();
   righe.forEach((l) => { if (!rigaPreferita(l)) return; const k = chiaveRiga(l); const prev = migliori.get(k); if (!prev || (/bloccat/i.test(l) && !/bloccat/i.test(prev))) migliori.set(k, l); });
-  righe = righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
+  const usate = new Set();
+  righe = righe.filter((l) => { if (!rigaPreferita(l)) return true; const k = chiaveRiga(l); if (usate.has(k) || migliori.get(k) !== l) return false; usate.add(k); return true; });
   if (S.planManual) return righe; // l'ordine l'hai scelto tu con le frecce
   return righe.map((l, i) => ({ l, i, r: mealRank(l) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.l);
 };
 
+// le righe della previsione come le vedi a schermo (senza doppioni): i totali devono usare solo queste
+function vistaPrevisione() {
+  return sortPlanLines(S.plannedDinner || "").join("\n");
+}
 function refreshForecast() {
   if (!S.profile) return; // primo avvio: prima il profilo, poi la previsione
   const k = view.date, future = k > todayKey();
@@ -350,7 +355,7 @@ function refreshForecast() {
   if (!S.autoForecast) return;
   const snap = k + "|" + [t.kcal, t.p, t.c, t.f].map((x) => Math.round(x)).join("|");
   // se la previsione supera il rimanente va sempre ricontrollata, anche senza nuovi cibi
-  const overNow = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
+  const overNow = parseDiary(vistaPrevisione()).reduce((a, x) => a + x.kcal, 0) > tg.kcal - t.kcal;
   if (snap === S.forecastSnap && !overNow && (S.plannedDinner || "").trim()) return; // previsione vuota: la ricalcolo sempre
   // se hai cancellato o riordinato righe a mano, la lista resta come l'hai lasciata: si ricalcola solo con Rigenera
   // la previsione gia scritta non viene cambiata da sola: la cambia solo Rigenera
@@ -980,7 +985,7 @@ function favIsProteic(nome) {
 function gramiAutomatici(hit) {
   const per = [hit.kcal, hit.p, hit.c, hit.f];
   const tg = targets(todayKey()), t = totals(todayKey());
-  const pianoK = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+  const pianoK = parseDiary(vistaPrevisione()).reduce((a, x) => a + x.kcal, 0);
   const kLeft = tg.kcal - t.kcal - pianoK;
   const cLeft = tg.carbs - t.c;
   let g = 200;
@@ -1353,7 +1358,7 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
 }
 function myPlanCard() {
   const k = view.date, left = targets(k).kcal - totals(k).kcal;
-  const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+  const planned = parseDiary(vistaPrevisione()).reduce((a, x) => a + x.kcal, 0);
   const over = planned - left;
   const warn = planned > 0 && over > 0 ? (left <= 0 ? `<p class="warn-line">Hai già superato il target di oggi di ${r0(-left)} kcal. Non c'è altro da mangiare.</p>` : `<p class="warn-line">Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}. Togli qualche riga con × oppure mangia meno.</p>`) : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
@@ -1681,7 +1686,7 @@ function dayComment(k) {
   const d = day(k), t = totals(k), tg = targets(k);
   if (!d.meals.length) return null;
   // il consiglio parte da quanto hai mangiato piu quanto e gia previsto: non suggerisce cio che c'e gia
-  const pl = (k >= todayKey() && S.plannedDinner ? parseDiary(S.plannedDinner) : []).reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { kcal: 0, p: 0, c: 0, f: 0 });
+  const pl = (k >= todayKey() && S.plannedDinner ? parseDiary(vistaPrevisione()) : []).reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { kcal: 0, p: 0, c: 0, f: 0 });
   const clean = (n) => String(n).replace(/\s*\(.*$/, "").replace(/\s+/g, " ").trim();
   const merged = {};
   d.meals.forEach((m) => { const key = clean(m.name).toLowerCase(); const x = merged[key] || { name: clean(m.name), kcal: 0, p: 0, c: 0, f: 0, g: 0 }; x.kcal += m.kcal; x.p += m.p; x.c += m.c; x.f += m.f; x.g += m.g || 0; merged[key] = x; });
@@ -1695,7 +1700,7 @@ function dayComment(k) {
   const lines = [];
   const diff = t.kcal - tg.kcal;
   // se la cena prevista supera il resto della giornata, niente consigli su pranzo e cena
-  const overPlanned = !!S.plannedDinner && k >= todayKey() && parseDiary(S.plannedDinner).length > 0 && tg.kcal - t.kcal - parseDiary(S.plannedDinner).reduce((a, x) => a + x.kcal, 0) <= 0;
+  const overPlanned = !!S.plannedDinner && k >= todayKey() && parseDiary(vistaPrevisione()).length > 0 && tg.kcal - t.kcal - parseDiary(vistaPrevisione()).reduce((a, x) => a + x.kcal, 0) <= 0;
   lines.push({ lvl: ratio <= 1.05 ? "good" : verdict.lvl, text: diff > 0 ? `Hai assunto ${r0(t.kcal)} kcal contro un obiettivo di ${r0(tg.kcal)}: ${r0(diff)} kcal in più.` : `Hai assunto ${r0(t.kcal)} kcal su ${r0(tg.kcal)}: sei dentro l'obiettivo.` });
   if (diff > tg.kcal * 0.1) lines.push({ lvl: "bad", text: `Oggi: ${r0(diff)} kcal sopra il target, cioè ${Math.round((t.kcal / tg.kcal) * 100)}%. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
   else if (diff > 0) lines.push({ lvl: "warn", text: `Oggi sei sopra di poco. Le voci più pesanti sono ${list(top("kcal"), "kcal", "kcal")}.` });
@@ -1826,7 +1831,7 @@ function dayComment(k) {
   }
   // cena prevista: quanto resta per il resto della giornata
   if (S.plannedDinner && k >= todayKey() && !d.closed) {
-    const pd = parseDiary(S.plannedDinner);
+    const pd = parseDiary(vistaPrevisione());
     const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0);
     if (pd.length) {
       const leftK = Math.round(tg.kcal - t.kcal - dk), leftP = Math.round(tg.protein - t.p - dp);
@@ -2807,7 +2812,7 @@ function act(a, el) {
       const res = view.fvMine ? allFoods().filter((f) => f.cat === "I miei alimenti").slice(0, 40) : (q ? searchFoods(q).slice(0, 8) : []);
       // quanto pesa ogni risultato sulla giornata, prima di aggiungerlo
       const k = view.date, tg = targets(k), t = totals(k);
-      const planned = parseDiary(S.plannedDinner || "").reduce((a, x) => a + x.kcal, 0);
+      const planned = parseDiary(vistaPrevisione()).reduce((a, x) => a + x.kcal, 0);
       const left = tg.kcal - t.kcal - planned;
       $("#fv-res").innerHTML = res.length ? res.map((f) => {
         const g = f.portion || f.piece || 100;
