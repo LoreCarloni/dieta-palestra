@@ -316,6 +316,8 @@ function vistaPrevisione() {
   const out = righe.slice();
   for (let i = out.length - 1; i >= 0 && (kP > remK || cP > remC); i--) {
     if (/bloccat/i.test(out[i])) continue;
+    // se sono sopra solo i carboidrati, i cibi senza carboidrati (proteine, grassi) restano
+    if (kP <= remK && cRiga(out[i]) === 0) continue;
     kP -= kRiga(out[i]); cP -= cRiga(out[i]); out.splice(i, 1);
   }
   return out.join("\n");
@@ -1306,9 +1308,9 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const yog = byName("Yogurt greco 0%");
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
   // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
-  if (S.gustiPersonali && !(S.favFoods || []).length) { // con una lista di preferiti, la previsione usa solo quelli
+  if (S.gustiPersonali) { // con una lista di preferiti, la previsione usa solo quelli
   if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
-  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(400, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
+  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(270, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
   if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   }
