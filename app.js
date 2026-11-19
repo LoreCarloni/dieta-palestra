@@ -1351,8 +1351,8 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
     const badge = fd ? sourceBadge(fd) : "";
     const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "");
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
-    const it = parseDiary(x)[0];
-    const nums = it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : `<span class="muted small">valori mancanti</span>`;
+    const its = parseDiary(x);
+    const nums = its.length ? `<span class="muted small">${Math.round(its.reduce((a, y) => a + y.kcal, 0))} kcal, C ${Math.round(its.reduce((a, y) => a + (y.c || 0), 0))} g</span>` : `<span class="muted small">valori mancanti</span>`;
     return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-no-oggi" data-i="${i}">Non oggi</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
