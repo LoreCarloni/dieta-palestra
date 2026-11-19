@@ -330,10 +330,18 @@ function refreshForecast() {
   }
   const t = totals(k), tg = targets(k);
   // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
-  if (!future && k === todayKey() && tg.kcal - t.kcal <= 0 && (S.plannedDinner || "").trim()) {
-    const righeTutte = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
-    const tenute = righeTutte.filter((l) => /bloccat/i.test(l));
-    if (tenute.length !== righeTutte.length) { S.plannedDinner = tenute.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
+  // la previsione non puo superare le calorie rimaste: tolgo le righe non bloccate dalla fine finche rientra
+  if (!future && k === todayKey() && (S.plannedDinner || "").trim()) {
+    const rimaste = tg.kcal - t.kcal;
+    const righe = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
+    const kcalRiga = (l) => parseDiary(l).reduce((a, x) => a + x.kcal, 0);
+    let tot = righe.reduce((a, l) => a + kcalRiga(l), 0);
+    let cambiate = false;
+    for (let i = righe.length - 1; i >= 0 && tot > rimaste; i--) {
+      if (/bloccat/i.test(righe[i])) continue;
+      tot -= kcalRiga(righe[i]); righe.splice(i, 1); cambiate = true;
+    }
+    if (cambiate) { S.plannedDinner = righe.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
   }
   // la previsione gia scritta non viene tolta da sola: la ricalcola solo Rigenera
   if (!S.autoForecast) return;
