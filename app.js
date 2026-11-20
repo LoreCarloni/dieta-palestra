@@ -1827,7 +1827,7 @@ function dayComment(k) {
   if (k === todayKey() && t.p + pl.p < tg.protein * 0.85 && !overPlanned && tg.kcal - t.kcal > 0) {
     const recent = new Set();
     Object.keys(S.days).filter((j) => j <= k && j > addDays(k, -30)).forEach((j) => S.days[j].meals.forEach((m) => recent.add(norm(m.name).split(" ")[0])));
-    const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name).split(" ")[0]) && !NOT_FOR_DIET.test(f.name)).sort((a, b) => b.p / b.kcal - a.p / a.kcal)[0];
+    const pick = allFoods().filter((f) => !f.perServing && f.p >= 8 && f.kcal > 0 && f.kcal <= 120 && !recent.has(norm(f.name).split(" ")[0]) && !NOT_FOR_DIET.test(f.name)).sort((a, b) => (isVerified(b) ? 1 : 0) - (isVerified(a) ? 1 : 0) || b.p / b.kcal - a.p / a.kcal)[0];
     if (pick) {
       const gap = Math.round(tg.protein - t.p - pl.p);
       // la porzione e quella che usi tu (es. 135 g di albume), altrimenti 100 g
