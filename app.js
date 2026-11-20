@@ -406,7 +406,21 @@ function refreshForecast() {
   save();
 }
 
+// ---------- Lingua: italiano (predefinito) o inglese ----------
+// T("testo italiano", "English text") restituisce il testo nella lingua scelta nel Profilo
+const T = (it, en) => (S.lang === "en" ? en : it);
+if (!S.lang) S.lang = /^en/i.test(navigator.language || "") ? "en" : "it";
+const NAV_EN = { oggi: "Today", misure: "Measures", report: "Report", coach: "Coach", fumo: "Smoking", giornata: "Day", profilo: "Profile" };
+function applicaLingua() {
+  document.documentElement.lang = S.lang === "en" ? "en" : "it";
+  document.querySelectorAll(".nav button[data-tab]").forEach((b) => {
+    const it = b.dataset.itLabel || (b.dataset.itLabel = b.textContent);
+    b.textContent = S.lang === "en" ? NAV_EN[b.dataset.tab] || it : it;
+    b.style.display = S.lang === "en" && b.dataset.tab === "fumo" ? "none" : "";
+  });
+}
 function render() {
+  applicaLingua();
   // la casella per aggiungere un cibo tiene quello che hai scritto anche se la pagina si ridisegna
   const casella = ["pl-q", "pl-g", "pl-pasto", "pl-forza"].map((id) => { const el = document.getElementById(id); return el ? [id, el.type === "checkbox" ? el.checked : el.value] : null; }).filter(Boolean);
   refreshForecast();
@@ -1090,6 +1104,7 @@ function renderProfile(first) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
+  <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
   ${first ? `<section class="card intro"><h2>Benvenuto</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
   <form class="card" id="profile-form">
     <h2>I tuoi dati</h2>
@@ -3333,6 +3348,8 @@ function act(a, el) {
       d.meals.push(...src.filter((m) => !d.meals.some((x) => x.name === m.name)).map((m) => ({ ...m, id: uid(), auto: false })));
       toast("Copiato da ieri"); break;
     }
+    case "lang-it": S.lang = "it"; save(); render(); return true;
+    case "lang-en": S.lang = "en"; save(); render(); return true;
     case "toggle-repeat": {
       const m = day(k).meals.find((x) => x.id === el.dataset.id);
       if (!m) return;
