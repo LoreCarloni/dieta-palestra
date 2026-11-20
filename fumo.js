@@ -702,10 +702,10 @@ function renderFumo() {
   const tetto = f.tettoGiorno || 10;
   const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
   const sforo = smokedToday > tetto;
-  const bannerTetto = `<section class="card"><p><b>Oggi: ${smokedToday} di ${tetto} sigarette.</b> ${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : "#2e7d32"}"></div></div></section>`;
+  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">sigarette oggi</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : "#2e7d32"}"></div></div></section>`;
   return `${bannerTetto}
     <section class="card" style="text-align:center;padding:14px 10px">
-      <div style="font-size:3.2rem;font-weight:800;line-height:1">${sigOggi}</div>
+
       <div class="muted small">sigarette oggi</div>
       <div style="font-size:1.4rem;font-weight:800;line-height:1.2;margin-top:10px">${esc(commento.titolo)}</div>
       <div class="small" style="margin-top:6px">${esc(commento.testo)}</div>
