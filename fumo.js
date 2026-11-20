@@ -710,11 +710,6 @@ function renderFumo() {
       <div style="font-size:1.4rem;font-weight:800;line-height:1.2;margin-top:10px">${esc(commento.titolo)}</div>
       <div class="small" style="margin-top:6px">${esc(commento.testo)}</div>
     </section>
-    <section class="card" style="text-align:center;padding:18px 10px">
-      <div class="muted small">Senza fumare da</div>
-      <div id="fumo-live" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1">${esc(fumoHMS(st.ms))}</div>
-      <div class="muted small">Dal ${esc(new Date(f.start).toLocaleString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}</div>
-    </section>
     <div style="text-align:center;margin:-6px 0 10px"><button class="link" data-act="fumo-breathing">Breathing Space · 3 minuti</button></div>
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
       <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
