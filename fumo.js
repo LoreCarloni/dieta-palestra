@@ -208,13 +208,13 @@ function fumoDiaryCard() {
   const acts = rows.filter((e) => e.kind === "act").length;
   const smoked = rows.filter((e) => e.kind === "smoke").reduce((a, e) => a + (e.n || 1), 0);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "act" ? `Hai fatto: ${esc(e.text)}` : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}`}</div>${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">${T("Modifica", "Edit")}</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">${T("Elimina", "Delete")}</button></div>` : ""}</div>`).join("");
   if (!view.fumoRegistroOpen) return `
     <section class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
           <div style="font-size:1.2rem;font-weight:700;letter-spacing:-0.01em">${T("Registro di oggi", "Today's log")}</div>
-          <div style="font-size:1rem;color:var(--muted);margin-top:2px">${acts} ${acts === 1 ? "azione" : "azioni"} · ${smoked} ${smoked === 1 ? "sigaretta" : "sigarette"}</div>
+          <div style="font-size:1rem;color:var(--muted);margin-top:2px">${acts} ${T(acts === 1 ? "azione" : "azioni", acts === 1 ? "action" : "actions")} · ${smoked} ${T(smoked === 1 ? "sigaretta" : "sigarette", smoked === 1 ? "cigarette" : "cigarettes")}</div>
         </div>
         <button class="btn ghost small-btn" data-act="fumo-registro-toggle">${T("Mostra", "Show")}</button>
       </div>
@@ -230,7 +230,7 @@ function fumoDiaryCard() {
         <button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button>
       </div>
       <p class="muted small" style="text-align:center">${T("Azioni fatte", "Actions done")}: ${acts} · ${T("Sigarette fumate", "Cigarettes smoked")}: ${smoked}</p>
-      ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
+      ${lines || `<p class="muted small">${T("Nessuna voce per questo giorno.", "No entries for this day.")}</p>`}
       <form id="fumo-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="smoke">Ho fumato</option><option value="act">Ho fatto un'azione</option></select>
@@ -337,7 +337,7 @@ function giornataReportHtml() {
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">${T("Torna al registro", "Back to the log")}</button></div>
     <section class="card">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${bottoni}</div>
-      <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
+      <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} ${T("di attività", "of activity")} · ${totSig} ${T(totSig === 1 ? "sigaretta" : "sigarette", totSig === 1 ? "cigarette" : "cigarettes")}</p>
       <p style="margin:8px 0 0">${esc(frase)}</p>
     </section>
     ${(() => {
@@ -348,7 +348,7 @@ function giornataReportHtml() {
       </section>`;
     })()}
     <section class="card"><h2>Gruppi di attività</h2>
-      ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-gruppo-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">Elimina</button></div></div>`).join("")}
+      ${((S.giornata && S.giornata.gruppi) || []).map((g, i) => `<div class="fumo-item"><div class="fumo-text"><strong>${esc(g.nome)}</strong>: ${esc(g.parole.join(", "))}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-gruppo-edit" data-i="${i}">${T("Modifica", "Edit")}</button><button class="btn danger small-btn" data-act="giornata-gruppo-del" data-i="${i}">${T("Elimina", "Delete")}</button></div></div>`).join("")}
       <form id="giornata-gruppo-form" class="form" style="margin-top:10px">
         <input name="nome" maxlength="40" placeholder="Nome del gruppo, es. Auto">
         <input name="parole" maxlength="200" placeholder="Parole, separate da virgola: auto, macchina, automobile">
@@ -424,17 +424,17 @@ function renderGiornata() {
   const running = gRun();
   const startCard = `
     <section class="card">
-      <h2>Cosa stai facendo adesso?</h2>
-      <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder="Per esempio lavoro all'app">
-      <input id="giornata-start-time" maxlength="5" placeholder="Dalle, es. 6.50 (facoltativo, altrimenti adesso)" style="margin-top:8px">
-      <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">Inizia</button>
+      <h2>${T("Cosa stai facendo adesso?", "What are you doing now?")}</h2>
+      <input id="giornata-start-text" list="giornata-suggest" maxlength="80" placeholder=T("Per esempio lavoro all'app", "For example working on the app")>
+      <input id="giornata-start-time" maxlength="5" placeholder=T("Dalle, es. 6.50 (facoltativo, altrimenti adesso)", "From, e.g. 6.50 (optional, otherwise now)") style="margin-top:8px">
+      <button class="btn primary wide" data-act="giornata-start" style="margin-top:8px">${T("Inizia", "Start")}</button>
     </section>`;
   const runningHtml = (running.length ? running.map((r, i) => `
     <section class="card" style="text-align:center">
-      <div class="muted small">In corso</div>
+      <div class="muted small">${T("In corso", "In progress")}</div>
       <div style="font-weight:700;font-size:1.1rem">${esc(r.text)}</div>
       <div class="giornata-live" data-start="${r.start}" style="font-size:2.2rem;font-weight:700;font-variant-numeric:tabular-nums">${esc(fumoHMS(fumoNow() - r.start))}</div>
-      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-stop" data-i="${i}">Finisci</button><button class="link" data-act="giornata-rename" data-i="${i}">Cambia nome</button><button class="link" data-act="giornata-cancel" data-i="${i}">${T("Annulla", "Cancel")}</button></div>
+      <div class="btns" style="justify-content:center;margin-top:8px"><button class="btn primary" data-act="giornata-stop" data-i="${i}">${T("Finisci", "Finish")}</button><button class="link" data-act="giornata-rename" data-i="${i}">${T("Cambia nome", "Rename")}</button><button class="link" data-act="giornata-cancel" data-i="${i}">${T("Annulla", "Cancel")}</button></div>
     </section>`).join("") : "") + startCard;
   const acts = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind !== "pausa").map((e) => ({ ...e, kind: "act" }));
   const pause = ((S.giornata && S.giornata.log) || []).map((e, idx) => ({ ...e, idx })).filter((e) => e.kind === "pausa").map((e) => ({ ...e, kind: "pausa" }));
@@ -460,26 +460,26 @@ function renderGiornata() {
     return names.join(", ");
   };
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">Modifica</button>${haGruppo(e.text) ? `<span class="muted small" style="align-self:center">Gruppo: ${esc(gruppoDi(e.text))}</span>` : `<button class="btn ghost small-btn" data-act="giornata-grp-open" data-idx="${e.idx}">Gruppo</button>`}<button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">Modifica</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">Elimina</button></div>` : ""}</div>`).join("");
+  const lines = rows.map((e) => `<div class="fumo-item fumo-timed"><div class="muted small" style="font-variant-numeric:tabular-nums">${esc(hhmm(e.at))}:</div><div class="fumo-text">${e.kind === "pausa" ? `Sigaretta, ${esc(fumoDurataMin(e.min))}` : e.kind === "act" ? esc(e.text) + (e.min ? ` · ${fumoDurataMin(e.min)}` : "") : `Hai fumato ${e.n || 1} ${(e.n || 1) === 1 ? "sigaretta" : "sigarette"}${gOver(e.at) ? ` · mentre: ${esc(gOver(e.at))}` : ""}`}</div>${e.kind === "act" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="giornata-log-edit" data-idx="${e.idx}">${T("Modifica", "Edit")}</button>${haGruppo(e.text) ? `<span class="muted small" style="align-self:center">Gruppo: ${esc(gruppoDi(e.text))}</span>` : `<button class="btn ghost small-btn" data-act="giornata-grp-open" data-idx="${e.idx}">${T("Gruppo", "Group")}</button>`}<button class="btn danger small-btn" data-act="giornata-log-del" data-idx="${e.idx}">${T("Elimina", "Delete")}</button></div>` : ""}${e.kind === "smoke" ? `<div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-log-edit" data-idx="${e.idx}">${T("Modifica", "Edit")}</button><button class="btn danger small-btn" data-act="fumo-log-del" data-idx="${e.idx}">${T("Elimina", "Delete")}</button></div>` : ""}</div>`).join("");
   if (view.giornataReport) return giornataReportHtml();
   giornataAssicuraGruppi();
   return `
-    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
+    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">${T("Report della settimana", "Weekly report")}</button></div>
     ${runningHtml}
     ${giornataRiepilogoHtml(day, acts, nSmoke)}
     ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">${T("Registro di oggi", "Today's log")}</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">${T("Mostra", "Show")}</button></div></section>`}
     ${view.giornataRegistroOpen ? `<section class="card">
       <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">${T("Nascondi registro", "Hide log")}</button></div>
       <div class="row" style="align-items:center">
-        <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
+        <button class="btn ghost small-btn" data-act="giornata-prev">${T("Giorno prima", "Previous day")}</button>
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
-        <button class="btn ghost small-btn" data-act="giornata-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
+        <button class="btn ghost small-btn" data-act="giornata-next" ${day >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button>
       </div>
       <p class="muted small" style="text-align:center">Attività: ${nAct}${minTot ? ` (${fumoDurataMin(minTot)})` : ""} · Sigarette fumate: ${nSmoke}</p>
-      ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
+      ${lines || `<p class="muted small">${T("Nessuna voce per questo giorno.", "No entries for this day.")}</p>`}
       <form id="giornata-add-form" class="form" style="margin-top:12px">
-        <p class="muted small" style="margin:0 0 6px">Qualcosa di già fatto da registrare? Scrivilo come una frase, anche con la tastiera che detta. Per esempio: "ho lavorato all'app dalle 6.50 alle 9.50" oppure "ho fumato 2 sigarette alle 7".</p>
-        <input name="frase" maxlength="160" placeholder="Scrivi o detta la frase" required>
+        <p class="muted small" style="margin:0 0 6px">${T("Qualcosa di già fatto da registrare? Scrivilo come una frase, anche con la tastiera che detta. Per esempio: \"ho lavorato all'app dalle 6.50 alle 9.50\" oppure \"ho fumato 2 sigarette alle 7\".", "Something already done to log? Write it as a sentence, or use voice dictation. For example: \"I worked on the app from 6.50 to 9.50\" or \"I smoked 2 cigarettes at 7\".")}</p>
+        <input name="frase" maxlength="160" placeholder=T("Scrivi o detta la frase", "Write or dictate the sentence") required>
         <button class="btn ghost wide" type="submit">${T("Aggiungi", "Add")}</button>
         <datalist id="giornata-suggest"></datalist>
       </form>
@@ -489,7 +489,7 @@ function renderGiornata() {
 
 // Lista delle azioni della previsione: compare solo dopo aver toccato la casella di ricerca.
 function fumoPlanHtml() {
-  return `<div style="text-align:right"><button class="link" data-act="fumo-elenco-chiudi">Chiudi l'elenco</button></div>` + fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">Modifica</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">Elimina</button></div></div>`).join("");
+  return `<div style="text-align:right"><button class="link" data-act="fumo-elenco-chiudi">Chiudi l'elenco</button></div>` + fumoPrevisione().map((a, i) => `<div class="fumo-item"><div class="fumo-text">${esc(a)}</div><div class="fumo-tools"><button class="btn ghost small-btn" data-act="fumo-act" data-i="${i}">Fatto</button><button class="btn ghost small-btn" data-act="fumo-plan-edit" data-i="${i}">${T("Modifica", "Edit")}</button><button class="btn danger small-btn" data-act="fumo-plan-del" data-i="${i}">${T("Elimina", "Delete")}</button></div></div>`).join("");
 }
 
 // Cosa stai facendo al posto di fumare: si scrive o si cerca tra le azioni già usate.
@@ -968,7 +968,7 @@ function fumoOpenPicker() {
     <p class="muted small">Scorri la rotella fino al numero che vuoi.</p>
     <div id="fumo-wheel" style="height:${FUMO_ITEM_H * 3}px;overflow-y:auto;scroll-snap-type:y mandatory;border:1px solid var(--line);border-radius:12px;text-align:center">${pad}${items}${pad}</div>
     <p class="stat-v" id="fumo-wheel-val" style="text-align:center;font-size:1.6rem">1 minuto</p>
-    <button class="btn primary wide" data-act="fumo-wait">Inizia</button>
+    <button class="btn primary wide" data-act="fumo-wait">${T("Inizia", "Start")}</button>
     <button class="btn ghost wide" data-act="dlg-close">${T("Annulla", "Cancel")}</button>`);
   const w = $("#fumo-wheel");
   w.addEventListener("scroll", () => {
@@ -1005,7 +1005,7 @@ function fumoShowCraving(act) {
     <p>${esc(fumoI(tec.t))}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
     <div id="fumo-sugg-box" style="margin:12px 0">${fumoSuggBox()}</div>
-    <input id="fumo-dialog-text" maxlength="80" placeholder="Oppure scrivi o detta cosa fai al posto della sigaretta" style="margin-top:4px">
+    <input id="fumo-dialog-text" maxlength="80" placeholder="${T("Oppure scrivi o detta cosa fai al posto della sigaretta", "Or write or dictate what you do instead of the cigarette")}" style="margin-top:4px">
     <button class="btn ghost wide" data-act="fumo-dialog-log" style="margin-top:6px">Registra</button>
     <button class="btn primary wide" data-act="fumo-done">Ce l'ho fatta</button>
     <button class="btn danger wide" data-act="fumo-lit">Ho appena acceso la sigaretta</button>`);
@@ -1061,7 +1061,7 @@ function fumoAct(a, el) {
         ? `<input name="text" maxlength="80" value="${esc(e.text)}" autofocus>`
         : `<input name="n" type="number" min="1" max="100" step="1" value="${e.n || 1}" autofocus>`;
       openDialog(`
-        <h3>${e.kind === "act" ? "Modifica l'azione" : "Modifica le sigarette"}</h3>
+        <h3>${e.kind === "act" ? T("Modifica l'azione", "Edit the action") : T("Modifica le sigarette", "Edit the cigarettes")}</h3>
         <form id="fumo-item-form" class="form" data-kind="log" data-idx="${idx}">
           ${field}
           <button class="btn primary wide" type="submit">${T("Salva", "Save")}</button>
