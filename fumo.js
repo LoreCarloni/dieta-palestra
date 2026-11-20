@@ -699,7 +699,9 @@ function renderFumo() {
   const commento = sigOggi === 0
     ? { titolo: "Nessuna sigaretta oggi.", testo: "Continua così: ogni ora senza fumo conta." }
     : { titolo: "Complimenti, stai rovinando la tua salute.", testo: sigOggi >= 5 ? "Oggi sei già a " + sigOggi + ": prova a fermarti alla prossima voglia e fai una delle azioni sotto." : "Prova a fermarti alla prossima voglia: scegli una delle azioni sotto e aspetta il cronometro." };
-  return `
+  const tetto = f.tettoGiorno || 10;
+  const bannerTetto = `<section class="card"><p><b>Oggi: ${smokedToday} di ${tetto} sigarette.</b> ${smokedToday > tetto ? `Hai superato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p></section>`;
+  return `${bannerTetto}
     <section class="card" style="text-align:center;padding:14px 10px">
       <div style="font-size:3.2rem;font-weight:800;line-height:1">${sigOggi}</div>
       <div class="muted small">sigarette oggi</div>
@@ -773,7 +775,8 @@ function renderFumoSetup(editing) {
       <form id="fumo-form" class="form">
         <label>Quando hai smesso (o smetti)
           <input type="datetime-local" name="start" value="${toLocalInput(new Date(f.start))}" required></label>
-        <label>Sigarette al giorno prima di smettere
+
+        <label>Tetto di sigarette al giorno<input type="number" name="tettoGiorno" min="0" max="40" step="1" value="${f.tettoGiorno || 10}" required></label>        <label>Sigarette al giorno prima di smettere
           <input type="number" name="perDay" min="1" max="100" step="1" value="${f.perDay}" required></label>
         <label>Prezzo di un pacchetto in euro
           <input type="number" name="packPrice" min="0.5" max="30" step="0.1" value="${f.packPrice}" required></label>
@@ -1467,6 +1470,7 @@ document.addEventListener("submit", (e) => {
     perDay: parseFloat(fd.get("perDay")),
     packPrice: parseFloat(fd.get("packPrice")),
     packSize: parseFloat(fd.get("packSize")),
+    tettoGiorno: Math.max(0, Math.round(parseFloat(fd.get("tettoGiorno")) || 10)),
     reason: String(fd.get("reason") || "").trim(),
     cravings: prev.cravings || [],
   };
