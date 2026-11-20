@@ -78,6 +78,8 @@ function tieniUnPreferito(righe) {
   return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
 }
 function save() {
+  if (typeof _searchCache !== "undefined") _searchCache.clear(); // dopo ogni salvataggio le ricerche si rifanno, cosi le modifiche agli alimenti si vedono
+  if (typeof _favHitCache !== "undefined") _favHitCache.clear();
   if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).filter((l) => /bloccat/i.test(l) || rigaPreferita(l) || parseDiary(l).reduce((a, x) => a + x.kcal, 0) > 0).join("\n"); // le righe senza calorie (per esempio un albume senza valori) non restano
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
@@ -995,7 +997,7 @@ function renderCoach() {
 // ---------- Profilo ----------
 // ogni cibo preferito puo avere i suoi grammi
 function favIsProteic(nome) {
-  return !!favHit(nome);
+  return !!favHitCached(nome);
 }
 // quantita decisa dall'app quando lasci i grammi vuoti: quello che entra nelle calorie e nei carboidrati rimasti
 function gramiAutomatici(hit) {
@@ -1011,6 +1013,13 @@ function gramiAutomatici(hit) {
   return g;
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
+// il risultato di favHit si ricorda finche non cambiano gli alimenti personali: la ricerca nel database e lenta
+const _favHitCache = new Map();
+function favHitCached(nome) {
+  const key = nome + "|" + (S.customFoods || []).length;
+  if (!_favHitCache.has(key)) _favHitCache.set(key, favHit(nome));
+  return _favHitCache.get(key);
+}
 function favHit(nome) {
   nome = String(nome).replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").trim(); // il pasto scritto tra parentesi non fa parte del nome
   const n = norm(nome).trim();
@@ -1136,13 +1145,13 @@ const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.fi
 const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.length > 2).slice(0, 2).join(" ");
 // riga gia nella previsione che corrisponde a un tuo preferito (anche con il nome del database)
 function rigaPreferita(l) {
-  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
+  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHitCached(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
 }
 function favoriteFoods(k) {
   const count = new Map();
   const todayGroups = new Set(((S.days[k] || {}).meals || []).map((m) => foodGroup(m.name)));
   // i preferiti scelti da te entrano sempre per primi, senza aspettare la cronologia
-  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name) && (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(x.name).trim() || (!!h && h.name === x.name); })))
+  const pref = S.customFoods.filter((x) => x.fav && !todayGroups.has(foodGroup(x.name)) && !NOT_FOR_DIET.test(x.name) && (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHitCached(pz); return norm(pz).trim() === norm(x.name).trim() || (!!h && h.name === x.name); })))
     .map((x) => ({ name: x.name, g: x.portion || 100, per: [x.kcal, x.p, x.c, x.f] }));
   for (let i = 1; i <= 30; i++) {
     const d = S.days[addDays(k, -i)];
@@ -1211,7 +1220,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   favoriteFoods(k).forEach((fv) => {
     if (picked >= 3 || eatenToday.has(norm(fv.name).trim())) return;
     // se il cibo e tra i tuoi preferiti, lo decidi tu (grammi e abbinamento): qui non lo propongo
-    if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHit(pz); return h && h.name === fv.name; }))) return;
+    if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHitCached(pz); return h && h.name === fv.name; }))) return;
     // il preferito e il cibo, non la quantita: la porzione abituale e solo un massimo, e si scende se le calorie o i carboidrati non entrano
     const gMax = /cotoletta/i.test(hit.name) ? Math.min(60, fv.g) : fv.g;
     const gK = fv.per[0] > 0 ? Math.floor((needK + 150) / (fv.per[0] / 100) / 5) * 5 : gMax;
@@ -1231,7 +1240,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // piatto combinato: "Albume + JUST WHEY (GymBeam) + Latte parzialmente scremato" si propone come un unico piatto
     const pezzi = nome.split("+").map((x) => x.trim()).filter(Boolean);
     if (pezzi.length > 1) {
-      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
+      const trovati = pezzi.map((pz) => ({ pz, hit: favHitCached(pz) })).filter((x) => x.hit);
       if (trovati.some((x) => escluso(x.hit.name, k))) return;
       if (trovati.length !== pezzi.length || trovati.some((x) => planText.split("\n").some((l) => (l.trim().toLowerCase().startsWith(x.hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(x.pz.toLowerCase() + ",")) && !/bloccato/i.test(l)))) return;
       const base0 = (pz) => (/albume/i.test(pz) ? 135 : /whey|polvere/i.test(pz) ? 15 : 100);
@@ -1281,7 +1290,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       picked++;
       return;
     }
-    const hit = favHit(nome);
+    const hit = favHitCached(nome);
     if (hit && escluso(hit.name, k)) return;
     // proteine gia raggiunte: non propongo cibi proteici (albume, yogurt, polvere)
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(nome.toLowerCase() + ","))) return;
@@ -1535,7 +1544,14 @@ function tokenScore(t, words) {
   }
   return best;
 }
+// la ricerca nel database si ricorda per ogni testo: il calcolo dei totali la ripete molte volte
+const _searchCache = new Map();
 function searchFoods(q) {
+  const key = String(q) + "|" + (S.customFoods || []).length;
+  if (!_searchCache.has(key)) { if (_searchCache.size > 2000) _searchCache.clear(); _searchCache.set(key, searchFoodsRaw(q)); }
+  return _searchCache.get(key);
+}
+function searchFoodsRaw(q) {
   // nomi brevi come "Pane bianco" puntano all'alimento giusto del database
   const alias = Object.keys(FOOD_ALIAS).find((k) => norm(k).trim() === norm(q).trim());
   if (alias) q = FOOD_ALIAS[alias];
@@ -2033,7 +2049,7 @@ function parseDiary(text) {
     const nameOnly = line.split(/[,:(]/)[0].replace(/\b(circa|una|un|uno|mezza|mezzo|porzione|piatto|di|da)\b/gi, "").replace(/\d+(?:[.,]\d+)?\s*%?|%/g, "").trim();
     // "Calorie", "Proteine", "Grassi" ecc. sono intestazioni dei macro, non alimenti: non vanno cercati nel database
     const MACRO_LABEL = /^(calorie|kcal|energia|proteine|carboidrati|carbo|grassi|lipidi|macro|valori|totale|p|c|g|f)$/i;
-    const dbHit = !k && !MACRO_LABEL.test(nameOnly.trim()) && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? (searchFoods(nameOnly).find((x) => !x.perServing) || favHit(nameOnly)) : null;
+    const dbHit = !k && !MACRO_LABEL.test(nameOnly.trim()) && /^[A-Za-zÀ-ÿ]{3,}/.test(nameOnly) ? (searchFoods(nameOnly).find((x) => !x.perServing) || favHitCached(nameOnly)) : null;
     const gramLine = line.match(/(\d+(?:[.,]\d+)?)\s*g\b(?!\s*di\b)/i);
     const dbG = dbHit ? (gramLine ? num1(gramLine[1]) : /porzione/i.test(line) ? dbHit.portion : null) : null;
     if (dbHit && dbG) {
@@ -2571,7 +2587,7 @@ function act(a, el) {
       const gCasella = Number(((document.getElementById("pl-g") || {}).value || "").replace(",", "."));
       const senza = voci.filter((v) => !v.g);
       if (gCasella > 0 && senza.length) senza[senza.length - 1].g = String(gCasella);
-      const trovati = voci.map((v) => ({ ...v, hit: favHit(v.nome) }));
+      const trovati = voci.map((v) => ({ ...v, hit: favHitCached(v.nome) }));
       if (!trovati.length || trovati.some((x) => !x.hit)) return toast("Scegli un cibo dall'elenco");
       const righe = trovati.map((x) => {
         const g = x.g ? Number(String(x.g).replace(",", ".")) : (/whey|polvere/i.test(x.nome) ? 15 : /olio/i.test(x.nome) ? 10 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
@@ -2601,7 +2617,7 @@ function act(a, el) {
       const riga = (S.favFoods || [])[+el.dataset.i];
       if (!riga) break;
       const pezzi = riga.split("+").map((x) => x.trim()).filter(Boolean);
-      const trovati = pezzi.map((pz) => ({ pz, hit: favHit(pz) })).filter((x) => x.hit);
+      const trovati = pezzi.map((pz) => ({ pz, hit: favHitCached(pz) })).filter((x) => x.hit);
       if (!trovati.length) return toast("Non trovo questo cibo nel database");
       const pasto = pastoDiPreferito(norm(pezzi[0]));
       const righe = trovati.map((x) => {
@@ -2650,7 +2666,7 @@ function act(a, el) {
         const v = Math.round(Number(inp.value));
         if (v > 0) S.favGrams[nome] = v; else delete S.favGrams[nome];
         // la riga gia nella previsione prende la stessa quantita (senza grammi scritti torna la porzione del database)
-        const hit = favHit(nome);
+        const hit = favHitCached(nome);
         const grammi = v > 0 ? v : (hit ? gramiAutomatici(hit) : 100);
         S.plannedDinner = (S.plannedDinner || "").split("\n").map((l) => {
           if (!l.trim() || !hit || !norm(l).includes(norm(hit.name).trim())) return l;
@@ -2675,7 +2691,7 @@ function act(a, el) {
       if (view.favPair !== undefined) {
         const i = view.favPair; view.favPair = undefined;
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
-      } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
+      } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHitCached(pz), b = favHitCached(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
         toast("Questo cibo è già nei preferiti");
       } else if (window.confirm(`Aggiungo ${nome} ai miei preferiti?`)) {
         S.favFoods.push(nome);
@@ -2882,10 +2898,10 @@ function act(a, el) {
       if (!line) break;
       const nome = foodKey(line).replace(/:.*$/, "").split(/ con /)[0].trim();
       const primo = (line.split(/ con /)[0] || "").replace(/,?\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\(.*?\)\s*$/, "").trim();
-      const voce = (S.favFoods || []).find((r) => rigaPreferita(primo) && r.split(" + ").some((pz) => { const h = favHit(pz); return norm(pz).trim() === norm(primo).trim() || (!!h && norm(h.name) === norm(primo)) || norm(pz).includes(norm(primo)); }));
+      const voce = (S.favFoods || []).find((r) => rigaPreferita(primo) && r.split(" + ").some((pz) => { const h = favHitCached(pz); return norm(pz).trim() === norm(primo).trim() || (!!h && norm(h.name) === norm(primo)) || norm(pz).includes(norm(primo)); }));
       S.favFoods = S.favFoods || [];
       if (voce) { S.favFoods = S.favFoods.filter((r) => r !== voce); save(); toast("Tolto dai preferiti"); }
-      else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHit(pz), b = favHit(primo); return norm(pz) === norm(primo) || (!!a && !!b && a.name === b.name); }))) { toast("Questo cibo è già nei preferiti"); }
+      else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHitCached(pz), b = favHitCached(primo); return norm(pz) === norm(primo) || (!!a && !!b && a.name === b.name); }))) { toast("Questo cibo è già nei preferiti"); }
       else if (window.confirm(`Aggiungo ${primo} ai miei preferiti?`)) { S.favFoods.push(primo); save(); toast(`${primo} aggiunto ai preferiti`); }
       favRefresh();
       break;
@@ -3717,7 +3733,7 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
 }
 // all'avvio: se una voce della lista e ripetuta (stesso cibo, anche con nome o tag diversi), resta la prima
 function pulisciPreferiti() {
-  const chiave = (r) => r.split(" + ").map((pz0) => { const pz = pz0.replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, ""); const h = favHit(pz); return norm(h ? h.name : pz).trim(); }).join("|");
+  const chiave = (r) => r.split(" + ").map((pz0) => { const pz = pz0.replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, ""); const h = favHitCached(pz); return norm(h ? h.name : pz).trim(); }).join("|");
   const visti = new Set();
   const nuova = (S.favFoods || []).filter((r) => { const k = chiave(r); if (visti.has(k)) return false; visti.add(k); return true; });
   if (nuova.length !== (S.favFoods || []).length) { S.favFoods = nuova; save(); }
