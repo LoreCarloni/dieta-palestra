@@ -832,6 +832,26 @@ function renderMeasures() {
 }
 
 // ---------- Report ----------
+// confronto delle ultime settimane: quante calorie al giorno sopra o sotto l'obiettivo, settimana per settimana
+function weeksCompareHtml() {
+  const frase = (v) => (v > 0 ? `${r0(v)} kcal al giorno in più` : v < 0 ? `${r0(-v)} kcal al giorno in meno` : "in linea con l'obiettivo");
+  const righe = [0, 1, 2, 3].map((w) => {
+    const fine = addDays(todayKey(), -7 * w);
+    const st = periodStats(fine, 7);
+    const nome = w === 0 ? "Questa settimana" : `${w} ${w === 1 ? "settimana" : "settimane"} fa`;
+    if (!st.tracked) return `<div class="row"><div>${nome}</div><div class="row-r muted small">nessun giorno registrato</div></div>`;
+    return `<div class="row"><div>${nome} <span class="muted small">(${st.tracked} giorni registrati)</span></div><div class="row-r">${frase(st.kcal - st.target)}</div></div>`;
+  });
+  // da quando usi l'app: dal primo giorno con cibi registrati
+  const giorni = Object.keys(S.days).filter((k) => (S.days[k].meals || []).length).sort();
+  let totale = "";
+  if (giorni.length) {
+    const n = Math.min(365, Math.round((parseKey(todayKey()) - parseKey(giorni[0])) / 86400000) + 1);
+    const st = periodStats(todayKey(), n);
+    if (st.tracked) totale = `<p class="muted small" style="margin-top:8px">Da quando usi l'app (${st.tracked} giorni registrati): ${frase(st.kcal - st.target)}, in media.</p>`;
+  }
+  return `<section class="card"><h2>Confronto settimane</h2>${righe.join("")}${totale}</section>`;
+}
 function renderReport() {
   const st = periodStats(todayKey(), view.period);
   const W = 320, H = 140, pad = 4;
@@ -857,6 +877,7 @@ function renderReport() {
 
   const stat = (label, val, sub = "") => `<div class="stat"><div class="muted small">${label}</div><div class="stat-v">${val}</div>${sub ? `<div class="muted small">${sub}</div>` : ""}</div>`;
   return `
+  ${weeksCompareHtml()}
   <div class="seg">${[7, 14, 30].map((n) => `<button data-act="period" data-n="${n}" class="${view.period === n ? "active" : ""}">${n} giorni</button>`).join("")}</div>
   <section class="card">
     <h2>Riepilogo ultimi ${view.period} giorni</h2>
