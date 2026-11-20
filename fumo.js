@@ -842,19 +842,19 @@ function renderFumoSetup(editing) {
   const f = S.fumo || { perDay: 15, packPrice: 6.5, packSize: 20, reason: "", start: new Date().toISOString() };
   return `
     <section class="card">
-      <h3>${editing ? "Modifica dati" : "Smettere di fumare"}</h3>
-      <p class="muted small">${editing ? "" : "Pochi dati per calcolare risparmio e traguardi. Restano solo sul tuo dispositivo."}</p>
+      <h3>${editing ? T("Modifica dati", "Edit data") : T("Smettere di fumare", "Quitting smoking")}</h3>
+      <p class="muted small">${editing ? "" : T("Pochi dati per calcolare risparmio e traguardi. Restano solo sul tuo dispositivo.", "A few details to calculate savings and milestones. They stay only on your device.")}</p>
       <form id="fumo-form" class="form">
-        <label>Quando hai smesso (o smetti)
+        <label>${T("Quando hai smesso (o smetti)", "When you quit (or will quit)")}
           <input type="datetime-local" name="start" value="${toLocalInput(new Date(f.start))}" required></label>
 
-        <label>Sigarette al giorno: 3-4 tollerate dal medico, oltre fa male<input type="number" name="tettoGiorno" min="0" max="40" step="1" value="${f.tettoGiorno || 4}" required></label>        <label>Sigarette al giorno prima di smettere
+        <label>${T("Sigarette al giorno: 3-4 tollerate dal medico, oltre fa male", "Cigarettes a day: 3-4 tolerated by your doctor, more is harmful")}<input type="number" name="tettoGiorno" min="0" max="40" step="1" value="${f.tettoGiorno || 4}" required></label>        <label>${T("Sigarette al giorno prima di smettere", "Cigarettes a day before quitting")}
           <input type="number" name="perDay" min="1" max="100" step="1" value="${f.perDay}" required></label>
-        <label>Prezzo di un pacchetto in euro
+        <label>${T("Prezzo di un pacchetto in euro", "Price of a pack (euro)")}
           <input type="number" name="packPrice" min="0.5" max="30" step="0.1" value="${f.packPrice}" required></label>
-        <label>Sigarette per pacchetto
+        <label>${T("Sigarette per pacchetto", "Cigarettes per pack")}
           <input type="number" name="packSize" min="1" max="50" step="1" value="${f.packSize}" required></label>
-        <label>Il tuo motivo per smettere
+        <label>${T("Il tuo motivo per smettere", "Your reason to quit")}
           <textarea name="reason" rows="2" maxlength="200">${esc(f.reason || "")}</textarea></label>
         <button class="btn primary wide" type="submit">${T("Salva", "Save")}</button>
         ${editing ? `<button class="btn ghost wide" type="button" data-act="fumo-cancel">${T("Annulla", "Cancel")}</button>` : ""}
