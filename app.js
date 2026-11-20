@@ -949,28 +949,28 @@ function coachAdvice() {
   const out = [];
   const add = (lvl, title, text) => out.push({ lvl, title, text });
 
-  if (st.tracked < 5) add("warn", "Registra con costanza", `Negli ultimi 7 giorni hai registrato ${st.tracked} giornate complete. Senza almeno 5 giorni su 7 i numeri non sono affidabili. Pesa gli alimenti, conta l'olio e chiudi la giornata ogni sera.`);
+  if (st.tracked < 5) add("warn", T("Registra con costanza", "Log consistently"), `Negli ultimi 7 giorni hai registrato ${st.tracked} giornate complete. Senza almeno 5 giorni su 7 i numeri non sono affidabili. Pesa gli alimenti, conta l'olio e chiudi la giornata ogni sera.`);
   if (st.tracked >= 3) {
-    if (st.kcal > st.target + 150) add("bad", "Sei sopra l'obiettivo", `Media ${r0(st.kcal)} kcal contro un obiettivo di ${r0(st.target)}. Sono circa ${r0(st.kcal - st.target)} kcal in più al giorno. Controlla condimenti, snack fuori pasto e bevande.`);
-    else if (st.kcal < st.bmr * 0.95) add("warn", "Stai mangiando troppo poco", `Media ${r0(st.kcal)} kcal, sotto il tuo metabolismo basale (${r0(st.bmr)}). Rischi di perdere muscolo, avere più fame e rallentare. Meglio un deficit moderato e sostenibile.`);
-    else if (sgSt) add("warn", "Calorie in linea, ma con sgarri", `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}, però nei 7 giorni hai ${sgSt} ${sgSt === 1 ? "sgarro" : "sgarri"}. La media nasconde i giorni fuori obiettivo: il prossimo passo è azzerarli.`);
-    else add("good", "Calorie in linea", `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}. Continua così.`);
+    if (st.kcal > st.target + 150) add("bad", T("Sei sopra l'obiettivo", "You are above the goal"), `Media ${r0(st.kcal)} kcal contro un obiettivo di ${r0(st.target)}. Sono circa ${r0(st.kcal - st.target)} kcal in più al giorno. Controlla condimenti, snack fuori pasto e bevande.`);
+    else if (st.kcal < st.bmr * 0.95) add("warn", T("Stai mangiando troppo poco", "You are eating too little"), `Media ${r0(st.kcal)} kcal, sotto il tuo metabolismo basale (${r0(st.bmr)}). Rischi di perdere muscolo, avere più fame e rallentare. Meglio un deficit moderato e sostenibile.`);
+    else if (sgSt) add("warn", T("Calorie in linea, ma con sgarri", "Calories on track, but with overshoots"), `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}, però nei 7 giorni hai ${sgSt} ${sgSt === 1 ? "sgarro" : "sgarri"}. La media nasconde i giorni fuori obiettivo: il prossimo passo è azzerarli.`);
+    else add("good", T("Calorie in linea", "Calories on track"), `Media ${r0(st.kcal)} kcal con obiettivo ${r0(st.target)}. Continua così.`);
 
-    if (st.p < st.pTarget * 0.85) add("bad", "Proteine basse", `Media ${r0(st.p)} g contro ${r0(st.pTarget)} g. Le proteine proteggono il muscolo e saziano. Aggiungi una fonte a ogni pasto: yogurt greco o skyr a colazione, carne bianca, pesce, uova, legumi o fiocchi di latte a pranzo e cena.`);
-    else add("good", "Proteine a posto", `Media ${r0(st.p)} g al giorno.`);
+    if (st.p < st.pTarget * 0.85) add("bad", T("Proteine basse", "Low protein"), `Media ${r0(st.p)} g contro ${r0(st.pTarget)} g. Le proteine proteggono il muscolo e saziano. Aggiungi una fonte a ogni pasto: yogurt greco o skyr a colazione, carne bianca, pesce, uova, legumi o fiocchi di latte a pranzo e cena.`);
+    else add("good", T("Proteine a posto", "Protein on track"), `Media ${r0(st.p)} g al giorno.`);
 
-    if (st.water < st.waterTarget * 0.8) add("warn", "Bevi di più", `Media ${r1(st.water / 1000)} litri contro ${r1(st.waterTarget / 1000)}. Tieni una bottiglia sempre vicina e bevi un bicchiere prima di ogni pasto.`);
-    if (st.weekendKcal && st.weekdayKcal && st.weekendKcal - st.weekdayKcal > 400) add("warn", "Il weekend annulla la settimana", `Nel weekend mangi in media ${r0(st.weekendKcal - st.weekdayKcal)} kcal in più rispetto ai giorni feriali. Pianifica in anticipo uscite e pasti fuori.`);
+    if (st.water < st.waterTarget * 0.8) add("warn", T("Bevi di più", "Drink more"), `Media ${r1(st.water / 1000)} litri contro ${r1(st.waterTarget / 1000)}. Tieni una bottiglia sempre vicina e bevi un bicchiere prima di ogni pasto.`);
+    if (st.weekendKcal && st.weekdayKcal && st.weekendKcal - st.weekdayKcal > 400) add("warn", T("Il weekend annulla la settimana", "The weekend cancels the week"), `Nel weekend mangi in media ${r0(st.weekendKcal - st.weekdayKcal)} kcal in più rispetto ai giorni feriali. Pianifica in anticipo uscite e pasti fuori.`);
   }
-  if (st.alc > 700) add("warn", "Alcol", `Negli ultimi 7 giorni hai bevuto ${r0(st.alc)} kcal di alcolici. L'alcol blocca l'uso dei grassi come energia e aumenta la fame. Limitalo a una o due occasioni a settimana.`);
-  if (st.exMin < 150) add("warn", "Muoviti di più", `${r0(st.exMin)} minuti di attività negli ultimi 7 giorni. L'obiettivo minimo è 150 minuti a settimana, più 7000 o 10000 passi al giorno.`);
-  else add("good", "Movimento", `${r0(st.exMin)} minuti negli ultimi 7 giorni.`);
-  if (st.strength < 2) add("warn", "Allenamento di forza", `Solo ${st.strength} sedute di forza. Per dimagrire mantenendo il muscolo servono almeno 2 o 3 sedute con i pesi a settimana. Trovi il piano qui sotto.`);
+  if (st.alc > 700) add("warn", T("Alcol", "Alcohol"), `Negli ultimi 7 giorni hai bevuto ${r0(st.alc)} kcal di alcolici. L'alcol blocca l'uso dei grassi come energia e aumenta la fame. Limitalo a una o due occasioni a settimana.`);
+  if (st.exMin < 150) add("warn", T("Muoviti di più", "Move more"), `${r0(st.exMin)} minuti di attività negli ultimi 7 giorni. L'obiettivo minimo è 150 minuti a settimana, più 7000 o 10000 passi al giorno.`);
+  else add("good", T("Movimento", "Movement"), `${r0(st.exMin)} minuti negli ultimi 7 giorni.`);
+  if (st.strength < 2) add("warn", T("Allenamento di forza", "Strength training"), `Solo ${st.strength} sedute di forza. Per dimagrire mantenendo il muscolo servono almeno 2 o 3 sedute con i pesi a settimana. Trovi il piano qui sotto.`);
 
   if (st14.weights.length >= 4 && st14.tracked >= 9) {
     const exp = st14.estLossKg;
     const real = -(st14.weightDelta || 0);
-    if (exp > 0.6 && real < 0.2) add("warn", "Il peso non scende come previsto", `Secondo i dati dovresti aver perso circa ${r1(exp)} kg in 14 giorni, ma la bilancia dice ${r1(real)} kg. Le cause più comuni sono porzioni sottostimate, olio non contato, assaggi e bevande dimenticate. Per una settimana pesa tutto con la bilancia da cucina.`);
+    if (exp > 0.6 && real < 0.2) add("warn", T("Il peso non scende come previsto", "Weight is not dropping as expected"), `Secondo i dati dovresti aver perso circa ${r1(exp)} kg in 14 giorni, ma la bilancia dice ${r1(real)} kg. Le cause più comuni sono porzioni sottostimate, olio non contato, assaggi e bevande dimenticate. Per una settimana pesa tutto con la bilancia da cucina.`);
   }
   return { out, st, tg };
 }
