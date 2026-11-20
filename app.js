@@ -1565,7 +1565,7 @@ function searchFoodsRaw(q) {
       return { f, score: scores.reduce((a, b) => a + b, 0) + (f.seen ? Math.min(f.seen, 10) * 0.1 : 0) };
     })
     .filter(Boolean)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => (isVerified(b.f) ? 1 : 0) - (isVerified(a.f) ? 1 : 0) || b.score - a.score)
     .map((x) => x.f)
     .slice(0, 40);
 }
