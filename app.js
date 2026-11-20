@@ -631,7 +631,7 @@ function renderToday() {
 
   const checklist = [
     ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
-    { label: "Cosa hai mangiato oggi", ok: d.meals.length > 0, act: "food" },
+    { label: T("Cosa hai mangiato oggi","What you ate today"), ok: d.meals.length > 0, act: "food" },
     { label: d.rest ? "Giorno di riposo" : "Passi e allenamento (sezione Attività)", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "goto-attivita" },
     { label: "Chiudi la giornata", ok: d.closed, act: "close" },
   ];
@@ -655,7 +655,7 @@ function renderToday() {
       <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
       <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
     </div>
-    <div class="goal-line">Obiettivo giornaliero: <b>${tg.kcal} kcal</b></div>
+    <div class="goal-line">${T("Obiettivo giornaliero","Daily goal")}: <b>${tg.kcal} kcal</b></div>
     ${tg.plan ? `<div class="plan-line tiny"><div>Target vero: <b>${tg.kcal + tg.plan.cutKcal}</b> kcal</div><div>Recupero, da seguire adesso: <b>${tg.kcal}</b> kcal, per altri ${tg.plan.daysLeft} giorni</div></div>` : ""}
     ${kcalBar(t.kcal, tg.kcal)}
     ${tg.kcal < tg.bmr ? `<p class="warn-line tiny">Sotto il metabolismo basale (${r0(tg.bmr)} kcal): da concordare con un medico.</p>` : ""}
@@ -669,7 +669,7 @@ function renderToday() {
   </section>
 
   <section class="card">
-    <h2>Cosa hai mangiato <span class="muted small">${r0(foodKcal)} kcal</span><button class="icon-plus" data-act="food-menu" aria-label="Aggiungi">+</button></h2>
+    <h2>${T("Cosa hai mangiato","What you ate")} <span class="muted small">${r0(foodKcal)} kcal</span><button class="icon-plus" data-act="food-menu" aria-label="Aggiungi">+</button></h2>
     ${view.foodMenu ? `<div class="food-menu">
       <button class="menu-item" data-act="food">Aggiungi alimento</button>
       <button class="menu-item" data-act="diary-dialog">Incolla un riepilogo</button>
@@ -1419,7 +1419,7 @@ function planLeggeHtml() {
 function planItemsHtml(conFrecce = true, pastoFiltro = null) {
   const lines = vistaPrevisione().split("\n").filter((x) => x.trim());
   if (!lines.length && (S.plannedDinner || "").trim()) return `<p class="muted small">Hai già superato calorie o carboidrati di oggi: la previsione non propone altro cibo. Le righe bloccate, se ci sono, restano visibili.</p>`;
-  if (!lines.length) return `<p class="muted small">Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.</p>`;
+  if (!lines.length) return `<p class="muted small">${T("Scrivi colazione, pranzo e cena, una riga per alimento con i grammi.","Write breakfast, lunch and dinner, one line per food with grams.")}</p>`;
   const pastoDiRiga = (x) => { const r = mealRank(x); return PASTI[Math.min(3, r < 0 ? 3 : r)]; };
   return lines.map((x, i) => {
     if (pastoFiltro && pastoDiRiga(x) !== pastoFiltro) return "";
@@ -1431,7 +1431,7 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const its = parseDiary(x);
     const nums = its.length ? `<span class="muted small">${Math.round(its.reduce((a, y) => a + y.kcal, 0))} kcal, C ${Math.round(its.reduce((a, y) => a + (y.c || 0), 0))} g</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">Mangiato</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? "Bloccata" : "Blocca"}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? "Preferito" : "Preferito"; })()}</button><button class="pa" data-act="plan-no-oggi" data-i="${i}">Non oggi</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
+    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button> ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">${T("Mangiato","Eaten")}</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? T("Bloccata", "Locked") : T("Blocca", "Lock")}</button><button class="pa${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return f2 && f2.fav ? " on" : ""; })()}" data-act="plan-fav" data-i="${i}">${(() => { const k2 = foodKey(x).replace(/:.*$/, "").trim(); const f2 = allFoods().find((f) => norm(f.name).trim().toLowerCase() === k2); return T("Preferito", "Favorite"); })()}</button><button class="pa" data-act="plan-no-oggi" data-i="${i}">${T("Non oggi","Not today")}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
 function myPlanCard() {
@@ -1441,7 +1441,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ? (left <= 0 ? `<p class="warn-line">Hai già superato il target di oggi di ${r0(-left)} kcal. Non c'è altro da mangiare.</p>` : `<p class="warn-line">Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}. Togli qualche riga con × oppure mangia meno.</p>`) : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = false && left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">Previsione della giornata <span class="pill ok">Modifica</span></h2>${warn}${optional}${left < 0 && k === todayKey() ? `<p class="muted small">Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.</p>` : planItemsHtml(false)}<div class="field"><label class="muted small">Aggiungi un cibo a un pasto</label><div class="fav-add"><input id="pl-q" type="search" placeholder="Scrivi un cibo" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">Rigenera</button><button class="btn danger" data-act="plan-clear">Cancella</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">${T("Previsione della giornata","Day forecast")} <span class="pill ok">${T("Modifica","Edit")}</span></h2>${warn}${optional}${left < 0 && k === todayKey() ? `<p class="muted small">${T("Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.","You have already reached today's target: the forecast suggests no more food. Your favorites stay in the list.")}</p>` : planItemsHtml(false)}<div class="field"><label class="muted small">${T("Aggiungi un cibo a un pasto","Add a food to a meal")}</label><div class="fav-add"><input id="pl-q" type="search" placeholder="${T("Scrivi un cibo","Type a food")}" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">${T("Rigenera","Regenerate")}</button><button class="btn danger" data-act="plan-clear">${T("Cancella","Clear")}</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1464,7 +1464,7 @@ function closeDialogAnimata() {
 }
 // la finestra Modifica previsione: preferiti, poi le righe della giornata modificabili
 function planDialogHtml() {
-  return `${favCardHtml(false)}<button class="btn wide" data-act="plan-done">Chiudi</button>`;
+  return `${favCardHtml(false)}<button class="btn wide" data-act="plan-done">${T("Chiudi","Close")}</button>`;
 }
 function closeDialog() { view.dialogPlan = false; if (dlg().open) dlg().close(); document.documentElement.style.overflow = ""; document.body.style.overflow = ""; }
 document.addEventListener("close", (e) => { if (e.target.id === "dlg") stopScan(); }, true);
