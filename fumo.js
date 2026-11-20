@@ -700,7 +700,9 @@ function renderFumo() {
     ? { titolo: "Nessuna sigaretta oggi.", testo: "Continua così: ogni ora senza fumo conta." }
     : { titolo: "Complimenti, stai rovinando la tua salute.", testo: sigOggi >= 5 ? "Oggi sei già a " + sigOggi + ": prova a fermarti alla prossima voglia e fai una delle azioni sotto." : "Prova a fermarti alla prossima voglia: scegli una delle azioni sotto e aspetta il cronometro." };
   const tetto = f.tettoGiorno || 10;
-  const bannerTetto = `<section class="card"><p><b>Oggi: ${smokedToday} di ${tetto} sigarette.</b> ${smokedToday > tetto ? `Hai superato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p></section>`;
+  const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
+  const sforo = smokedToday > tetto;
+  const bannerTetto = `<section class="card"><p><b>Oggi: ${smokedToday} di ${tetto} sigarette.</b> ${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : "#2e7d32"}"></div></div></section>`;
   return `${bannerTetto}
     <section class="card" style="text-align:center;padding:14px 10px">
       <div style="font-size:3.2rem;font-weight:800;line-height:1">${sigOggi}</div>
@@ -1257,6 +1259,7 @@ function fumoAct(a, el) {
       S.fumo.smoked = (S.fumo.smoked || 0) + 1;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
       S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + 1;
+      if (S.fumo.tettoGiorno && S.fumo.smokedDays[todayKey()] >= S.fumo.tettoGiorno) toast(S.fumo.smokedDays[todayKey()] > S.fumo.tettoGiorno ? `Hai sforato il tetto di oggi: ${S.fumo.smokedDays[todayKey()]} di ${S.fumo.tettoGiorno}` : "Hai raggiunto il tetto di oggi");
       S.fumo.log = [...(S.fumo.log || []), { at: new Date(now).toISOString(), kind: "smoke", n: 1 }];
       S.fumo.best = Math.max(S.fumo.best || 0, fumoStats().ms);
       S.fumo.start = new Date(now).toISOString();
