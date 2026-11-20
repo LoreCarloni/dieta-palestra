@@ -833,13 +833,13 @@ function renderMeasures() {
 // ---------- Report ----------
 // confronto delle ultime settimane: quante calorie al giorno sopra o sotto l'obiettivo, settimana per settimana
 function weeksCompareHtml() {
-  const frase = (v) => (v > 0 ? `${r0(v)} kcal in più a settimana` : v < 0 ? `${r0(-v)} kcal in meno a settimana` : "in linea con l'obiettivo");
+  const frase = (v) => (v > 0 ? T(`${r0(v)} kcal in più a settimana`, `${r0(v)} kcal more a week`) : v < 0 ? T(`${r0(-v)} kcal in meno a settimana`, `${r0(-v)} kcal less a week`) : T("in linea con l'obiettivo", "on target"));
   const righe = [0, 1, 2, 3].map((w) => {
     const fine = addDays(todayKey(), -7 * w);
     const st = periodStats(fine, 7);
-    const nome = w === 0 ? "Questa settimana" : `${w} ${w === 1 ? "settimana" : "settimane"} fa`;
-    if (!st.tracked) return `<div class="row"><div>${nome}</div><div class="row-r muted small">nessun giorno registrato</div></div>`;
-    return `<div class="row"><div>${nome} <span class="muted small">(${st.tracked} giorni registrati)</span></div><div class="row-r">${frase((st.kcal - st.target) * 7)}</div></div>`;
+    const nome = w === 0 ? T("Questa settimana", "This week") : T(`${w} ${w === 1 ? "settimana" : "settimane"} fa`, `${w} ${w === 1 ? "week" : "weeks"} ago`);
+    if (!st.tracked) return `<div class="row"><div>${nome}</div><div class="row-r muted small">${T("nessun giorno registrato", "no days logged")}</div></div>`;
+    return `<div class="row"><div>${nome} <span class="muted small">(${st.tracked} ${T("giorni registrati", "days logged")})</span></div><div class="row-r">${frase((st.kcal - st.target) * 7)}</div></div>`;
   });
   // da quando usi l'app: dal primo giorno con cibi registrati
   const giorni = Object.keys(S.days).filter((k) => (S.days[k].meals || []).length).sort();
@@ -847,9 +847,9 @@ function weeksCompareHtml() {
   if (giorni.length) {
     const n = Math.min(365, Math.round((parseKey(todayKey()) - parseKey(giorni[0])) / 86400000) + 1);
     const st = periodStats(todayKey(), n);
-    if (st.tracked) totale = `<p class="muted small" style="margin-top:8px">Da quando usi l'app (${st.tracked} giorni registrati): ${frase((st.kcal - st.target) * 7)}, in media.</p>`;
+    if (st.tracked) totale = `<p class="muted small" style="margin-top:8px">${T("Da quando usi l'app", "Since you started")} (${st.tracked} ${T("giorni registrati", "days logged")}): ${frase((st.kcal - st.target) * 7)}, ${T("in media", "on average")}.</p>`;
   }
-  return `<section class="card"><h2>Confronto settimane</h2>${righe.join("")}${totale}</section>`;
+  return `<section class="card"><h2>${T("Confronto settimane", "Week comparison")}</h2>${righe.join("")}${totale}</section>`;
 }
 function renderReport() {
   const st = periodStats(todayKey(), view.period);
@@ -864,13 +864,13 @@ function renderReport() {
   const ty = H - (st.rows[st.rows.length - 1].tg.kcal / maxK) * H;
   const kcalChart = `<svg viewBox="0 0 ${W} ${H + 2}" class="chart" role="img" aria-label="Calorie giornaliere">${bars}<line x1="0" x2="${W}" y1="${ty}" y2="${ty}" class="target"/></svg>`;
 
-  let weightChart = `<p class="muted small">Registra il peso almeno due volte per vedere l'andamento.</p>`;
+  let weightChart = `<p class="muted small">${T("Registra il peso almeno due volte per vedere l'andamento.", "Log your weight at least twice to see the trend.")}</p>`;
   if (st.weights.length >= 2) {
     const ws = st.weights.map((x) => x.w);
     const mn = Math.min(...ws) - 0.5, mx = Math.max(...ws) + 0.5;
     const idx = (k) => st.keys.indexOf(k);
     const pts = st.weights.map((x) => `${pad + idx(x.k) * bw + bw / 2},${H - ((x.w - mn) / (mx - mn)) * H}`).join(" ");
-    weightChart = `<svg viewBox="0 0 ${W} ${H + 2}" class="chart" role="img" aria-label="Andamento peso"><polyline points="${pts}" class="wline"/>${st.weights.map((x) => `<circle cx="${pad + idx(x.k) * bw + bw / 2}" cy="${H - ((x.w - mn) / (mx - mn)) * H}" r="3" class="wdot"><title>${x.w} kg</title></circle>`).join("")}</svg>
+    weightChart = `<svg viewBox="0 0 ${W} ${H + 2}" class="chart" role="img" aria-label=T("Andamento peso", "Weight trend")><polyline points="${pts}" class="wline"/>${st.weights.map((x) => `<circle cx="${pad + idx(x.k) * bw + bw / 2}" cy="${H - ((x.w - mn) / (mx - mn)) * H}" r="3" class="wdot"><title>${x.w} kg</title></circle>`).join("")}</svg>
     <div class="muted small axis"><span>${r1(mx)} kg</span><span>${r1(mn)} kg</span></div>`;
   }
 
@@ -881,32 +881,32 @@ function renderReport() {
   <section class="card">
     <h2>Riepilogo ultimi ${view.period} giorni</h2>
     <div class="stats">
-      ${stat("Giorni registrati", `${st.tracked} su ${st.n}`, st.tracked < st.n * 0.7 ? "Precisione bassa" : "Buona precisione")}
-      ${stat("Media kcal", r0(st.kcal), `obiettivo ${r0(st.target)}`)}
-      ${stat("Bilancio medio", `${st.balance > 0 ? "più " : "meno "}${r0(Math.abs(st.balance))}`, "kcal al giorno")}
-      ${stat("Grasso perso stimato", `${r1(Math.max(0, st.estLossKg))} kg`, "dai dati registrati")}
-      ${stat("Peso reale", st.weightDelta === null ? "n.d." : `${st.weightDelta > 0 ? "più " : st.weightDelta < 0 ? "meno " : ""}${r1(Math.abs(st.weightDelta))} kg`, "prima e ultima pesata")}
-      ${stat("Proteine medie", `${r0(st.p)} g`, `obiettivo ${r0(st.pTarget)} g`)}
-      ${stat("Acqua media", `${r1(st.water / 1000)} L`, `${st.waterDays} giorni a obiettivo`)}
-      ${stat("Movimento", `${r0(st.exMin)} min`, `${st.strength} sedute di forza`)}
-      ${stat("Calorie da alcol", r0(st.alc), "nel periodo")}
-      ${stat("Giorni in linea", `${st.onTargetDays} su ${st.tracked}`, "entro obiettivo")}
+      ${stat(T("Giorni registrati", "Days logged"), `${st.tracked} su ${st.n}`, st.tracked < st.n * 0.7 ? T("Precisione bassa", "Low accuracy") : T("Buona precisione", "Good accuracy"))}
+      ${stat(T("Media kcal", "Average kcal"), r0(st.kcal), `obiettivo ${r0(st.target)}`)}
+      ${stat(T("Bilancio medio", "Average balance"), `${st.balance > 0 ? "più " : "meno "}${r0(Math.abs(st.balance))}`, "kcal al giorno")}
+      ${stat(T("Grasso perso stimato", "Estimated fat lost"), `${r1(Math.max(0, st.estLossKg))} kg`, "dai dati registrati")}
+      ${stat(T("Peso reale", "Real weight"), st.weightDelta === null ? "n.d." : `${st.weightDelta > 0 ? "più " : st.weightDelta < 0 ? "meno " : ""}${r1(Math.abs(st.weightDelta))} kg`, "prima e ultima pesata")}
+      ${stat(T("Proteine medie", "Average protein"), `${r0(st.p)} g`, `obiettivo ${r0(st.pTarget)} g`)}
+      ${stat(T("Acqua media", "Average water"), `${r1(st.water / 1000)} L`, `${st.waterDays} giorni a obiettivo`)}
+      ${stat(T("Movimento", "Movement"), `${r0(st.exMin)} min`, `${st.strength} sedute di forza`)}
+      ${stat(T("Calorie da alcol", "Calories from alcohol"), r0(st.alc), "nel periodo")}
+      ${stat(T("Giorni in linea", "Days on track"), `${st.onTargetDays} su ${st.tracked}`, "entro obiettivo")}
     </div>
   </section>
-  <section class="card"><h2>Calorie giornaliere</h2>${kcalChart}<div class="legend small"><span class="lg okb"></span>in linea <span class="lg hi"></span>sopra obiettivo <span class="lg nt"></span>non completo <span class="lg tl"></span>obiettivo</div></section>
+  <section class="card"><h2>${T("Calorie giornaliere", "Daily calories")}</h2>${kcalChart}<div class="legend small"><span class="lg okb"></span>${T("in linea ", "on track ")}<span class="lg hi"></span>${T("sopra obiettivo ", "above goal ")}<span class="lg nt"></span>${T("non completo ", "incomplete ")}<span class="lg tl"></span>${T("obiettivo", "goal")}</div></section>
   <section class="card"><h2>Peso</h2>${weightChart}</section>
   <section class="card">
-    <h2>Dettaglio giorni</h2>
+    <h2>${T("Dettaglio giorni", "Day details")}</h2>
     <div class="table">
-      <div class="tr th"><span>Giorno</span><span>kcal</span><span>Prot</span><span>${T("Acqua", "Water")}</span><span>Mov</span></div>
+      <div class="tr th"><span>${T("Giorno", "Day")}</span><span>kcal</span><span>Prot</span><span>${T("Acqua", "Water")}</span><span>Mov</span></div>
       ${st.rows.slice().reverse().map((r) => `<button class="tr" data-act="goto" data-k="${r.k}"><span>${esc(fmtDate(r.k, { weekday: "short", day: "numeric" }))}${r.tracked ? "" : " *"}</span><span class="${r.t.kcal > r.tg.kcal + 150 ? "bad" : ""}">${r0(r.t.kcal)}</span><span>${r0(r.t.p)}</span><span>${r1(r.t.water / 1000)}</span><span>${r0(r.t.exMin)}</span></button>`).join("")}
     </div>
-    <p class="muted small">L'asterisco indica giorni non completi. Tocca un giorno per aprirlo.</p>
+    <p class="muted small">${T("L'asterisco indica giorni non completi. Tocca un giorno per aprirlo.", "The asterisk marks incomplete days. Tap a day to open it.")}</p>
   </section>
   <section class="card">
-    <h2>Condividi con il tuo coach</h2>
-    <p class="muted small">Copia il report e incollalo in una conversazione con Claude per un'analisi approfondita.</p>
-    <div class="btns"><button class="btn primary" data-act="copy-report">Copia report testuale</button></div>
+    <h2>${T("Condividi con il tuo coach", "Share with your coach")}</h2>
+    <p class="muted small">${T("Copia il report e incollalo in una conversazione con Claude per un'analisi approfondita.", "Copy the report and paste it into a conversation with Claude for a deeper analysis.")}</p>
+    <div class="btns"><button class="btn primary" data-act="copy-report">${T("Copia report testuale", "Copy text report")}</button></div>
   </section>`;
 }
 
