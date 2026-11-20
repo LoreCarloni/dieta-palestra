@@ -3,6 +3,68 @@
 // ---------- Scheda Fumo: contatore, risparmio, traguardi e aiuto per le voglie ----------
 // Usa lo stato S, save(), render() e le utilità definite in app.js. I dati stanno in S.fumo.
 
+// Testi inglesi della scheda Fumo: la chiave e il testo italiano esatto
+// Testi della scheda Fumo in inglese, per il testo italiano esatto (pensieri, azioni, traguardi)
+const FUMO_EN = {
+  "20 minuti": "20 minutes", "Frequenza cardiaca e pressione iniziano a scendere.": "Heart rate and blood pressure start to drop.",
+  "12 ore": "12 hours", "Il monossido di carbonio nel sangue si normalizza.": "Carbon monoxide in the blood returns to normal.",
+  "1 giorno": "1 day", "Il primo giorno è passato: le voglie più forti arrivano a ondate di pochi minuti.": "The first day is over: the strongest cravings come in waves lasting a few minutes.",
+  "2 giorni": "2 days", "Gusto e olfatto cominciano a tornare.": "Taste and smell start to come back.",
+  "3 giorni": "3 days", "La nicotina è in gran parte eliminata dal corpo.": "Most of the nicotine is cleared from the body.",
+  "2 settimane": "2 weeks", "Circolazione e respiro migliorano in modo percepibile.": "Circulation and breathing noticeably improve.",
+  "1 mese": "1 month", "Tosse e fiato corto tendono a diminuire.": "Coughing and shortness of breath tend to decrease.",
+  "3 mesi": "3 months", "La funzione polmonare migliora in modo misurabile.": "Lung function measurably improves.",
+  "1 anno": "1 year", "Il rischio di malattia coronarica scende a circa la metà di quello di un fumatore.": "The risk of coronary heart disease drops to about half that of a smoker.",
+  "Mangia una mela o una carota.": "Eat an apple or a carrot.",
+  "Bevi un sorso d'acqua e posa il bicchiere lontano dal pacchetto.": "Take a sip of water and put the glass away from the pack.",
+  "Cammina per due minuti, anche solo in corridoio.": "Walk for two minutes, even just in the corridor.",
+  "Sistema una cosa in camera: il letto, la scrivania, il tavolo.": "Tidy one thing in your room: the bed, the desk, the table.",
+  "Lavati le mani e il viso con acqua fredda.": "Wash your hands and face with cold water.",
+  "Scrivi su un foglio tre cose che farai nell'ora successiva, senza sigaretta.": "Write on a sheet three things you will do in the next hour, without a cigarette.",
+  "Metti le sigarette in un cassetto lontano e chiudilo.": "Put the cigarettes in a drawer far away and close it.",
+  "Scrivi o chiama una persona e raccontale come stai andando.": "Write to or call someone and tell them how it is going.",
+  "Guarda fuori dalla finestra per un minuto e respira piano.": "Look out of the window for a minute and breathe slowly.",
+  "Fatti una doccia e cambia la maglietta.": "Take a shower and change your T-shirt.",
+  "Apri la finestra e prepara la colazione.": "Open the window and make breakfast.",
+  "Prepara la borsa o la giornata di oggi, una cosa alla volta.": "Get your bag or today's plan ready, one thing at a time.",
+  "Lavati i denti e mettiti il pigiama.": "Brush your teeth and put on your pyjamas.",
+  "Prepara il letto e posa tutto quello che hai in mano.": "Make the bed and put down whatever you are holding.",
+  "Pianifica la mattina: sveglia, bagno, denti, colazione, senza sigaretta.": "Plan the morning: alarm, shower, teeth, breakfast, without a cigarette.",
+  "Quello che senti come sollievo è il bisogno creato dalla nicotina. Accendendola non guadagni niente: torni solo alla condizione di prima.": "What you feel as relief is the need created by nicotine. Lighting one gains you nothing: you just return to the condition you were in before.",
+  "Non devi decidere di non fumare per sempre. Basta non accendere questa sigaretta adesso.": "You do not have to decide never to smoke again. Just do not light this cigarette now.",
+  "Una voglia dura pochi minuti, anche se sembra infinita. Ogni volta che passa senza fumare, dimostri a te stesso che puoi farlo.": "A craving lasts a few minutes, even if it feels endless. Every time it passes without smoking, you prove to yourself that you can do it.",
+  "Sembra una privazione, ma stai liberandoti di una dipendenza che ogni giorno occupa la tua mente.": "It feels like deprivation, but you are freeing yourself from an addiction that takes up your mind every day.",
+  "Chi smette non resiste con la forza: smette di credere che la sigaretta sia necessaria, e questo cambia tutto.": "People who quit do not resist with willpower: they stop believing the cigarette is necessary, and that changes everything.",
+  "Il fumo restringe i piccoli vasi del corpo, anche quelli che nutrono i capelli. Ogni ora senza sigaretta è un'ora in cui non li stringi.": "Smoking narrows the body's small vessels, including those that feed the hair. Every hour without a cigarette is an hour in which you do not squeeze them.",
+  "Il grigio arriva comunque con il tempo. Quello che puoi decidere è quanto in fretta arriva.": "Grey comes with time anyway. What you can decide is how fast it comes.",
+  "Il fumo accelera l'invecchiamento della pelle. Ogni giorno senza sigarette è un giorno in cui la pelle ha meno cose da sopportare.": "Smoking speeds up skin ageing. Every day without cigarettes is a day in which the skin has less to put up with.",
+  "Tra un mese guardati allo specchio. Non serve un cambiamento perfetto: basta notare che sei già diverso da ieri.": "In a month, look at yourself in the mirror. You do not need a perfect change: just notice that you are already different from yesterday.",
+  "Un respiro profondo adesso vale più di una boccata.": "A deep breath now is worth more than a puff.",
+  "Pensa al motivo che hai scritto. Era la tua ragione quando eri lucido, e lo è ancora.": "Think about the reason you wrote down. It was your reason when you were clear-headed, and it still is.",
+  "Anche se hai fumato ieri, oggi è un altro giorno: il conto ricomincia da adesso.": "Even if you smoked yesterday, today is another day: the count starts again from now.",
+  "Chi ti vuole bene preferisce vederti respirare meglio, non solo smettere.": "Those who love you would rather see you breathing better, not just quitting.",
+  "Vestiti, casa, mani: il fumo si sente prima di quanto pensi. Smettere è anche tornare a sentire l'aria pulita.": "Clothes, home, hands: smoke is noticed sooner than you think. Quitting also means breathing clean air again.",
+  "Il prezzo di un pacchetto basta per comprare qualcosa che ti piace davvero.": "The price of a pack is enough to buy something you really like.",
+  "Questo minuto passa anche se fumi. Prova a vedere quanti ne passano senza.": "This minute passes even if you smoke. Try to see how many pass without.",
+  "Il gusto del cibo torna più in fretta di quanto immagini: ti accorgerai del pane che sa di pane.": "Food taste comes back faster than you think: you will notice bread tasting like bread.",
+  "Non devi sentirti bene per smettere: basta non accendere.": "You do not have to feel good to quit: just do not light up.",
+  "Non stai rinunciando a un piacere. Stai smettendo di pagare per il malessere che la sigaretta ha creato.": "You are not giving up a pleasure. You are stopping paying for the discomfort the cigarette has created.",
+  "Ogni volta che accendi, la dipendenza ti convince che ti serve. Non ti serve.": "Every time you light up, the addiction convinces you that you need it. You do not.",
+  "La sigaretta non ti dà piacere: ti toglie l'astinenza che lei stessa ha causato.": "The cigarette does not give you pleasure: it removes the withdrawal it has caused itself.",
+  "Il pensiero che ti manca qualcosa è la trappola. Non ti manca niente.": "The thought that something is missing is the trap. Nothing is missing.",
+  "Non devi essere forte. Devi capire che la sigaretta non ti aggiunge niente.": "You do not have to be strong. You have to understand that the cigarette adds nothing to you.",
+  "Fumare non ti rilassa: ti rilassa smettere di aver bisogno della sigaretta.": "Smoking does not relax you: stopping needing a cigarette does.",
+  "Hai detto tante volte che è l'ultima. Non è una questione di forza, è una questione di capire come funziona.": "You have said many times that it is the last one. It is not a matter of strength: it is a matter of understanding how it works.",
+  "La voglia è un segnale della dipendenza, non una verità su di te.": "A craving is a signal of the addiction, not a truth about you.",
+  "Ogni sigaretta che non accendi è una prova che la dipendenza non ti comanda.": "Every cigarette you do not light is proof that the addiction does not control you.",
+  "Quello che ti sembra un sacrificio è la fine di un abbonamento che non avresti mai voluto sottoscrivere.": "What feels like a sacrifice is the end of a subscription you never wanted to sign up for.",
+  "Non c'è niente di speciale in una sigaretta. È solo quello che il corpo ti chiede, e puoi dirgli di no.": "There is nothing special about a cigarette. It is just what the body asks for, and you can say no.",
+  "Un giorno con meno sigarette del giorno prima": "One day with fewer cigarettes than the day before",
+  "Tre giorni di fila con meno sigarette del giorno prima": "Three days in a row with fewer cigarettes than the day before",
+  "Sette giorni di fila con meno sigarette del giorno prima": "Seven days in a row with fewer cigarettes than the day before",
+  "Una settimana senza sigarette registrate": "One week with no cigarettes logged",
+};
+const fumoI = (x) => (S.lang === "en" && FUMO_EN[x]) || x;
 const FUMO_TRAGUARDI = [
   { h: 0.34, t: "20 minuti", d: "Frequenza cardiaca e pressione iniziano a scendere." },
   { h: 12, t: "12 ore", d: "Il monossido di carbonio nel sangue si normalizza." },
@@ -154,7 +216,7 @@ function fumoDiaryCard() {
           <div style="font-size:1.2rem;font-weight:700;letter-spacing:-0.01em">${T("Registro di oggi", "Today's log")}</div>
           <div style="font-size:1rem;color:var(--muted);margin-top:2px">${acts} ${acts === 1 ? "azione" : "azioni"} · ${smoked} ${smoked === 1 ? "sigaretta" : "sigarette"}</div>
         </div>
-        <button class="btn ghost small-btn" data-act="fumo-registro-toggle">Mostra</button>
+        <button class="btn ghost small-btn" data-act="fumo-registro-toggle">${T("Mostra", "Show")}</button>
       </div>
     </section>`;
   return `
@@ -405,7 +467,7 @@ function renderGiornata() {
     <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Report della settimana</button></div>
     ${runningHtml}
     ${giornataRiepilogoHtml(day, acts, nSmoke)}
-    ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">${T("Registro di oggi", "Today's log")}</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">Mostra</button></div></section>`}
+    ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">${T("Registro di oggi", "Today's log")}</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">${T("Mostra", "Show")}</button></div></section>`}
     ${view.giornataRegistroOpen ? `<section class="card">
       <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">Nascondi registro</button></div>
       <div class="row" style="align-items:center">
@@ -732,18 +794,18 @@ function renderFumo() {
     ${fumoSearchCard()}
     <section class="card">
       <p class="stat-v" style="text-align:center;font-size:1.6rem;margin:0 0 8px">${T("Resisti!", "Hold on!")}</p>
-      <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(a.t)}</li>`).join("")}</ul>
+      <ul style="margin:0;padding-left:20px">${fumoAzioniDiOggi().map((a) => `<li style="margin:6px 0">${esc(fumoI(a.t))}</li>`).join("")}</ul>
     </section>
     <section class="card">
       <h2>${T("Previsione della giornata", "Day forecast")}</h2>
-      <p class="muted small">Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.</p>
+      <p class="muted small">${T("Quando hai voglia di fumare, scegli una di queste azioni. Ogni azione fatta al posto della sigaretta conta.", "When you crave a cigarette, pick one of these actions. Every action done instead of smoking counts.")}</p>
       <div id="fumo-plan">${view.fumoPlanOpen ? fumoPlanHtml() : ""}</div>
       <form id="fumo-acts-form" class="form" style="margin-top:10px">
         <input name="act" maxlength="80" placeholder="Aggiungi un'azione">
         <button class="btn ghost wide" type="submit">${T("Aggiungi", "Add")}</button>
       </form>
     </section>
-    <section class="card" style="text-align:center"><p>${esc(tecOggi.t)}</p></section>
+    <section class="card" style="text-align:center"><p>${esc(fumoI(tecOggi.t))}</p></section>
     <section class="card">
       ${f.attempts && f.attempts.length ? `<div class="muted small">Ultima resistenza: ${Math.floor(f.attempts[f.attempts.length - 1].seconds / 60)} minuti e ${f.attempts[f.attempts.length - 1].seconds % 60} secondi</div>` : ""}
     </section>
@@ -761,11 +823,11 @@ function renderFumo() {
     <p class="muted small">Voglie superate oggi: ${resistedToday}. In totale: ${(f.resisted || []).length} superate su ${(f.cravings || []).length} registrate.</p>
     <section class="card">
       <h3>${T("Prossimo traguardo", "Next milestone")}</h3>
-      ${next ? `<p><strong>${esc(next.t)}</strong>: ${esc(next.d)}</p>${bar(pctNext, 100)}<div class="muted small">${pctNext}% del tempo</div>` : "<p>Hai superato tutti i traguardi in elenco. Continua così.</p>"}
+      ${next ? `<p><strong>${esc(fumoI(next.t))}</strong>: ${esc(fumoI(next.d))}</p>${bar(pctNext, 100)}<div class="muted small">${pctNext}% del tempo</div>` : "<p>Hai superato tutti i traguardi in elenco. Continua così.</p>"}
     </section>
-    ${done.length ? `<section class="card"><h3>${T("Traguardi raggiunti", "Milestones reached")}</h3>${done.map((m) => `<p class="small"><strong>${esc(m.t)}</strong>: ${esc(m.d)}</p>`).join("")}<p class="muted small">Indicazioni generali di salute pubblica: i tempi variano da persona a persona.</p></section>` : ""}
+    ${done.length ? `<section class="card"><h3>${T("Traguardi raggiunti", "Milestones reached")}</h3>${done.map((m) => `<p class="small"><strong>${esc(fumoI(m.t))}</strong>: ${esc(fumoI(m.d))}</p>`).join("")}<p class="muted small">Indicazioni generali di salute pubblica: i tempi variano da persona a persona.</p></section>` : ""}
     <section class="card"><h3>${T("Sigarette fumate per giorno", "Cigarettes smoked per day")}</h3>${weekRows}</section>
-    <section class="card"><h3>${T("Traguardi di riduzione", "Reduction milestones")}</h3>${fumoRiduzioni().map((m) => `<p class="small"><strong>${m.ok ? "Raggiunto" : "Da raggiungere"}:</strong> ${esc(m.t)}</p>`).join("")}<p class="muted small">Il confronto è tra un giorno e il precedente, sulle sigarette registrate con "Ho fumato".</p></section>
+    <section class="card"><h3>${T("Traguardi di riduzione", "Reduction milestones")}</h3>${fumoRiduzioni().map((m) => `<p class="small"><strong>${m.ok ? "Raggiunto" : "Da raggiungere"}:</strong> ${esc(fumoI(m.t))}</p>`).join("")}<p class="muted small">Il confronto è tra un giorno e il precedente, sulle sigarette registrate con "Ho fumato".</p></section>
     ${f.reason ? `<section class="card"><h3>${T("Il tuo motivo", "Your reason")}</h3><p>${esc(f.reason)}</p></section>` : ""}
     <section class="card">
       <h3>${T("Impostazioni", "Settings")}</h3>
@@ -940,7 +1002,7 @@ function fumoShowCraving(act) {
     <div id="fumo-count" style="font-size:3rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums"></div>
     <div class="bar" style="margin:10px 0"><span id="fumo-bar" style="width:0%"></span></div>
     <p id="fumo-breath" class="small" style="text-align:center"></p>
-    <p>${esc(tec.t)}</p>
+    <p>${esc(fumoI(tec.t))}</p>
     ${S.fumo.reason ? `<p class="small"><strong>Il tuo motivo:</strong> ${esc(S.fumo.reason)}</p>` : ""}
     <div id="fumo-sugg-box" style="margin:12px 0">${fumoSuggBox()}</div>
     <input id="fumo-dialog-text" maxlength="80" placeholder="Oppure scrivi o detta cosa fai al posto della sigaretta" style="margin-top:4px">
@@ -1298,7 +1360,7 @@ function fumoAct(a, el) {
       openDialog(`
         <h3>Hai resistito ${m} ${m === 1 ? "minuto" : "minuti"} e ${sec} ${sec === 1 ? "secondo" : "secondi"}</h3>
         <p class="muted small">Il conto del tempo senza fumare riparte da adesso. Puoi ricominciare quando vuoi.</p>
-        <p>${esc(fumoPensieroDiOggi().t)}</p>
+        <p>${esc(fumoI(fumoPensieroDiOggi().t))}</p>
         <button class="btn primary wide" data-act="dlg-close">Ok</button>`);
       render();
       return true;
