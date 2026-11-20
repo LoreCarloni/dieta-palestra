@@ -616,8 +616,8 @@ function weekCard() {
   const word = diffDay > 0 ? "sopra" : "sotto";
   return `<section class="card week-card"><h2>${T("Questa settimana", "This week")}</h2>
     <div class="week-big ${cls}">${r0(Math.abs(diffTot))} kcal</div>
-    <div class="muted small">nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.</div>
-    <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g in totale.</div>${prev !== null ? `<div class="prev-week">Settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)} kcal al giorno</div>` : ""}</section>`;
+    <div class="muted small">${T(`nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.`, `this week you are ${diffTot > 0 ? "above" : "below"} the target. On average, ${Math.abs(diffDay)} kcal per day ${word}.`)}</div>
+    <div class="muted small">${T("Proteine", "Protein")}: ${r0(sumP)} ${T("di", "of")} ${r0(sumPT)} g ${T("in totale", "in total")}.</div>${prev !== null ? `<div class="prev-week">Settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)} kcal al giorno</div>` : ""}</section>`;
 }
 
 function renderToday() {
@@ -629,10 +629,10 @@ function renderToday() {
   const remaining = tg.kcal - t.kcal;
 
   const checklist = [
-    ...(measureDue(k) ? [{ label: "Peso e misure della settimana", ok: false, act: "tab-misure" }] : []),
+    ...(measureDue(k) ? [{ label: T("Peso e misure della settimana", "Weight and measurements this week"), ok: false, act: "tab-misure" }] : []),
     { label: T("Cosa hai mangiato oggi","What you ate today"), ok: d.meals.length > 0, act: "food" },
-    { label: d.rest ? "Giorno di riposo" : "Passi e allenamento (sezione Attività)", ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "goto-attivita" },
-    { label: "Chiudi la giornata", ok: d.closed, act: "close" },
+    { label: d.rest ? T("Giorno di riposo", "Rest day") : T("Passi e allenamento (sezione Attività)", "Steps and training (Activity section)"), ok: d.ex.length > 0 || t.steps >= 7000 || d.rest, act: "goto-attivita" },
+    { label: T("Chiudi la giornata", "Close the day"), ok: d.closed, act: "close" },
   ];
   const todo = checklist.filter((c) => !c.ok).length;
 
@@ -706,25 +706,25 @@ function renderToday() {
   <section class="card" id="sec-attivita">
     <h2>Attività</h2>
     <div class="steps-box">
-      <label for="steps" class="muted small">Passi del giorno</label>
+      <label for="steps" class="muted small">${T("Passi del giorno", "Steps today")}</label>
       <input id="steps" class="steps-input" type="number" inputmode="numeric" min="0" step="100" value="${d.steps || ""}" placeholder="0" data-change="steps">
     </div>
     ${(() => {
       const done = S.plans.flatMap((p) => p.days.filter((dd) => d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`)).map((dd) => `giorno ${dd.label}`));
-      return done.length ? `<p class="done-line">Palestra fatta: ${esc(done.join(", "))}</p>` : `<p class="muted small done-line">Palestra: nessun giorno ancora segnato</p>`;
+      return done.length ? `<p class="done-line">${T("Palestra fatta", "Gym done")}: ${esc(done.join(", "))}</p>` : `<p class="muted small done-line">${T("Palestra: nessun giorno ancora segnato", "Gym: no day logged yet")}</p>`;
     })()}
     ${d.ex.map((e) => `<div class="row"><div><div>${esc(e.name)}</div><div class="muted small">${r0(e.min)} minuti${e.note ? ", " + esc(e.note) : ""}</div></div><div class="row-r"><span>${r0(e.kcal)}</span><button class="x" data-act="del-ex" data-id="${e.id}" aria-label="Elimina">×</button></div></div>`).join("")}
     <div class="btns">
       <button class="btn primary" data-act="activity-dialog">Scrivi o incolla le attività</button>
-      <button class="btn ghost" data-act="plans-dialog">Schede di allenamento</button>
-      <button class="btn ghost" data-act="toggle-rest">${d.rest ? "Annulla riposo" : "Giorno di riposo"}</button>
+      <button class="btn ghost" data-act="plans-dialog">${T("Schede di allenamento", "Workout plans")}</button>
+      <button class="btn ghost" data-act="toggle-rest">${d.rest ? T("Annulla riposo", "Cancel rest") : T("Giorno di riposo", "Rest day")}</button>
     </div>
     ${S.plans.map((p) => `<div class="plan-quick"><span class="muted small">${esc(p.name)}</span><div class="btns">${p.days.filter((dd) => !d.ex.some((e) => e.name === `${p.name}, giorno ${dd.label}`)).map((dd) => `<button class="btn small-btn ghost" data-act="plan-quick" data-id="${p.id}" data-label="${esc(dd.label)}">Ho fatto giorno ${esc(dd.label)}</button>`).join("")}</div></div>`).join("")}
   </section>
 
   <section class="card">
     <h2>Peso, misure e note</h2>
-    <button class="btn wide" data-act="measure-today">${d.weight ? `Peso ${r1(d.weight)} kg: modifica peso e misure` : "Inserisci peso e misure di oggi"}</button>
+    <button class="btn wide" data-act="measure-today">${d.weight ? `${T("Peso", "Weight")} ${r1(d.weight)} kg: ${T("modifica peso e misure", "edit weight and measurements")}` : T("Inserisci peso e misure di oggi", "Enter today's weight and measurements")}</button>
     <div class="field"><label for="note">Note (fame, sonno, stress, ciclo, sgarri)</label><textarea id="note" rows="2" data-change="note">${esc(d.note)}</textarea></div>
     <button class="btn ${d.closed ? "ghost" : "primary"} wide" data-act="close">${d.closed ? "Riapri la giornata" : "Ho inserito tutto: chiudi la giornata"}</button>
   </section>`;
@@ -1440,7 +1440,7 @@ function myPlanCard() {
   const warn = planned > 0 && over > 0 ? (left <= 0 ? `<p class="warn-line">Hai già superato il target di oggi di ${r0(-left)} kcal. Non c'è altro da mangiare.</p>` : `<p class="warn-line">Restano ${r0(left)} kcal, la previsione ne vale ${r0(planned)}. Togli qualche riga con × oppure mangia meno.</p>`) : "";
   // sopra il target e senza righe previste: consiglio facoltativo con la scelta piu magra
   const optional = false && left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
-  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">${T("Previsione della giornata","Day forecast")} <span class="pill ok">${T("Modifica","Edit")}</span></h2>${warn}${optional}${left < 0 && k === todayKey() ? `<p class="muted small">${T("Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.","You have already reached today's target: the forecast suggests no more food. Your favorites stay in the list.")}</p>` : planItemsHtml(false)}<div class="field"><label class="muted small">${T("Aggiungi un cibo a un pasto","Add a food to a meal")}</label><div class="fav-add"><input id="pl-q" type="search" placeholder="${T("Scrivi un cibo","Type a food")}" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> per forza</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">Aggiungi</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">${T("Rigenera","Regenerate")}</button><button class="btn danger" data-act="plan-clear">${T("Cancella","Clear")}</button>` : ""}</div></section>`;
+  return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">${T("Previsione della giornata","Day forecast")} <span class="pill ok">${T("Modifica","Edit")}</span></h2>${warn}${optional}${left < 0 && k === todayKey() ? `<p class="muted small">${T("Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.","You have already reached today's target: the forecast suggests no more food. Your favorites stay in the list.")}</p>` : planItemsHtml(false)}<div class="field"><label class="muted small">${T("Aggiungi un cibo a un pasto","Add a food to a meal")}</label><div class="fav-add"><input id="pl-q" type="search" placeholder="${T("Scrivi un cibo","Type a food")}" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> ${T("per forza", "no matter what")}</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">${T("Aggiungi", "Add")}</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">${T("Rigenera","Regenerate")}</button><button class="btn danger" data-act="plan-clear">${T("Cancella","Clear")}</button>` : ""}</div></section>`;
 }
 function openDialog(html) {
   const d = dlg();
@@ -1843,7 +1843,7 @@ function dayComment(k) {
   // cibi molto grassi: un avviso neutro, con la quantita, senza giudizi
   const grassi = d.meals.filter((m) => m.g > 0 && m.f / m.g * 100 >= 20 && !/olio|burro|strutto/i.test(m.name)).map((m) => m.name);
   grassi.slice(0, 2).forEach((nome) => lines.push({ lvl: "bad", text: `Oggi ${nome} è troppo grasso: più di 20 g di grassi ogni 100 g. Una porzione piccola pesa molto sulle calorie.` }));
-  d.meals.filter((m) => m.g > 0 && m.c / m.g * 100 >= 30).slice(0, 2).forEach((m) => lines.push({ lvl: "bad", text: `${m.name} è troppo ricco di zuccheri e carboidrati: più di 30 g ogni 100 g.` }));
+  d.meals.filter((m) => m.g > 0 && m.c / m.g * 100 >= 30).slice(0, 2).forEach((m) => lines.push({ lvl: "bad", text: T(`${m.name} è troppo ricco di zuccheri e carboidrati: più di 30 g ogni 100 g.`, `${m.name} is too rich in sugars and carbs: more than 30 g per 100 g.`) }));
   if (!d.closed && k === todayKey() && !overPlanned && !d.meals.some((m) => m.slot === "cena" && m.kcal >= 300)) {
     const rem = tg.kcal - t.kcal, remP = tg.protein - t.p, remF = tg.fat - t.f, remC = tg.carbs - t.c;
     const salumi = items.filter((x) => /prosciutt|salame|pancetta|bresaola|mortadella|speck|wurstel|salsicc|bacon/i.test(x.name));
@@ -1951,7 +1951,7 @@ function commentHtml(k) {
   const rest = rest0.filter((l) => !causa.includes(l));
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Dall'inizio: ${j.over} giorni con sgarri su ${j.days} tracciati (${j.pct}%).</p>` : "";
-  const fresh = c.newFood ? `<p class="action">Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da ${c.newFood.porzione} g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}</p>` : "";
+  const fresh = c.newFood ? `<p class="action">${T(`Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da ${c.newFood.porzione} g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}`, `You are ${c.newFood.gap} g short of protein. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "glasses" : "glass"} of ${c.newFood.porzione} g, that is ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `The rest, about ${c.newFood.rest} g, from meat or fish.` : ""}`)}</p>` : "";
   return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${causa.map(advice).join("")}${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
 }
 
@@ -2046,7 +2046,7 @@ function activityDialog() {
     <h3>Scrivi o incolla le attività</h3>
     <p class="muted small">Una riga per attività con i minuti, per esempio: Krav Maga, 75 minuti, corso serale. Le attività non in elenco usano una stima generica.</p>
     <div class="field"><textarea id="act-text" rows="7" placeholder="Incolla qui" autofocus></textarea></div>
-    <button class="btn primary wide" data-act="activity-save">Aggiungi</button>`);
+    <button class="btn primary wide" data-act="activity-save">${T("Aggiungi", "Add")}</button>`);
 }
 
 // ---------- Riepilogo incollato: suddivisione in pasti ----------
@@ -2306,7 +2306,7 @@ function qtyDialog(f, slot) {
     <div class="chips">${f.parts ? "" : [0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
     <div class="field"><label for="q-pz">Quanti ne mangi uguali (es. 3 bicchieri)</label><input id="q-pz" type="text" inputmode="numeric" value="1"></div>
     <div id="q-prev" class="preview"></div>
-    <button class="btn primary wide" data-act="save-food">Aggiungi</button>`);
+    <button class="btn primary wide" data-act="save-food">${T("Aggiungi", "Add")}</button>`);
   dlg().dataset.food = JSON.stringify(f);
   dlg().dataset.slot = slot;
   updateQtyPreview();
