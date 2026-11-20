@@ -2705,7 +2705,7 @@ function act(a, el) {
       if (view.favPair !== undefined) {
         const i = view.favPair; view.favPair = undefined;
         if (S.favFoods[i]) S.favFoods[i] = S.favFoods[i] + " + " + nome;
-      } else if ((S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const a = favHitCached(pz), b = favHitCached(nome); return norm(pz) === norm(nome) || (!!a && !!b && a.name === b.name); }))) {
+      } else if ((S.favFoods || []).some((r) => norm(r).trim() === norm(nome).trim())) {
         toast("Questo cibo è già nei preferiti");
       } else if (window.confirm(`Aggiungo ${nome} ai miei preferiti?`)) {
         S.favFoods.push(nome);
