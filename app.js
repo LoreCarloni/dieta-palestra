@@ -324,6 +324,26 @@ function vistaPrevisione() {
   }
   return out.join("\n");
 }
+// proteine che mancano: albume (poche calorie, quasi zero carboidrati) e poi fesa di tacchino cruda, nei limiti di calorie rimaste
+function proteinFiller(k, righe) {
+  const tg = targets(k), t = totals(k);
+  const vista = righe.join("\n");
+  const pd = parseDiary(vista);
+  let needP = tg.protein - t.p - pd.reduce((a, x) => a + x.p, 0);
+  let kLeft = tg.kcal - t.kcal - pd.reduce((a, x) => a + x.kcal, 0);
+  const out = [];
+  const ha = (re) => righe.some((l) => re.test(l));
+  if (needP > 5 && kLeft > 60 && !ha(/^albume/i)) {
+    const g = Math.min(270, Math.round(needP / 0.107 / 10) * 10, Math.floor(kLeft / 0.45 / 10) * 10);
+    if (g >= 100) { out.push(`Albume, ${g} g`); needP -= g * 0.107; kLeft -= g * 0.45; }
+  }
+  if (needP > 5 && kLeft > 120 && !ha(/^fesa/i)) {
+    const g = Math.min(200, Math.round(needP / 0.24 / 10) * 10, Math.floor(kLeft / 1.07 / 10) * 10);
+    if (g >= 100) out.push(`Fesa di tacchino (cruda), ${g} g`);
+  }
+  return out;
+}
+
 function refreshForecast() {
   if (!S.profile) return; // primo avvio: prima il profilo, poi la previsione
   const k = view.date, future = k > todayKey();
@@ -353,21 +373,15 @@ function refreshForecast() {
   }
   const t = totals(k), tg = targets(k);
   // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
-  // la previsione non puo superare le calorie rimaste: tolgo le righe non bloccate dalla fine finche rientra
+  // la previsione non puo superare calorie e carboidrati rimasti: si tengono le righe che entrano (vistaPrevisione)
+  // se mancano ancora proteine e restano calorie, si aggiunge albume o fesa di tacchino, senza carboidrati
   if (!future && k === todayKey() && (S.plannedDinner || "").trim()) {
-    const rimaste = tg.kcal - t.kcal;
-    const righe = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
-    const kcalRiga = (l) => parseDiary(l).reduce((a, x) => a + x.kcal, 0);
-    const carbRiga = (l) => parseDiary(l).reduce((a, x) => a + (x.c || 0), 0);
-    const remC = tg.carbs - t.c;
-    let tot = righe.reduce((a, l) => a + kcalRiga(l), 0);
-    let totC = righe.reduce((a, l) => a + carbRiga(l), 0);
-    let cambiate = false;
-    for (let i = righe.length - 1; i >= 0 && (tot > rimaste || totC > remC); i--) {
-      if (/bloccat/i.test(righe[i])) continue;
-      tot -= kcalRiga(righe[i]); totC -= carbRiga(righe[i]); righe.splice(i, 1); cambiate = true;
-    }
-    if (cambiate) { S.plannedDinner = righe.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
+    const visti = vistaPrevisione().split("\n").filter((l) => l.trim());
+    const pieni = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
+    let nuove = visti;
+    const fill = proteinFiller(k, visti);
+    if (fill.length) nuove = [...visti, ...fill];
+    if (nuove.join("\n") !== pieni.join("\n")) { S.plannedDinner = nuove.join("\n"); S.autoLines = []; S.autoAll = []; save(); }
   }
   // la previsione gia scritta non viene tolta da sola: la ricalcola solo Rigenera
   if (!S.autoForecast) return;
