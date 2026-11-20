@@ -712,8 +712,7 @@ function renderFumo() {
     </section>
     <div style="text-align:center;margin:-6px 0 10px"><button class="link" data-act="fumo-breathing">Breathing Space · 3 minuti</button></div>
     <div class="btns" style="justify-content:center;gap:18px;margin-bottom:16px">
-      <button class="btn primary" data-act="fumo-craving" style="${FUMO_ROUND}">${fumoActive() ? "Riprendi il conto" : "Ho voglia di fumare"}</button>
-      <button class="btn danger" data-act="fumo-lit-now" style="${FUMO_ROUND}">Sto fumando</button>
+      <button class="btn primary" data-act="fumo-add-cig" style="${FUMO_ROUND}">Aggiungi sigaretta</button>
     </div>
     ${fumoDiaryCard()}
     ${fumoSearchCard()}
@@ -1190,6 +1189,18 @@ function fumoAct(a, el) {
       if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
       save(); toast(`Fatto: ${text}`);
       if (!dlg().open) render();
+      return true;
+    }
+    case "fumo-add-cig": {
+      // una sigaretta in piu oggi, senza cronometro: stesso conteggio del tetto
+      S.fumo.smokedDays = S.fumo.smokedDays || {};
+      const oggi = todayKey();
+      S.fumo.smokedDays[oggi] = (S.fumo.smokedDays[oggi] || 0) + 1;
+      S.fumo.smoked = (S.fumo.smoked || 0) + 1;
+      S.fumo.log = [...(S.fumo.log || []), { at: new Date().toISOString(), kind: "smoke", n: 1 }];
+      const n = S.fumo.smokedDays[oggi], tetto = S.fumo.tettoGiorno || 10;
+      save(); render();
+      toast(n > tetto ? `Hai sforato il tetto di oggi: ${n} di ${tetto}` : n === tetto ? "Hai raggiunto il tetto di oggi" : `Sigaretta aggiunta: ${n} di ${tetto} oggi`);
       return true;
     }
     case "fumo-breathing": fumoBreathingSpace(); return true;
