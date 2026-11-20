@@ -899,7 +899,7 @@ function renderReport() {
   <section class="card">
     <h2>Dettaglio giorni</h2>
     <div class="table">
-      <div class="tr th"><span>Giorno</span><span>kcal</span><span>Prot</span><span>Acqua</span><span>Mov</span></div>
+      <div class="tr th"><span>Giorno</span><span>kcal</span><span>Prot</span><span>${T("Acqua", "Water")}</span><span>Mov</span></div>
       ${st.rows.slice().reverse().map((r) => `<button class="tr" data-act="goto" data-k="${r.k}"><span>${esc(fmtDate(r.k, { weekday: "short", day: "numeric" }))}${r.tracked ? "" : " *"}</span><span class="${r.t.kcal > r.tg.kcal + 150 ? "bad" : ""}">${r0(r.t.kcal)}</span><span>${r0(r.t.p)}</span><span>${r1(r.t.water / 1000)}</span><span>${r0(r.t.exMin)}</span></button>`).join("")}
     </div>
     <p class="muted small">L'asterisco indica giorni non completi. Tocca un giorno per aprirlo.</p>
@@ -1013,28 +1013,28 @@ function renderCoach() {
   const plan = PLANS[p.trainDays] || PLANS[3];
   return `
   <section class="card">
-    <h2>Oggi ti restano</h2>
+    <h2>${T("Oggi ti restano", "Today you have left")}</h2>
     <div class="stats three">
-      <div class="stat"><div class="muted small">Calorie</div><div class="stat-v ${tg.kcal - t.kcal < 0 ? "bad" : ""}">${r0(tg.kcal - t.kcal)}</div></div>
+      <div class="stat"><div class="muted small">${T("Calorie", "Calories")}</div><div class="stat-v ${tg.kcal - t.kcal < 0 ? "bad" : ""}">${r0(tg.kcal - t.kcal)}</div></div>
       <div class="stat"><div class="muted small">Proteine</div><div class="stat-v">${r0(Math.max(0, tg.protein - t.p))} g</div></div>
-      <div class="stat"><div class="muted small">Acqua</div><div class="stat-v">${r1(Math.max(0, t.waterTarget - t.water) / 1000)} L</div></div>
+      <div class="stat"><div class="muted small">${T("Acqua", "Water")}</div><div class="stat-v">${r1(Math.max(0, t.waterTarget - t.water) / 1000)} L</div></div>
     </div>
     <p class="small">${esc(projection())}</p>
   </section>
   <section class="card">
-    <h2>Analisi degli ultimi 7 giorni</h2>
+    <h2>${T("Analisi degli ultimi 7 giorni", "Last 7 days analysis")}</h2>
     ${out.map((a) => `<div class="advice ${a.lvl}"><b>${esc(a.title)}</b><p>${esc(a.text)}</p></div>`).join("")}
   </section>
   <section class="card">
-    <h2>Il tuo piano settimanale</h2>
+    <h2>${T("Il tuo piano settimanale", "Your weekly plan")}</h2>
     <p class="muted small">${p.trainDays} allenamenti a settimana, livello ${esc(p.level)}. Esercizi di forza: ${sets}, recupero 60 a 90 secondi. Ogni giorno punta ad almeno 8000 passi. Aumenta il carico quando completi tutte le ripetizioni con facilità.</p>
-    ${plan.map((w, i) => `<details class="workout"><summary><b>Giorno ${i + 1}</b> ${esc(w)}</summary><ul>${WORKOUTS[w].map((x) => `<li>${esc(x)}</li>`).join("")}</ul><button class="btn small-btn" data-act="log-workout" data-w="${esc(w)}">Registra come fatto oggi</button></details>`).join("")}
+    ${plan.map((w, i) => `<details class="workout"><summary><b>Giorno ${i + 1}</b> ${esc(w)}</summary><ul>${WORKOUTS[w].map((x) => `<li>${esc(x)}</li>`).join("")}</ul><button class="btn small-btn" data-act="log-workout" data-w="${esc(w)}">${T("Registra come fatto oggi", "Mark as done today")}</button></details>`).join("")}
   </section>
   <section class="card">
-    <h2>Regole d'oro</h2>
+    <h2>${T("Regole d'oro", "Golden rules")}</h2>
     <ul class="rules">
-      <li>Pesa gli alimenti da crudi e conta sempre l'olio: un cucchiaio vale circa 90 kcal.</li>
-      <li>Non mangiare le calorie dell'allenamento: il deficit lo crea la dieta, l'allenamento protegge il muscolo.</li>
+      <li>${T("Pesa gli alimenti da crudi e conta sempre l'olio: un cucchiaio vale circa 90 kcal.", "Weigh foods raw and always count oil: one tablespoon is about 90 kcal.")}</li>
+      <li>${T("Non mangiare le calorie dell'allenamento: il deficit lo crea la dieta, l'allenamento protegge il muscolo.", "Do not eat back the calories you burn in training: the diet creates the deficit, training protects muscle.")}</li>
       <li>Pesati ogni mattina a digiuno e guarda la media della settimana, non il singolo giorno.</li>
       <li>Dormi almeno 7 ore: dormire poco aumenta la fame del giorno dopo.</li>
       <li>Metà piatto di verdura a pranzo e cena.</li>
@@ -1147,11 +1147,11 @@ function renderProfile(first) {
   </form>
   ${tg ? `<section class="card"><h2>I tuoi obiettivi giornalieri</h2>
     <div class="stats">
-      <div class="stat"><div class="muted small">Calorie</div><div class="stat-v">${tg.kcal}</div></div>
+      <div class="stat"><div class="muted small">${T("Calorie", "Calories")}</div><div class="stat-v">${tg.kcal}</div></div>
       <div class="stat"><div class="muted small">Proteine</div><div class="stat-v">${tg.protein} g</div></div>
       <div class="stat"><div class="muted small">Carboidrati</div><div class="stat-v">${tg.carbs} g</div></div>
       <div class="stat"><div class="muted small">Grassi</div><div class="stat-v">${tg.fat} g</div></div>
-      <div class="stat"><div class="muted small">Acqua</div><div class="stat-v">${r1(tg.water / 1000)} L</div></div>
+      <div class="stat"><div class="muted small">${T("Acqua", "Water")}</div><div class="stat-v">${r1(tg.water / 1000)} L</div></div>
       <div class="stat"><div class="muted small">Metabolismo basale</div><div class="stat-v">${r0(tg.bmr)}</div></div>
     </div>
     <p class="muted small">Calcolo Mifflin St Jeor. Gli obiettivi si aggiornano in automatico quando registri un nuovo peso.</p></section>
