@@ -632,7 +632,7 @@ function fumoBreathingSpace() {
       if (!c || !dlg().open) { clearInterval(fumoBsTimer); return; }
       const left = Math.max(0, fine - fumoNow());
       c.textContent = `0:${String(Math.ceil(left / 1000)).padStart(2, "0")}`;
-      if (left === 0) { clearInterval(fumoBsTimer); if (i < 2) passo(i + 1); else { closeDialog(); toast("Ottimo, tre minuti fatti"); } }
+      if (left === 0) { clearInterval(fumoBsTimer); if (i < 2) passo(i + 1); else { closeDialog(); toast(T("Ottimo, tre minuti fatti", "Well done, three minutes done")); } }
     }, 250);
   };
   passo(0);
@@ -1048,9 +1048,9 @@ function fumoAct(a, el) {
     }
     case "fumo-plan-del": {
       const i = parseInt(el.dataset.i);
-      if (!confirm("Eliminare questa azione dalla previsione?")) return true;
+      if (!confirm(T("Eliminare questa azione dalla previsione?", "Remove this action from the forecast?"))) return true;
       S.fumo.acts = fumoPrevisione().filter((_, k) => k !== i);
-      save(); render(); toast("Azione eliminata");
+      save(); render(); toast(T("Azione eliminata", "Action removed"));
       return true;
     }
     case "fumo-log-edit": {
@@ -1080,12 +1080,12 @@ function fumoAct(a, el) {
         S.fumo.smoked = Math.max(0, (S.fumo.smoked || 0) - n);
         if (S.fumo.smokedDays && S.fumo.smokedDays[day]) S.fumo.smokedDays[day] = Math.max(0, S.fumo.smokedDays[day] - n);
       }
-      save(); render(); toast("Voce eliminata");
+      save(); render(); toast(T("Voce eliminata", "Entry removed"));
       return true;
     }
     case "giornata-start": {
       let text = String(($("#giornata-start-text") || {}).value || "").trim();
-      if (!text) { toast("Scrivi cosa stai facendo"); return true; }
+      if (!text) { toast(T("Scrivi cosa stai facendo", "Write what you are doing")); return true; }
       let start = fumoNow();
       // "ho lavorato 20 minuti", "negli ultimi 20 minuti", "per un'ora": attivita gia finita, registrata senza cronometro
       const dallaCasellaOra = String(($("#giornata-start-time") || {}).value || "").trim();
@@ -1115,9 +1115,9 @@ function fumoAct(a, el) {
       const dalle = String(($("#giornata-start-time") || {}).value || "").trim();
       if (dalle) {
         const ora = parseOra(dalle);
-        if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return true; }
+        if (!ora) { toast(T("Scrivi l'ora, per esempio 6.50", "Write the time, for example 6.50")); return true; }
         const d = new Date(); d.setHours(ora[0], ora[1], 0, 0);
-        if (d > new Date()) { toast("L'ora di inizio è nel futuro"); return true; }
+        if (d > new Date()) { toast(T("L'ora di inizio è nel futuro", "The start time is in the future")); return true; }
         start = d.getTime();
       }
       gChiudiPausa();
@@ -1126,12 +1126,12 @@ function fumoAct(a, el) {
         // Iniziare una nuova attività chiude quella più recente, all'ora di inizio della nuova.
         const last = run[run.length - 1];
         const min = Math.round((start - last.start) / 60000);
-        if (min < 1) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return true; }
+        if (min < 1) { toast(T("L'ora deve essere dopo l'inizio dell'attività in corso", "The time must be after the start of the current activity")); return true; }
         S.giornata.log = [...(S.giornata.log || []), { at: new Date(last.start).toISOString(), text: last.text, min }];
         run.pop();
       }
       run.push({ text: attivitaGerundio(text), start });
-      save(); render(); toast("Attività iniziata");
+      save(); render(); toast(T("Attività iniziata", "Activity started"));
       return true;
     }
     case "giornata-log-edit": {
@@ -1185,7 +1185,7 @@ function fumoAct(a, el) {
       const voce = (S.giornata && S.giornata.log || [])[idx];
       if (!voce || !confirm(`Eliminare "${voce.text}" dal registro?`)) return true;
       S.giornata.log = S.giornata.log.filter((_, k) => k !== idx);
-      save(); render(); toast("Attività eliminata");
+      save(); render(); toast(T("Attività eliminata", "Activity removed"));
       return true;
     }
     case "giornata-stop": {
@@ -1199,20 +1199,20 @@ function fumoAct(a, el) {
     }
     case "giornata-torno": {
       if (!(S.giornata && S.giornata.pausa)) return true;
-      gChiudiPausa(); save(); render(); toast("Pausa registrata");
+      gChiudiPausa(); save(); render(); toast(T("Pausa registrata", "Break logged"));
       return true;
     }
     case "giornata-rename": {
       const r = gRun()[parseInt(el.dataset.i)]; if (!r) return true;
       const nuovo = prompt("Cosa stai facendo?", r.text);
-      if (nuovo && nuovo.trim()) { r.text = nuovo.trim().slice(0, 80); save(); render(); toast("Nome cambiato, l'orario di inizio resta"); }
+      if (nuovo && nuovo.trim()) { r.text = nuovo.trim().slice(0, 80); save(); render(); toast(T("Nome cambiato, l'orario di inizio resta", "Name changed, start time kept")); }
       return true;
     }
     case "giornata-cancel": {
       const run = gRun(); const i = parseInt(el.dataset.i);
       if (!run[i]) return true;
-      if (!confirm("Annullare questa attività senza registrarla?")) return true;
-      run.splice(i, 1); save(); render(); toast("Attività annullata");
+      if (!confirm(T("Annullare questa attività senza registrarla?", "Cancel this activity without logging it?"))) return true;
+      run.splice(i, 1); save(); render(); toast(T("Attività annullata", "Activity cancelled"));
       return true;
     }
     case "giornata-from-last": {
@@ -1220,12 +1220,12 @@ function fumoAct(a, el) {
       if (!f) return true;
       const smokes = ((S.fumo && S.fumo.log) || []).filter((e) => e.kind === "smoke").map((e) => new Date(e.at).getTime()).filter((t) => t <= fumoNow());
       const last = smokes.length ? Math.max(...smokes) : (S.fumo && S.fumo.start ? new Date(S.fumo.start).getTime() : null);
-      if (!last) { toast("Non c'è un'ultima sigaretta da cui partire"); return true; }
+      if (!last) { toast(T("Non c'è un'ultima sigaretta da cui partire", "There is no last cigarette to start from")); return true; }
       const d = new Date(last);
       f.querySelector('[name=kind]').value = "act";
       f.querySelector('[name=time]').value = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       f.querySelector('[name=min]').value = Math.max(1, Math.round((fumoNow() - last) / 60000));
-      toast("Compilato dall'ultima sigaretta: scrivi cosa hai fatto");
+      toast(T("Compilato dall'ultima sigaretta: scrivi cosa hai fatto", "Filled from the last cigarette: write what you did"));
       return true;
     }
     case "giornata-registro-toggle": view.giornataRegistroOpen = !view.giornataRegistroOpen; render(); return true;
@@ -1248,7 +1248,7 @@ function fumoAct(a, el) {
       const i = parseInt(el.dataset.i);
       if (!S.giornata || !S.giornata.gruppi || !S.giornata.gruppi[i]) return true;
       S.giornata.gruppi = S.giornata.gruppi.filter((_, k) => k !== i);
-      save(); render(); toast("Gruppo eliminato");
+      save(); render(); toast(T("Gruppo eliminato", "Group removed"));
       return true;
     }
     case "giornata-periodo": view.giornataPeriodo = el.dataset.p; render(); return true;
@@ -1275,7 +1275,7 @@ function fumoAct(a, el) {
       S.fumo.log = S.fumo.log.filter((_, k) => k !== i);
       if (S.fumo.smokedDays && S.fumo.smokedDays[giorno]) S.fumo.smokedDays[giorno] = Math.max(0, S.fumo.smokedDays[giorno] - 1);
       S.fumo.smoked = Math.max(0, (S.fumo.smoked || 0) - 1);
-      save(); render(); toast("Sigaretta tolta");
+      save(); render(); toast(T("Sigaretta tolta", "Cigarette removed"));
       return true;
     }
     case "fumo-add-cig": {
@@ -1307,7 +1307,7 @@ function fumoAct(a, el) {
     }
     case "fumo-dialog-log": {
       const text = String((($("#fumo-dialog-text") || {}).value) || "").trim();
-      if (!text) { toast("Scrivi cosa fai al posto della sigaretta"); return true; }
+      if (!text) { toast(T("Scrivi cosa fai al posto della sigaretta", "Write what you do instead of the cigarette")); return true; }
       const now = new Date(fumoNow()).toISOString();
       S.fumo.actCount = (S.fumo.actCount || 0) + 1;
       S.fumo.log = [...(S.fumo.log || []), { at: now, kind: "act", text }];
@@ -1331,7 +1331,7 @@ function fumoAct(a, el) {
       S.fumo.active = null;
       S.fumo.resisted = S.fumo.resisted || [];
       S.fumo.resisted.push(new Date().toISOString());
-      closeDialog(); save(); render(); toast("Ottimo, voglia superata");
+      closeDialog(); save(); render(); toast(T("Ottimo, voglia superata", "Well done, craving beaten"));
       return true;
     case "fumo-edit": view.fumoEdit = true; resetScroll = true; render(); return true;
     case "fumo-cancel": view.fumoEdit = false; render(); return true;
@@ -1378,17 +1378,17 @@ document.addEventListener("submit", (e) => {
       const idx = parseInt(k.replace("d_", ""));
       if (!log[idx]) continue;
       const min = durataIn(v);
-      if (min === null) { toast("Durata non chiara: prova '2 ore' o '90'"); return; }
+      if (min === null) { toast(T("Durata non chiara: prova '2 ore' o '90'", "Duration unclear: try '2 hours' or '90'")); return; }
       if (min > 0) log[idx] = { ...log[idx], min };
     }
-    closeDialog(); save(); render(); toast("Durate aggiornate");
+    closeDialog(); save(); render(); toast(T("Durate aggiornate", "Durations updated"));
     return;
   }
   if (e.target.id === "giornata-grp-one") {
     e.preventDefault();
     const nome = String(new FormData(e.target).get("nome") || "").trim();
     const parola = e.target.dataset.parola;
-    if (!nome) { toast("Scrivi il nome del gruppo"); return; }
+    if (!nome) { toast(T("Scrivi il nome del gruppo", "Write the group name")); return; }
     S.giornata = S.giornata || { log: [] };
     S.giornata.gruppi = S.giornata.gruppi || [];
     const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
@@ -1401,7 +1401,7 @@ document.addEventListener("submit", (e) => {
     e.preventDefault();
     const nome = String(new FormData(e.target).get("nome") || "").trim();
     const parola = e.target.dataset.parola;
-    if (!nome) { toast("Scrivi il nome del gruppo"); return; }
+    if (!nome) { toast(T("Scrivi il nome del gruppo", "Write the group name")); return; }
     S.giornata = S.giornata || { log: [] };
     S.giornata.gruppi = S.giornata.gruppi || [];
     const g = S.giornata.gruppi.find((x) => normTesto(x.nome) === normTesto(nome));
@@ -1416,9 +1416,9 @@ document.addEventListener("submit", (e) => {
     const fd = new FormData(e.target);
     const nome = String(fd.get("nome") || "").trim();
     const parole = String(fd.get("parole") || "").split(",").map((x) => x.trim()).filter(Boolean);
-    if (!nome || !parole.length || !S.giornata.gruppi[i]) { toast("Scrivi il nome e almeno una parola"); return; }
+    if (!nome || !parole.length || !S.giornata.gruppi[i]) { toast(T("Scrivi il nome e almeno una parola", "Write the name and at least one word")); return; }
     S.giornata.gruppi[i] = { nome, parole };
-    closeDialog(); save(); render(); toast("Gruppo modificato");
+    closeDialog(); save(); render(); toast(T("Gruppo modificato", "Group edited"));
     return;
   }
   if (e.target.id === "giornata-gruppo-form") {
@@ -1426,10 +1426,10 @@ document.addEventListener("submit", (e) => {
     const fd = new FormData(e.target);
     const nome = String(fd.get("nome") || "").trim();
     const parole = String(fd.get("parole") || "").split(",").map((x) => x.trim()).filter(Boolean);
-    if (!nome || !parole.length) { toast("Scrivi il nome e almeno una parola"); return; }
+    if (!nome || !parole.length) { toast(T("Scrivi il nome e almeno una parola", "Write the name and at least one word")); return; }
     S.giornata = S.giornata || { log: [] };
     S.giornata.gruppi = [{ nome, parole }, ...(S.giornata.gruppi || [])]; // il gruppo nuovo ha la precedenza
-    save(); render(); toast("Gruppo salvato");
+    save(); render(); toast(T("Gruppo salvato", "Group saved"));
     return;
   }
   if (e.target.id === "giornata-add-form") {
@@ -1441,10 +1441,10 @@ document.addEventListener("submit", (e) => {
       const run = gRun();
       if (cmd.type !== "stop") gChiudiPausa();
       const oraCmd = cmd.time ? parseOra(cmd.time) : null;
-      if (cmd.time && !oraCmd) { toast("Scrivi l'ora, per esempio 6.50"); return; }
+      if (cmd.time && !oraCmd) { toast(T("Scrivi l'ora, per esempio 6.50", "Write the time, for example 6.50")); return; }
       const at = new Date(); if (oraCmd) at.setHours(oraCmd[0], oraCmd[1], 0, 0);
       if (cmd.startAt) at.setTime(cmd.startAt);
-      if (at > new Date()) { toast("L'ora è nel futuro"); return; }
+      if (at > new Date()) { toast(T("L'ora è nel futuro", "The time is in the future")); return; }
       if (cmd.type === "stop") {
         let idx = -1;
         if (cmd.hint) { const h = cmd.hint; idx = run.map((r) => r.text.toLowerCase()).reduce((acc, t, i) => (h.split(/\s+/).some((w) => w.length > 3 && t.includes(w)) ? i : acc), -1); }
@@ -1452,7 +1452,7 @@ document.addEventListener("submit", (e) => {
         if (idx < 0) { toast(run.length ? "Quale attività? Scrivi il nome, per esempio: ho finito di lavorare" : "Nessuna attività in corso"); return; }
         const r = run[idx];
         const min = Math.round((at.getTime() - r.start) / 60000);
-        if (min < 1) { toast("L'ora di fine deve essere dopo l'inizio"); return; }
+        if (min < 1) { toast(T("L'ora di fine deve essere dopo l'inizio", "The end time must be after the start")); return; }
         S.giornata.log = [...(S.giornata.log || []), { at: new Date(r.start).toISOString(), text: r.text, min }];
         run.splice(idx, 1);
         save(); render(); toast(`Registrato: ${r.text}, ${fumoDurataMin(min)}`);
@@ -1463,7 +1463,7 @@ document.addEventListener("submit", (e) => {
         // "vado in bagno": chiude l'attività più recente e ne inizia una nuova.
         const last = run[run.length - 1];
         const min = Math.round((at.getTime() - last.start) / 60000);
-        if (min < 1) { toast("L'ora deve essere dopo l'inizio dell'attività in corso"); return; }
+        if (min < 1) { toast(T("L'ora deve essere dopo l'inizio dell'attività in corso", "The time must be after the start of the current activity")); return; }
         S.giornata.log = [...(S.giornata.log || []), { at: new Date(last.start).toISOString(), text: last.text, min }];
         run.pop();
       }
@@ -1474,7 +1474,7 @@ document.addEventListener("submit", (e) => {
     const r = parseFrase(frase, day);
     if (r.error) { toast(r.error); return; }
     if (r.kind === "smoke") {
-      if (!S.fumo) { toast("Imposta prima la data di inizio nella scheda Fumo"); return; }
+      if (!S.fumo) { toast(T("Imposta prima la data di inizio nella scheda Fumo", "Set the start date in the Smoking tab first")); return; }
       S.fumo.log = [...(S.fumo.log || []), { at: r.at, kind: "smoke", n: r.n }];
       S.fumo.smoked = (S.fumo.smoked || 0) + r.n;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
@@ -1491,11 +1491,11 @@ document.addEventListener("submit", (e) => {
     const fd = new FormData(e.target);
     const day = view.fumoDay || todayKey();
     const ora = parseOra(fd.get("time"));
-    if (!ora) { toast("Scrivi l'ora, per esempio 6.50"); return; }
+    if (!ora) { toast(T("Scrivi l'ora, per esempio 6.50", "Write the time, for example 6.50")); return; }
     const [hh, mm] = ora;
     const when = parseKey(day);
     when.setHours(hh || 0, mm || 0, 0, 0);
-    if (when > new Date()) { toast("L'ora è nel futuro"); return; }
+    if (when > new Date()) { toast(T("L'ora è nel futuro", "The time is in the future")); return; }
     const at = when.toISOString();
     const kind = fd.get("kind");
     const text = String(fd.get("text") || "").trim();
@@ -1506,7 +1506,7 @@ document.addEventListener("submit", (e) => {
       S.fumo.smokedDays = S.fumo.smokedDays || {};
       S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + n;
     } else {
-      if (!text) { toast("Scrivi cosa hai fatto"); return; }
+      if (!text) { toast(T("Scrivi cosa hai fatto", "Write what you did")); return; }
       S.fumo.log = [...(S.fumo.log || []), { at, kind: "act", text }];
       S.fumo.actCount = (S.fumo.actCount || 0) + 1;
       if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
@@ -1522,7 +1522,7 @@ document.addEventListener("submit", (e) => {
       const text = String(fd.get("text") || "").trim();
       if (!text || !S.giornata || !S.giornata.log[idx]) return;
       const min = durataIn(fd.get("durata"));
-      if (min === null) { toast("Durata non chiara: prova '2 ore' o '90'"); return; }
+      if (min === null) { toast(T("Durata non chiara: prova '2 ore' o '90'", "Duration unclear: try '2 hours' or '90'")); return; }
       S.giornata.log[idx] = { ...S.giornata.log[idx], text, min: min || S.giornata.log[idx].min };
     } else if (f.dataset.kind === "plan") {
       const text = String(fd.get("text") || "").trim();
@@ -1544,7 +1544,7 @@ document.addEventListener("submit", (e) => {
         S.fumo.smokedDays[day] = Math.max(0, (S.fumo.smokedDays[day] || 0) + diff);
       }
     }
-    closeDialog(); save(); render(); toast("Modifica salvata");
+    closeDialog(); save(); render(); toast(T("Modifica salvata", "Change saved"));
     return;
   }
   if (e.target.id === "fumo-acts-form") {
@@ -1552,7 +1552,7 @@ document.addEventListener("submit", (e) => {
     const text = String(new FormData(e.target).get("act") || "").trim();
     if (!text) return;
     S.fumo.acts = [...fumoPrevisione(), text];
-    save(); render(); toast("Azione aggiunta");
+    save(); render(); toast(T("Azione aggiunta", "Action added"));
     return;
   }
   if (e.target.id !== "fumo-form") return;
@@ -1571,5 +1571,5 @@ document.addEventListener("submit", (e) => {
     cravings: prev.cravings || [],
   };
   view.fumoEdit = false;
-  save(); resetScroll = true; render(); toast("Dati salvati");
+  save(); resetScroll = true; render(); toast(T("Dati salvati", "Data saved"));
 });
