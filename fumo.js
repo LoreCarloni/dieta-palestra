@@ -222,21 +222,21 @@ function fumoDiaryCard() {
   return `
     <section class="card">
       <div class="row" style="align-items:center">
-        <button class="link" data-act="fumo-registro-toggle">Nascondi registro</button>
+        <button class="link" data-act="fumo-registro-toggle">${T("Nascondi registro", "Hide log")}</button>
       </div>
       <div class="row" style="align-items:center">
-        <button class="btn ghost small-btn" data-act="fumo-day-prev">Giorno prima</button>
+        <button class="btn ghost small-btn" data-act="fumo-day-prev">${T("Giorno prima", "Previous day")}</button>
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
-        <button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>Giorno dopo</button>
+        <button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button>
       </div>
-      <p class="muted small" style="text-align:center">Azioni fatte: ${acts} · Sigarette fumate: ${smoked}</p>
+      <p class="muted small" style="text-align:center">${T("Azioni fatte", "Actions done")}: ${acts} · ${T("Sigarette fumate", "Cigarettes smoked")}: ${smoked}</p>
       ${lines || `<p class="muted small">Nessuna voce per questo giorno.</p>`}
       <form id="fumo-add-form" class="form" style="margin-top:12px">
         <p class="muted small" style="margin:0 0 6px">Hai dimenticato di registrare qualcosa? Aggiungilo qui con l'ora in cui è successo.</p>
         <select name="kind"><option value="smoke">Ho fumato</option><option value="act">Ho fatto un'azione</option></select>
         <input name="time" type="text" maxlength="5" value="${day === todayKey() ? new Date().toTimeString().slice(0, 5).replace(":", ".") : "12.00"}" placeholder="Ora di inizio, es. 6.50" required>
         <input name="text" maxlength="80" placeholder="Quante sigarette (1 se non scrivi nulla), oppure cosa hai fatto">
-        <button class="btn ghost wide" type="submit">Aggiungi al registro</button>
+        <button class="btn ghost wide" type="submit">${T("Aggiungi al registro", "Add to log")}</button>
       </form>
     </section>`;
 }
@@ -334,7 +334,7 @@ function giornataReportHtml() {
   const frase = `${pLabel} hai dedicato ${righeAtt.length ? righeAtt.join(", ") : "nessuna attività registrata"}${totSig ? `, e ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}` : ""}.`;
   const bottoni = Object.entries(GIORNATA_PERIODI).map(([k, v]) => `<button class="btn ${k === periodo ? "primary" : "ghost"} small-btn" data-act="giornata-periodo" data-p="${k}">${esc(v)}</button>`).join(" ");
   return `
-    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">Torna al registro</button></div>
+    <div class="btns" style="justify-content:flex-end"><button class="link" data-act="giornata-report-toggle">${T("Torna al registro", "Back to the log")}</button></div>
     <section class="card">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${bottoni}</div>
       <p class="stat-v" style="margin:10px 0 0">${esc(fumoDurataMin(totMin))} di attività · ${totSig} ${totSig === 1 ? "sigaretta" : "sigarette"}</p>
@@ -406,7 +406,7 @@ function giornataRiepilogoHtml(day, acts, nSmoke) {
   if (!righe) return "";
   return `<section class="card"><h2>Riepilogo di oggi</h2>${righe}
     <div class="row" style="margin-top:6px;border-top:1px solid var(--line);padding-top:6px"><div style="flex:1;font-weight:700">Totale</div><div style="font-weight:700">${esc(fumoDurataMin(totale))}</div></div>
-    <p class="muted small" style="margin:8px 0 0">Sigarette fumate: ${nSmoke}</p></section>`;
+    <p class="muted small" style="margin:8px 0 0">${T("Sigarette fumate", "Cigarettes smoked")}: ${nSmoke}</p></section>`;
 }
 
 // Le azioni che servono a resistere alla voglia (respirando, bevi un bicchiere...) non sono attività della giornata.
@@ -469,7 +469,7 @@ function renderGiornata() {
     ${giornataRiepilogoHtml(day, acts, nSmoke)}
     ${view.giornataRegistroOpen ? "" : `<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-size:1.2rem;font-weight:700">${T("Registro di oggi", "Today's log")}</div><div style="font-size:1rem;color:var(--muted);margin-top:2px">${nAct} ${nAct === 1 ? "attività" : "attività"} · ${nSmoke} ${nSmoke === 1 ? "sigaretta" : "sigarette"}</div></div><button class="btn ghost small-btn" data-act="giornata-registro-toggle">${T("Mostra", "Show")}</button></div></section>`}
     ${view.giornataRegistroOpen ? `<section class="card">
-      <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">Nascondi registro</button></div>
+      <div class="row" style="align-items:center"><button class="link" data-act="giornata-registro-toggle">${T("Nascondi registro", "Hide log")}</button></div>
       <div class="row" style="align-items:center">
         <button class="btn ghost small-btn" data-act="giornata-prev">Giorno prima</button>
         <strong style="text-align:center">${esc(fmtDate(day))}</strong>
@@ -778,7 +778,7 @@ function renderFumo() {
   const sforo = smokedToday > tetto;
   const verdePct = sforo ? Math.round((tetto / smokedToday) * 100) : tettoPct;
   const barraHtml = `<div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden;display:flex" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${verdePct}%;height:100%;background:#2e7d32"></div>${sforo ? `<div style="width:${100 - verdePct}%;height:100%;background:#c0392b"></div>` : ""}</div>`;
-  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">${T("sigarette oggi", "cigarettes today")}</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? T("Sei al tetto di oggi.", "You are at today's cap.") : `${T("Ne restano ", "Left: ")}${tetto - smokedToday}${T(".", ".")}`}</p>${barraHtml}</section>`;
+  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> ${T("di", "of")} ${tetto}</span></div><div class="muted small">${T("sigarette oggi", "cigarettes today")}</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? T("Sei al tetto di oggi.", "You are at today's cap.") : `${T("Ne restano ", "Left: ")}${tetto - smokedToday}${T(".", ".")}`}</p>${barraHtml}</section>`;
   return `${bannerTetto}${fumoCigOggiHtml()}
     <section class="card" style="text-align:center;padding:14px 10px">
 
@@ -1072,7 +1072,7 @@ function fumoAct(a, el) {
     case "fumo-log-del": {
       const idx = parseInt(el.dataset.idx);
       const e = (S.fumo.log || [])[idx];
-      if (!e || !confirm("Eliminare questa voce del registro?")) return true;
+      if (!e || !confirm(T("Eliminare questa voce del registro?", "Delete this log entry?"))) return true;
       S.fumo.log = S.fumo.log.filter((_, k) => k !== idx);
       if (e.kind === "act") S.fumo.actCount = Math.max(0, (S.fumo.actCount || 0) - 1);
       if (e.kind === "smoke") {
@@ -1483,7 +1483,7 @@ document.addEventListener("submit", (e) => {
       S.giornata = S.giornata || { log: [] };
       S.giornata.log = [...S.giornata.log, r.min ? { at: r.at, text: r.text, min: r.min } : { at: r.at, text: r.text }];
     }
-    save(); render(); toast("Aggiunto al registro");
+    save(); render(); toast(T("Aggiunto al registro", "Added to the log"));
     return;
   }
   if (e.target.id === "fumo-add-form") {
@@ -1511,7 +1511,7 @@ document.addEventListener("submit", (e) => {
       S.fumo.actCount = (S.fumo.actCount || 0) + 1;
       if (!fumoPrevisione().includes(text)) S.fumo.acts = [...fumoPrevisione(), text];
     }
-    save(); render(); toast("Aggiunto al registro");
+    save(); render(); toast(T("Aggiunto al registro", "Added to the log"));
     return;
   }
   if (e.target.id === "fumo-item-form") {
