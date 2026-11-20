@@ -703,9 +703,14 @@ function renderFumo() {
   const resistedToday = (f.resisted || []).filter((t) => new Date(t).toDateString() === today).length;
   const pctNext = next ? Math.min(100, Math.round((st.hours / next.h) * 100)) : 100;
   const sigOggi = (f.smokedDays || {})[todayKey()] || 0;
+  const tettoC = f.tettoGiorno || 4;
   const commento = sigOggi === 0
     ? { titolo: "Nessuna sigaretta oggi.", testo: "Continua così: ogni ora senza fumo conta." }
-    : { titolo: "Complimenti, stai rovinando la tua salute.", testo: sigOggi >= 5 ? "Oggi sei già a " + sigOggi + ": prova a fermarti alla prossima voglia e fai una delle azioni sotto." : "Prova a fermarti alla prossima voglia: scegli una delle azioni sotto e aspetta il cronometro." };
+    : sigOggi < tettoC
+      ? { titolo: `Sei a ${sigOggi} di ${tettoC}.`, testo: "Sei nel limite. Alla prossima voglia scegli una delle azioni sotto." }
+      : sigOggi === tettoC
+        ? { titolo: `Sei al tetto: ${tettoC} di ${tettoC}.`, testo: "Niente altre sigarette oggi. Scegli una delle azioni sotto." }
+        : { titolo: `Hai sforato il tetto di ${sigOggi - tettoC}.`, testo: `Oltre ${tettoC} sigarette al giorno fa male. Riparti dalla prossima voglia: scegli una delle azioni sotto.` };
   const tetto = f.tettoGiorno || 4;
   const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
   const sforo = smokedToday > tetto;
