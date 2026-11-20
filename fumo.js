@@ -681,6 +681,13 @@ function toLocalInput(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+// elenco delle sigarette di oggi, con l'ora e il pulsante per toglierne una (come gli alimenti)
+function fumoCigOggiHtml() {
+  const oggi = todayKey();
+  const righe = ((S.fumo && S.fumo.log) || []).map((e, i) => ({ e, i })).filter(({ e }) => e.kind === "smoke" && keyOf(new Date(e.at)) === oggi);
+  if (!righe.length) return `<section class="card"><p class="muted small">Nessuna sigaretta registrata oggi.</p></section>`;
+  return `<section class="card"><h3>Sigarette di oggi</h3>${righe.map(({ e, i }) => `<div class="row"><div>Sigaretta alle ${esc(new Date(e.at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div><button class="link small-link" data-act="fumo-del-cig" data-i="${i}" aria-label="Togli">×</button></div>`).join("")}</section>`;
+}
 function renderFumo() {
   if (!S.fumo) return renderFumoSetup();
   if (view.fumoEdit) return renderFumoSetup(true);
@@ -699,11 +706,11 @@ function renderFumo() {
   const commento = sigOggi === 0
     ? { titolo: "Nessuna sigaretta oggi.", testo: "Continua così: ogni ora senza fumo conta." }
     : { titolo: "Complimenti, stai rovinando la tua salute.", testo: sigOggi >= 5 ? "Oggi sei già a " + sigOggi + ": prova a fermarti alla prossima voglia e fai una delle azioni sotto." : "Prova a fermarti alla prossima voglia: scegli una delle azioni sotto e aspetta il cronometro." };
-  const tetto = f.tettoGiorno || 10;
+  const tetto = f.tettoGiorno || 4;
   const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
   const sforo = smokedToday > tetto;
-  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">sigarette oggi</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : "#2e7d32"}"></div></div></section>`;
-  return `${bannerTetto}
+  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">sigarette oggi</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : smokedToday === tetto ? "#e0a800" : "#2e7d32"}"></div></div></section>`;
+  return `${bannerTetto}${fumoCigOggiHtml()}
     <section class="card" style="text-align:center;padding:14px 10px">
 
       <div class="muted small">sigarette oggi</div>
@@ -772,7 +779,7 @@ function renderFumoSetup(editing) {
         <label>Quando hai smesso (o smetti)
           <input type="datetime-local" name="start" value="${toLocalInput(new Date(f.start))}" required></label>
 
-        <label>Tetto di sigarette al giorno<input type="number" name="tettoGiorno" min="0" max="40" step="1" value="${f.tettoGiorno || 10}" required></label>        <label>Sigarette al giorno prima di smettere
+        <label>Sigarette al giorno: 3-4 tollerate dal medico, oltre fa male<input type="number" name="tettoGiorno" min="0" max="40" step="1" value="${f.tettoGiorno || 4}" required></label>        <label>Sigarette al giorno prima di smettere
           <input type="number" name="perDay" min="1" max="100" step="1" value="${f.perDay}" required></label>
         <label>Prezzo di un pacchetto in euro
           <input type="number" name="packPrice" min="0.5" max="30" step="0.1" value="${f.packPrice}" required></label>
@@ -1191,6 +1198,17 @@ function fumoAct(a, el) {
       if (!dlg().open) render();
       return true;
     }
+    case "fumo-del-cig": {
+      // toglie una sigaretta registrata per errore: il conto di oggi scende
+      const i = Number(el.dataset.i), voce = (S.fumo.log || [])[i];
+      if (!voce || voce.kind !== "smoke") break;
+      const giorno = keyOf(new Date(voce.at));
+      S.fumo.log = S.fumo.log.filter((_, k) => k !== i);
+      if (S.fumo.smokedDays && S.fumo.smokedDays[giorno]) S.fumo.smokedDays[giorno] = Math.max(0, S.fumo.smokedDays[giorno] - 1);
+      S.fumo.smoked = Math.max(0, (S.fumo.smoked || 0) - 1);
+      save(); render(); toast("Sigaretta tolta");
+      return true;
+    }
     case "fumo-add-cig": {
       // una sigaretta in piu oggi, senza cronometro: stesso conteggio del tetto
       S.fumo.smokedDays = S.fumo.smokedDays || {};
@@ -1198,7 +1216,7 @@ function fumoAct(a, el) {
       S.fumo.smokedDays[oggi] = (S.fumo.smokedDays[oggi] || 0) + 1;
       S.fumo.smoked = (S.fumo.smoked || 0) + 1;
       S.fumo.log = [...(S.fumo.log || []), { at: new Date().toISOString(), kind: "smoke", n: 1 }];
-      const n = S.fumo.smokedDays[oggi], tetto = S.fumo.tettoGiorno || 10;
+      const n = S.fumo.smokedDays[oggi], tetto = S.fumo.tettoGiorno || 4;
       save(); render();
       toast(n > tetto ? `Hai sforato il tetto di oggi: ${n} di ${tetto}` : n === tetto ? "Hai raggiunto il tetto di oggi" : `Sigaretta aggiunta: ${n} di ${tetto} oggi`);
       return true;
@@ -1479,7 +1497,7 @@ document.addEventListener("submit", (e) => {
     perDay: parseFloat(fd.get("perDay")),
     packPrice: parseFloat(fd.get("packPrice")),
     packSize: parseFloat(fd.get("packSize")),
-    tettoGiorno: Math.max(0, Math.round(parseFloat(fd.get("tettoGiorno")) || 10)),
+    tettoGiorno: Math.max(0, Math.round(parseFloat(fd.get("tettoGiorno")) || 4)),
     reason: String(fd.get("reason") || "").trim(),
     cravings: prev.cravings || [],
   };
