@@ -1797,14 +1797,14 @@ function dayComment(k) {
   if (wkOk) {
     const ov = overview(k, 7), prev = overview(addDays(k, -7), 7);
     const trend = ov.avgK !== null && prev.avgK !== null ? ov.avgK - prev.avgK : null;
-    const sgK = ov.over.map((d) => `${shortDay(d.k)}: ${r0(d.kcal - d.tgK)} kcal in più`).join("; ");
-    const sgF = ov.overF.map((d) => shortDay(d.k)).join(", ");
+
+
     const parts = [];
-    parts.push(`Questa settimana hai tracciato ${ov.days.length} giorni su 7. Sgarri calorici: ${ov.over.length}${ov.over.length ? `: ${sgK}` : ""}. Giorni con grassi sopra il limite: ${ov.overF.length}${ov.overF.length ? ` (${sgF})` : ""}.`);
+    parts.push(`Questa settimana: ${ov.over.length} sgarri calorici su ${ov.days.length} giorni registrati. Grassi sopra il limite in ${ov.overF.length} giorni.`);
     parts.push(`Media settimanale: ${r0(ov.avgK)} kcal contro ${r0(ov.tgK)}, grassi ${r0(ov.avgF)} g contro ${r0(ov.tgF)}.`);
-    if (trend !== null) parts.push(trend > 50 ? `Rispetto alla settimana scorsa stai mangiando di più (+${r0(trend)} kcal di media).` : trend < -50 ? `Rispetto alla settimana scorsa stai mangiando meno (${r0(trend)} kcal di media): buon segno.` : "Rispetto alla settimana scorsa il livello è stabile.");
+    if (trend !== null) parts.push(trend > 50 ? `Rispetto alla settimana scorsa stai mangiando di più: ${r0(trend * 7)} kcal a settimana.` : trend < -50 ? `Rispetto alla settimana scorsa stai mangiando meno: ${r0(-trend * 7)} kcal a settimana. Buon segno.` : "Rispetto alla settimana scorsa stai mangiando più o meno uguale.");
     const m30 = overview(k, 30);
-    if (m30.days.length >= 10) parts.push(`Ultimi 30 giorni: ${m30.over.length} sgarri calorici su ${m30.days.length} giorni tracciati, media ${r0(m30.avgK)} kcal.`);
+    if (m30.days.length >= 10) parts.push(`Ultime 4 settimane: ${r0((m30.avgK - m30.tgK) * 7)} kcal in ${m30.avgK > m30.tgK ? "più" : "meno"} a settimana rispetto all'obiettivo.`);
     const ok = ov.over.length <= 1 && ov.overF.length <= 2;
     lines.push({ lvl: ok ? "good" : "bad", text: parts.join(" ") });
     const sg = ov.over.length, sgFat = ov.overF.length;
