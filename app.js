@@ -737,7 +737,7 @@ function hasYesterday(k) {
 
 
 // ---------- Peso e misure settimanali ----------
-const MEAS_FIELDS = [["weight", "Peso (kg)"], ["waist", "Vita ombelico (cm)"], ["low", "Vita bassa (cm)"], ["thigh", "Coscia (cm)"]];
+const MEAS_FIELDS = [["weight", T("Peso (kg)", "Weight (kg)")], ["waist", T("Vita ombelico (cm)", "Navel waist (cm)")], ["low", T("Vita bassa (cm)", "Low waist (cm)")], ["thigh", T("Coscia (cm)", "Thigh (cm)")]];
 const num1 = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : null; };
 const fmtN = (n) => (n === null || n === undefined ? "n.d." : n.toLocaleString("it-IT", { maximumFractionDigits: 1 }));
 const sortedMeasures = () => S.measures.slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -790,23 +790,23 @@ function renderMeasures() {
   const dayName = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"][S.measureDay];
   return `
   <section class="card ${due ? "due" : ""}">
-    <h2>${view.mEdit ? "Modifica misurazione" : "Nuova misurazione"} ${due ? '<span class="pill">Da fare oggi</span>' : ""}</h2>
-    <p class="muted small">Una volta a settimana, di ${dayName}, al mattino, dopo il bagno e prima di mangiare. Lascia vuoto ciò che non misuri.</p>
-    <div class="field"><label for="m-date">Data</label><input id="m-date" type="date" value="${e.date}" max="${todayKey()}"></div>
-    <div class="grid2">${inp("weight", "Peso (kg)")}${inp("waist", "Vita ombelico (cm)")}${inp("low", "Vita bassa (cm)")}${inp("thigh", "Coscia (cm)")}</div>
+    <h2>${view.mEdit ? T("Modifica misurazione", "Edit measurement") : T("Nuova misurazione", "New measurement")} ${due ? `<span class="pill">${T("Da fare oggi", "To do today")}</span>` : ""}</h2>
+    <p class="muted small">${T(`Una volta a settimana, di ${dayName}, al mattino, dopo il bagno e prima di mangiare. Lascia vuoto ciò che non misuri.`, `Once a week, on ${dayName}, in the morning, after the bath and before eating. Leave blank what you do not measure.`)}</p>
+    <div class="field"><label for="m-date">${T("Data", "Date")}</label><input id="m-date" type="date" value="${e.date}" max="${todayKey()}"></div>
+    <div class="grid2">${inp("weight", T("Peso (kg)", "Weight (kg)"))}${inp("waist", T("Vita ombelico (cm)", "Navel waist (cm)"))}${inp("low", T("Vita bassa (cm)", "Low waist (cm)"))}${inp("thigh", T("Coscia (cm)", "Thigh (cm)"))}</div>
     <div class="field"><label for="m-note">Note (come ti svegli, gonfiore, ciclo)</label><input id="m-note" type="text" value="${esc(e.note || "")}"></div>
-    <button class="btn primary wide" data-act="save-measure">${view.mEdit ? "Salva modifiche" : "Salva misurazione"}</button>
-    ${view.mEdit ? '<button class="btn ghost wide" data-act="cancel-measure">Annulla</button><button class="btn danger wide" data-act="del-measure">Elimina</button>' : ""}
+    <button class="btn primary wide" data-act="save-measure">${view.mEdit ? T("Salva modifiche", "Save changes") : T("Salva misurazione", "Save measurement")}</button>
+    ${view.mEdit ? '<button class="btn ghost wide" data-act="cancel-measure">${T("Annulla", "Cancel")}</button><button class="btn danger wide" data-act="del-measure">${T("Elimina", "Delete")}</button>' : ""}
   </section>
   ${list.length ? `<section class="card">
-    <h2>Andamento</h2>
+    <h2>${T("Andamento", "Trend")}</h2>
     <div class="stats">
-      <div class="stat"><div class="muted small">Vita ombelico</div><div class="stat-v">${fmtN(wEnd?.waist ?? null)}${wEnd ? " cm" : ""}</div><div class="muted small">${deltaText(list, "waist", "cm")}</div></div>
-      <div class="stat"><div class="muted small">Dall'inizio</div><div class="stat-v">${wFirst && wEnd && wFirst !== wEnd ? (Math.abs(wEnd.waist - wFirst.waist) < 0.05 ? "invariato" : `${wEnd.waist < wFirst.waist ? "meno " : "più "}${fmtN(Math.abs(wEnd.waist - wFirst.waist))} cm`) : "n.d."}</div><div class="muted small">vita ombelico</div></div>
-      <div class="stat"><div class="muted small">Peso</div><div class="stat-v">${fmtN(lastWith("weight", list).slice(-1)[0]?.weight ?? null)}${lastWith("weight", list).length ? " kg" : ""}</div><div class="muted small">${deltaText(list, "weight", "kg")}</div></div>
-      <div class="stat"><div class="muted small">Coscia</div><div class="stat-v">${fmtN(lastWith("thigh", list).slice(-1)[0]?.thigh ?? null)}${lastWith("thigh", list).length ? " cm" : ""}</div><div class="muted small">${deltaText(list, "thigh", "cm")}</div></div>
+      <div class="stat"><div class="muted small">${T("Vita ombelico", "Navel waist")}</div><div class="stat-v">${fmtN(wEnd?.waist ?? null)}${wEnd ? " cm" : ""}</div><div class="muted small">${deltaText(list, "waist", "cm")}</div></div>
+      <div class="stat"><div class="muted small">${T("Dall'inizio", "Since the start")}</div><div class="stat-v">${wFirst && wEnd && wFirst !== wEnd ? (Math.abs(wEnd.waist - wFirst.waist) < 0.05 ? "invariato" : `${wEnd.waist < wFirst.waist ? "meno " : "più "}${fmtN(Math.abs(wEnd.waist - wFirst.waist))} cm`) : "n.d."}</div><div class="muted small">vita ombelico</div></div>
+      <div class="stat"><div class="muted small">${T("Peso", "Weight")}</div><div class="stat-v">${fmtN(lastWith("weight", list).slice(-1)[0]?.weight ?? null)}${lastWith("weight", list).length ? " kg" : ""}</div><div class="muted small">${deltaText(list, "weight", "kg")}</div></div>
+      <div class="stat"><div class="muted small">${T("Coscia", "Thigh")}</div><div class="stat-v">${fmtN(lastWith("thigh", list).slice(-1)[0]?.thigh ?? null)}${lastWith("thigh", list).length ? " cm" : ""}</div><div class="muted small">${deltaText(list, "thigh", "cm")}</div></div>
     </div>
-    <p class="small">Per la pancia contano più la vita all'ombelico e come ti svegli la mattina del peso: il peso può restare uguale mentre la pancia scende.</p>
+    <p class="small">${T("Per la pancia contano più la vita all'ombelico e come ti svegli la mattina del peso: il peso può restare uguale mentre la pancia scende.", "For the belly, the waist at the navel and how you wake up on weigh-in day matter most: weight can stay the same while the belly goes down.")}</p>
     ${lineChart(list, "waist", "Vita ombelico, misura principale")}
     ${lineChart(list, "low", "Vita bassa")}
     ${lowWaistComment(list)}
@@ -814,19 +814,19 @@ function renderMeasures() {
     ${lineChart(list, "thigh", "Coscia")}
   </section>
   <section class="card">
-    <h2>Storico</h2>
+    <h2>${T("Storico", "History")}</h2>
     <div class="table mtable">
-      <div class="tr th"><span>Data</span><span>Peso</span><span>Ombel.</span><span>Bassa</span><span>Coscia</span></div>
+      <div class="tr th"><span>${T("Data", "Date")}</span><span>${T("Peso", "Weight")}</span><span>${T("Ombel.", "Navel")}</span><span>${T("Bassa", "Low")}</span><span>${T("Coscia", "Thigh")}</span></div>
       ${list.slice().reverse().map((m) => `<button class="tr" data-act="edit-measure" data-id="${m.id}"><span>${esc(fmtDate(m.date, { day: "numeric", month: "short", year: "2-digit" }))}</span><span>${fmtN(m.weight)}</span><span>${fmtN(m.waist)}</span><span>${fmtN(m.low)}</span><span>${fmtN(m.thigh)}</span></button>`).join("")}
     </div>
-    <p class="muted small">Tocca una riga per modificarla o eliminarla.</p>
-  </section>` : `<section class="card"><h2>Storico</h2><p class="muted small">Nessuna misurazione. Se hai già dei valori in un'altra app, puoi caricarli adesso.</p><button class="btn wide" data-act="seed-measures">Carica le mie misure precedenti</button></section>`}
+    <p class="muted small">${T("Tocca una riga per modificarla o eliminarla.", "Tap a line to edit or delete it.")}</p>
+  </section>` : `<section class="card"><h2>${T("Storico", "History")}</h2><p class="muted small">${T("Nessuna misurazione. Se hai già dei valori in un'altra app, puoi caricarli adesso.", "No measurements yet. If you already have values in another app, you can load them now.")}</p><button class="btn wide" data-act="seed-measures">${T("Carica le mie misure precedenti", "Load my previous measurements")}</button></section>`}
   <section class="card">
-    <h2>Come misurare</h2>
-    <details class="workout"><summary><b>Peso</b></summary><ul><li>Bilancia su pavimento duro, sempre la stessa</li><li>Senza vestiti</li><li>Una volta a settimana, stesso giorno</li></ul></details>
-    <details class="workout"><summary><b>Vita ombelico, misura principale</b></summary><ul><li>Metro esattamente sull'ombelico</li><li>Orizzontale intorno al corpo</li><li>Respirazione normale, non contrarre l'addome</li></ul></details>
-    <details class="workout"><summary><b>Vita bassa</b></summary><ul><li>2 o 3 cm sotto l'ombelico</li><li>Metro orizzontale, corpo rilassato</li></ul></details>
-    <details class="workout"><summary><b>Coscia</b></summary><ul><li>Metà coscia, circa 15 cm sotto l'inguine</li><li>Peso distribuito su entrambe le gambe</li><li>Muscolo rilassato</li></ul></details>
+    <h2>${T("Come misurare", "How to measure")}</h2>
+    <details class="workout"><summary><b>${T("Peso", "Weight")}</b></summary><ul><li>${T("Bilancia su pavimento duro, sempre la stessa", "Scale on a hard floor, always the same one")}</li><li>${T("Senza vestiti", "Without clothes")}</li><li>${T("Una volta a settimana, stesso giorno", "Once a week, same day")}</li></ul></details>
+    <details class="workout"><summary><b>${T("Vita ombelico, misura principale", "Navel waist, main measurement")}</b></summary><ul><li>${T("Metro esattamente sull'ombelico", "Tape exactly on the navel")}</li><li>${T("Orizzontale intorno al corpo", "Horizontal around the body")}</li><li>${T("Respirazione normale, non contrarre l'addome", "Breathe normally, do not tighten your belly")}</li></ul></details>
+    <details class="workout"><summary><b>${T("Vita bassa", "Low waist")}</b></summary><ul><li>2 o 3 cm sotto l'ombelico</li><li>${T("Metro orizzontale, corpo rilassato", "Horizontal tape, relaxed body")}</li></ul></details>
+    <details class="workout"><summary><b>${T("Coscia", "Thigh")}</b></summary><ul><li>${T("Metà coscia, circa 15 cm sotto l'inguine", "Mid-thigh, about 15 cm below the groin")}</li><li>${T("Peso distribuito su entrambe le gambe", "Weight spread over both legs")}</li><li>${T("Muscolo rilassato", "Relaxed muscle")}</li></ul></details>
   </section>`;
 }
 
@@ -894,7 +894,7 @@ function renderReport() {
     </div>
   </section>
   <section class="card"><h2>${T("Calorie giornaliere", "Daily calories")}</h2>${kcalChart}<div class="legend small"><span class="lg okb"></span>${T("in linea ", "on track ")}<span class="lg hi"></span>${T("sopra obiettivo ", "above goal ")}<span class="lg nt"></span>${T("non completo ", "incomplete ")}<span class="lg tl"></span>${T("obiettivo", "goal")}</div></section>
-  <section class="card"><h2>Peso</h2>${weightChart}</section>
+  <section class="card"><h2>${T("Peso", "Weight")}</h2>${weightChart}</section>
   <section class="card">
     <h2>${T("Dettaglio giorni", "Day details")}</h2>
     <div class="table">
@@ -1653,7 +1653,7 @@ function editDialog(kind, id, k) {
       ${kind === "drink" ? fld("ed-c", "Carboidrati (g)", it.c) : fld("ed-p", "Proteine (g)", it.p) + fld("ed-c", "Carboidrati (g)", it.c) + fld("ed-f", "Grassi (g)", it.f)}
     </div>
     ${qty ? '<p class="muted small">Se cambi la quantità, calorie e macro si riscalano in proporzione; puoi poi correggerli a mano.</p>' : ""}
-    <div class="field"><label for="ed-date">Data</label><input id="ed-date" type="date" value="${k}" max="${todayKey()}"></div>
+    <div class="field"><label for="ed-date">${T("Data", "Date")}</label><input id="ed-date" type="date" value="${k}" max="${todayKey()}"></div>
     <div class="btns"><button class="btn ghost" data-act="ed-date-set" data-d="${addDays(k, -1)}">Giorno prima</button><button class="btn ghost" data-act="ed-date-set" data-d="${todayKey()}">Oggi</button></div>
     <button class="btn primary wide" data-act="save-entry">Salva modifiche</button>`);
   dlg().dataset.kind = kind; dlg().dataset.id = id; dlg().dataset.from = k;
@@ -1999,7 +1999,7 @@ function parsePlan(text) {
 }
 function plansDialog() {
   const list = S.plans.map((p) => `<div class="plan">
-      <div class="plan-h"><b>${esc(p.name)}</b><button class="link small-link" data-act="plan-del" data-id="${p.id}">Elimina</button></div>
+      <div class="plan-h"><b>${esc(p.name)}</b><button class="link small-link" data-act="plan-del" data-id="${p.id}">${T("Elimina", "Delete")}</button></div>
       <div class="btns">${p.days.map((dd) => `<button class="btn small-btn" data-act="plan-day" data-id="${p.id}" data-label="${esc(dd.label)}">Giorno ${esc(dd.label)}</button>`).join("")}</div>
       <button class="link small-link" data-act="plan-copy" data-id="${p.id}">Copia questa scheda</button>
     </div>`).join("");
@@ -3265,7 +3265,7 @@ function act(a, el) {
       const it = list.find((x) => x.id === el.dataset.id);
       if (!it) return;
       openDialog(`<h3>Cambia data</h3><p class="muted small">${esc(it.name)}, ${r0(it.kcal)} kcal. Scegli il giorno a cui appartiene: i totali dei due giorni si ricalcolano.</p>
-        <div class="field"><label for="md-date">Data</label><input id="md-date" type="date" value="${k}" max="${todayKey()}"></div>
+        <div class="field"><label for="md-date">${T("Data", "Date")}</label><input id="md-date" type="date" value="${k}" max="${todayKey()}"></div>
         <div class="btns"><button class="btn ghost" data-act="md-set" data-d="${addDays(k, -1)}">Giorno prima</button><button class="btn ghost" data-act="md-set" data-d="${todayKey()}">Oggi</button></div>
         <button class="btn primary wide" data-act="save-date">Salva</button>`);
       dlg().dataset.kind = el.dataset.kind; dlg().dataset.id = el.dataset.id; dlg().dataset.from = k;
