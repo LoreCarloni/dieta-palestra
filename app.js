@@ -1126,59 +1126,59 @@ function renderProfile(first) {
   const tg = S.profile ? targets(todayKey()) : null;
   return `
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
-  ${first ? `<section class="card intro"><h2>Benvenuto</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
+  ${first ? `<section class="card intro"><h2>${T("Benvenuto", "Welcome")}</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
   <form class="card" id="profile-form">
-    <h2>I tuoi dati</h2>
+    <h2>${T("I tuoi dati", "Your data")}</h2>
     <div class="grid2">
-      <div class="field"><label>Come vuoi essere chiamato (facoltativo)</label><input name="name" type="text" maxlength="20" value="${esc(p.name || "")}" placeholder="Il tuo nome"></div>
-      <div class="field"><label>Sesso</label><select name="sex">${opt("m", p.sex, "Uomo")}${opt("f", p.sex, "Donna")}</select></div>
-      <div class="field"><label>Età</label><input name="age" type="number" inputmode="numeric" min="14" max="99" required value="${p.age}"></div>
-      <div class="field"><label>Altezza (cm)</label><input name="height" type="number" inputmode="numeric" min="120" max="230" required value="${p.height}"></div>
-      <div class="field"><label>Peso iniziale (kg)</label><input name="weight" type="number" inputmode="decimal" step="0.1" min="30" max="300" required value="${p.weight}"></div>
-      <div class="field"><label>Peso obiettivo (kg)</label><input name="goalWeight" type="number" inputmode="decimal" step="0.1" min="30" max="300" required value="${p.goalWeight}"></div>
-      <div class="field"><label>Ritmo</label><select name="rate">${opt(0, p.rate, "Mantenimento")}${opt(0.25, p.rate, "Lento, 250 g a settimana")}${opt(0.5, p.rate, "Consigliato, 500 g a settimana")}${opt(0.75, p.rate, "Veloce, 750 g a settimana")}</select></div>
+      <div class="field"><label>${T("Come vuoi essere chiamato (facoltativo)", "What should we call you (optional)")}</label><input name="name" type="text" maxlength="20" value="${esc(p.name || "")}" placeholder="Il tuo nome"></div>
+      <div class="field"><label>${T("Sesso", "Sex")}</label><select name="sex">${opt("m", p.sex, T("Uomo", "Man"))}${opt("f", p.sex, T("Donna", "Woman"))}</select></div>
+      <div class="field"><label>${T("Età", "Age")}</label><input name="age" type="number" inputmode="numeric" min="14" max="99" required value="${p.age}"></div>
+      <div class="field"><label>${T("Altezza (cm)", "Height (cm)")}</label><input name="height" type="number" inputmode="numeric" min="120" max="230" required value="${p.height}"></div>
+      <div class="field"><label>${T("Peso iniziale (kg)", "Starting weight (kg)")}</label><input name="weight" type="number" inputmode="decimal" step="0.1" min="30" max="300" required value="${p.weight}"></div>
+      <div class="field"><label>${T("Peso obiettivo (kg)", "Goal weight (kg)")}</label><input name="goalWeight" type="number" inputmode="decimal" step="0.1" min="30" max="300" required value="${p.goalWeight}"></div>
+      <div class="field"><label>${T("Ritmo", "Pace")}</label><select name="rate">${opt(0, p.rate, "Mantenimento")}${opt(0.25, p.rate, "Lento, 250 g a settimana")}${opt(0.5, p.rate, "Consigliato, 500 g a settimana")}${opt(0.75, p.rate, "Veloce, 750 g a settimana")}</select></div>
     </div>
-    <div class="field"><label>Attività quotidiana, allenamenti esclusi</label><select name="activity">${opt(1.2, p.activity, "Sedentaria, lavoro alla scrivania")}${opt(1.375, p.activity, "Leggera, spesso in piedi")}${opt(1.55, p.activity, "Moderata, lavoro in movimento")}${opt(1.725, p.activity, "Alta, lavoro fisico")}</select></div>
+    <div class="field"><label>${T("Attività quotidiana, allenamenti esclusi", "Daily activity, excluding workouts")}</label><select name="activity">${opt(1.2, p.activity, "Sedentaria, lavoro alla scrivania")}${opt(1.375, p.activity, "Leggera, spesso in piedi")}${opt(1.55, p.activity, "Moderata, lavoro in movimento")}${opt(1.725, p.activity, "Alta, lavoro fisico")}</select></div>
     <div class="grid2">
-      <div class="field"><label>Allenamenti a settimana</label><select name="trainDays">${[2, 3, 4, 5, 6].map((n) => opt(n, p.trainDays, n)).join("")}</select></div>
-      <div class="field"><label>Livello</label><select name="level">${opt("principiante", p.level, "Principiante")}${opt("intermedio", p.level, "Intermedio")}</select></div>
+      <div class="field"><label>${T("Allenamenti a settimana", "Workouts per week")}</label><select name="trainDays">${[2, 3, 4, 5, 6].map((n) => opt(n, p.trainDays, n)).join("")}</select></div>
+      <div class="field"><label>${T("Livello", "Level")}</label><select name="level">${opt("principiante", p.level, "Principiante")}${opt("intermedio", p.level, "Intermedio")}</select></div>
     </div>
     <button class="btn primary wide" type="submit">${first ? "Inizia" : "Salva"}</button>
   </form>
-  ${tg ? `<section class="card"><h2>I tuoi obiettivi giornalieri</h2>
+  ${tg ? `<section class="card"><h2>${T("I tuoi obiettivi giornalieri", "Your daily goals")}</h2>
     <div class="stats">
       <div class="stat"><div class="muted small">${T("Calorie", "Calories")}</div><div class="stat-v">${tg.kcal}</div></div>
       <div class="stat"><div class="muted small">Proteine</div><div class="stat-v">${tg.protein} g</div></div>
       <div class="stat"><div class="muted small">Carboidrati</div><div class="stat-v">${tg.carbs} g</div></div>
       <div class="stat"><div class="muted small">Grassi</div><div class="stat-v">${tg.fat} g</div></div>
       <div class="stat"><div class="muted small">${T("Acqua", "Water")}</div><div class="stat-v">${r1(tg.water / 1000)} L</div></div>
-      <div class="stat"><div class="muted small">Metabolismo basale</div><div class="stat-v">${r0(tg.bmr)}</div></div>
+      <div class="stat"><div class="muted small">${T("Metabolismo basale", "Basal metabolic rate")}</div><div class="stat-v">${r0(tg.bmr)}</div></div>
     </div>
     <p class="muted small">Calcolo Mifflin St Jeor. Gli obiettivi si aggiornano in automatico quando registri un nuovo peso.</p></section>
   <section class="card">
-    <h2>Promemoria giornalieri</h2>
+    <h2>${T("Promemoria giornalieri", "Daily reminders")}</h2>
     <p class="muted small">Scarica il file e aprilo: il calendario del telefono ti avviserà ogni giorno agli orari scelti, con il link diretto all'app.</p>
     <div class="grid2">
       ${Object.entries({ misure: "Peso e misure (settimanale)", colazione: "Colazione", pranzo: "Pranzo", acqua: "Controllo acqua", cena: "Cena", chiusura: "Chiusura giornata" }).map(([k, l]) => `<div class="field"><label>${l}</label><input type="time" value="${esc(S.reminders[k] || "")}" data-change="rem" data-k="${k}"></div>`).join("")}
     </div>
-    <div class="field"><label>Giorno di peso e misure</label><select data-change="mday">${["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"].map((n, i) => `<option value="${i}" ${S.measureDay === i ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div class="field"><label>${T("Giorno di peso e misure", "Weigh-in and measurements day")}</label><select data-change="mday">${["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"].map((n, i) => `<option value="${i}" ${S.measureDay === i ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <button class="btn wide" data-act="ics">Scarica promemoria per il calendario</button>
   </section>
   <section class="card">
-    <h2>Alimenti da aggiungere</h2>
+    <h2>${T("Alimenti da aggiungere", "Foods to add")}</h2>
     ${prunedWanted().length ? `<p class="muted small">Cercati e non trovati. Arrivano con il report settimanale e li aggiungo alla lista.</p><div class="chips">${S.wanted.map((w, i) => `<span class="chip">${esc(w.name)} <button class="x mini" data-act="del-wanted" data-i="${i}" aria-label="Rimuovi">×</button></span>`).join("")}</div>` : `<p class="muted small">Nessun alimento in attesa. Quando cerchi qualcosa che non trovo, comparirà qui.</p>`}
-    <button class="btn wide" data-act="habit-open">Alimenti abituali</button>
-    <button class="btn wide" data-act="import-dialog">Incolla una lista di alimenti</button>
+    <button class="btn wide" data-act="habit-open">${T("Alimenti abituali", "Usual foods")}</button>
+    <button class="btn wide" data-act="import-dialog">${T("Incolla una lista di alimenti", "Paste a list of foods")}</button>
   </section>
   <section class="card">
-    <h2>Dati e backup</h2>
+    <h2>${T("Dati e backup", "Data and backup")}</h2>
     <p class="muted small">Ricalcolo storico: confronta i pasti passati con i valori aggiornati e applica solo le voci che scegli.</p>
-    <div class="btns"><button class="btn" data-act="hist-check">Confronta giornate passate</button></div>
+    <div class="btns"><button class="btn" data-act="hist-check">${T("Confronta giornate passate", "Compare past days")}</button></div>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
     <div class="btns">
-      <button class="btn" data-act="export">Esporta backup</button>
-      <label class="btn ghost">Importa backup<input type="file" accept="application/json" id="import" hidden></label>
-      <button class="btn danger" data-act="reset">Cancella tutto</button>
+      <button class="btn" data-act="export">${T("Esporta backup", "Export backup")}</button>
+      <label class="btn ghost">${T("Importa backup", "Import backup")}<input type="file" accept="application/json" id="import" hidden></label>
+      <button class="btn danger" data-act="reset">${T("Cancella tutto", "Delete everything")}</button>
     </div>
   </section>` : ""}`;
 }
@@ -2182,7 +2182,7 @@ function parseFoodList(text) {
 }
 function importDialog() {
   openDialog(`
-    <h3>Incolla una lista di alimenti</h3>
+    <h3>${T("Incolla una lista di alimenti", "Paste a list of foods")}</h3>
     <p class="muted small">Una riga per alimento, valori per 100 g, separati da punto e virgola: nome; kcal; proteine; carboidrati; grassi; porzione in grammi. Esempio:</p>
     <pre class="ex">Croissant al pistacchio bar; 413; 6,2; 45,3; 22,3; 80
 Mozzarella di bufala; 288; 16,7; 0,4; 24,4; 125</pre>
@@ -2811,7 +2811,7 @@ function act(a, el) {
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
         <button class="btn ghost wide" data-act="fv-mine">I miei alimenti</button>
         <div id="fv-res"></div>
-        <button class="btn ghost wide" data-act="habit-open">Alimenti abituali</button>
+        <button class="btn ghost wide" data-act="habit-open">${T("Alimenti abituali", "Usual foods")}</button>
         <button class="btn ghost wide" data-act="dish-open">Piatto composto (es. pasta e zucca)</button>
         <button class="btn ghost wide" data-act="custom-food">Nuovo alimento</button>`);
     }
