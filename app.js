@@ -416,7 +416,6 @@ function applicaLingua() {
   document.querySelectorAll(".nav button[data-tab]").forEach((b) => {
     const it = b.dataset.itLabel || (b.dataset.itLabel = b.textContent);
     b.textContent = S.lang === "en" ? NAV_EN[b.dataset.tab] || it : it;
-    b.style.display = S.lang === "en" && b.dataset.tab === "fumo" ? "none" : "";
   });
 }
 function render() {
