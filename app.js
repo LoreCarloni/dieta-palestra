@@ -180,9 +180,9 @@ function plannedHtml(k, t, tg) {
   if (!pd.length) return "";
   const dk = pd.reduce((a, x) => a + x.kcal, 0), dp = pd.reduce((a, x) => a + x.p, 0), dc = pd.reduce((a, x) => a + x.c, 0), df = pd.reduce((a, x) => a + x.f, 0);
   const left = Math.round(tg.kcal - t.kcal - dk);
-  const m = (cls, lbl, v, target) => `<div class="macro-btn"><span class="muted small">${lbl}</span><b>${r0(v)} di ${r0(target)} g</b>${bar(v, target, cls)}</div>`;
-  return `<div class="plan-line"><div><b>Con quanto previsto</b> · kcal rimanenti <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
-    <div class="macros">${m("p", "Proteine", t.p + dp, tg.protein)}${m("c", "Carboidrati", t.c + dc, tg.carbs)}${m("f", "Grassi", t.f + df, tg.fat)}</div></div>`;
+  const m = (cls, lbl, v, target) => `<div class="macro-btn"><span class="muted small">${lbl}</span><b>${r0(v)} ${T("di", "of")} ${r0(target)} g</b>${bar(v, target, cls)}</div>`;
+  return `<div class="plan-line"><div><b>${T("Con quanto previsto", "Planned total")}</b> · ${T("kcal rimanenti", "kcal left")} <b class="${left < 0 ? "bad" : "good"}">${left}</b></div>
+    <div class="macros">${m("p", T("Proteine", "Protein"), t.p + dp, tg.protein)}${m("c", T("Carboidrati", "Carbs"), t.c + dc, tg.carbs)}${m("f", T("Grassi", "Fat"), t.f + df, tg.fat)}</div></div>`;
 }
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
@@ -448,7 +448,7 @@ function kcalBar(v, target) {
   const base = (Math.min(v, target) / scale) * 100;
   const extra = (Math.max(0, v - target) / scale) * 100;
   const perc = target > 0 ? Math.round((v / target) * 100) : 0;
-  return `<div class="bar-over" role="img" aria-label="${perc} per cento dell'obiettivo"><span class="base" style="width:${base}%"></span><span class="extra" style="width:${extra}%"></span></div><div class="muted small">${perc}% dell'obiettivo</div>`;
+  return `<div class="bar-over" role="img" aria-label="${perc}% ${T("dell'obiettivo", "of goal")}"><span class="base" style="width:${base}%"></span><span class="extra" style="width:${extra}%"></span></div><div class="muted small">${perc}% dell'obiettivo</div>`;
 }
 
 // Alimenti abituali: una sola volta, dall'etichetta. Niente verdure, qualche fritto preferito.
@@ -608,14 +608,14 @@ function weekCard() {
   const ps = periodStats(todayKey(), 7);
   const tr = ps.rows.filter((r) => r.d.meals.length > 0);
   const prev = weekDiff(addDays(todayKey(), -7));
-  if (!tr.length) return `<section class="card week-card"><h2>Questa settimana</h2><p class="muted small">Nessun giorno registrato ancora.</p></section>`;
+  if (!tr.length) return `<section class="card week-card"><h2>${T("Questa settimana", "This week")}</h2><p class="muted small">${T("Nessun giorno registrato ancora", "No days logged yet")}.</p></section>`;
   const sumK = tr.reduce((a, r) => a + r.t.kcal, 0), sumT = tr.reduce((a, r) => a + r.tg.kcal, 0);
   const diffTot = Math.round(sumK - sumT);
   const diffDay = Math.round(diffTot / tr.length);
   const sumP = tr.reduce((a, r) => a + r.t.p, 0), sumPT = tr.reduce((a, r) => a + r.tg.protein, 0);
   const cls = diffTot > 0.05 * sumT ? "bad" : "good";
   const word = diffDay > 0 ? "sopra" : "sotto";
-  return `<section class="card week-card"><h2>Questa settimana</h2>
+  return `<section class="card week-card"><h2>${T("Questa settimana", "This week")}</h2>
     <div class="week-big ${cls}">${r0(Math.abs(diffTot))} kcal</div>
     <div class="muted small">nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.</div>
     <div class="muted small">Proteine: ${r0(sumP)} di ${r0(sumPT)} g in totale.</div>${prev !== null ? `<div class="prev-week">Settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)} kcal al giorno</div>` : ""}</section>`;
@@ -639,7 +639,7 @@ function renderToday() {
 
   const foodKcal = d.meals.reduce((a, m) => a + m.kcal, 0);
   const mealsHtml = `${(view.foodsOpen ? d.meals : []).map((m) => `<div class="row"><div class="tap" data-act="edit-entry" data-kind="meal" data-id="${m.id}"><div>${esc(m.name)} ${(() => { const fd = allFoods().find((f) => norm(f.name).trim() === norm(m.name).trim()); return fd ? sourceBadge(fd) : ""; })()}</div><div class="muted small">${m.auto ? "Inserito in automatico, eliminalo se non l'hai mangiato. " : ""}${SLOT_NAMES[m.slot] ? SLOT_NAMES[m.slot] + ", " : ""}${m.g ? (m.gEst ? "circa " : "") + r0(m.g) + " g, " : ""}P ${r0(m.p)} C ${r0(m.c)} G ${r0(m.f)}</div><button class="link small-link" data-act="edit-entry" data-kind="meal" data-id="${m.id}">Modifica</button> <button class="link small-link" data-act="dup-entry" data-id="${m.id}">Duplica</button> <button class="link small-link" data-act="toggle-repeat" data-id="${m.id}">${S.dailyAuto.some((x) => x.name === m.name) ? "Si ripete ogni giorno, tocca per smettere" : "Ripeti ogni giorno"}</button></div><div class="row-r"><span>${r0(m.kcal)}</span><button class="x" data-act="del-meal" data-id="${m.id}" aria-label="Elimina">×</button></div></div>`).join("")}
-    ${d.meals.length ? "" : `<p class="muted small">Ancora nulla. Aggiungi quello che mangi durante la giornata.</p>`}`;
+    ${d.meals.length ? "" : `<p class="muted small">${T("Ancora nulla. Aggiungi quello che mangi durante la giornata.", "Nothing yet. Add what you eat during the day.")}</p>`}`;
 
   return `
   ${view.date === todayKey() ? weekCard() : ""}
@@ -651,9 +651,9 @@ function renderToday() {
 
   <section class="card hero">
     <div class="hero-main">
-      <div><div class="big ${remaining < 0 ? "bad" : "good"}">${r0(Math.abs(remaining))}</div><div class="muted small">${remaining < 0 ? "kcal oltre obiettivo" : "kcal rimanenti"}</div></div>
-      <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">kcal assunte</div></button>
-      <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">kcal bruciate</div></div>
+      <div><div class="big ${remaining < 0 ? "bad" : "good"}">${r0(Math.abs(remaining))}</div><div class="muted small">${remaining < 0 ? T("kcal oltre obiettivo", "kcal over goal") : T("kcal rimanenti", "kcal left")}</div></div>
+      <button class="macro-btn center hero-mid" data-act="macro" data-m="kcal"><div class="big">${r0(t.kcal)}</div><div class="muted small">${T("kcal assunte", "kcal eaten")}</div></button>
+      <div><div class="big">${r0(t.exKcal)}</div><div class="muted small">${T("kcal bruciate", "kcal burned")}</div></div>
     </div>
     <div class="goal-line">${T("Obiettivo giornaliero","Daily goal")}: <b>${tg.kcal} kcal</b></div>
     ${tg.plan ? `<div class="plan-line tiny"><div>Target vero: <b>${tg.kcal + tg.plan.cutKcal}</b> kcal</div><div>Recupero, da seguire adesso: <b>${tg.kcal}</b> kcal, per altri ${tg.plan.daysLeft} giorni</div></div>` : ""}
@@ -661,9 +661,9 @@ function renderToday() {
     ${tg.kcal < tg.bmr ? `<p class="warn-line tiny">Sotto il metabolismo basale (${r0(tg.bmr)} kcal): da concordare con un medico.</p>` : ""}
     ${bar(t.kcal, tg.kcal)}
     <div class="macros">
-      <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">Proteine <span class="info-dot" aria-hidden="true">i</span></span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
-      <button class="macro-btn" data-act="macro" data-m="c"><span class="muted small">Carboidrati</span><b>${r0(t.c)} di ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</button>
-      <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">Grassi</span><b>${r0(t.f)} di ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
+      <button class="macro-btn" data-act="macro" data-m="p"><span class="muted small">${T("Proteine", "Protein")} <span class="info-dot" aria-hidden="true">i</span></span><b>${r0(t.p)} di ${tg.protein} g</b>${bar(t.p, tg.protein, "p")}</button>
+      <button class="macro-btn" data-act="macro" data-m="c"><span class="muted small">${T("Carboidrati", "Carbs")}</span><b>${r0(t.c)} ${T("di", "of")} ${tg.carbs} g</b>${bar(t.c, tg.carbs, "c")}</button>
+      <button class="macro-btn" data-act="macro" data-m="f"><span class="muted small">${T("Grassi", "Fat")}</span><b>${r0(t.f)} ${T("di", "of")} ${tg.fat} g</b>${bar(t.f, tg.fat, "f")}</button>
     </div>
     ${plannedHtml(k, t, tg)}
   </section>
