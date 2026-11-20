@@ -709,12 +709,12 @@ function renderFumo() {
     : sigOggi < tettoC
       ? { titolo: `Sei a ${sigOggi} di ${tettoC}.`, testo: "Sei nel limite. Alla prossima voglia scegli una delle azioni sotto." }
       : sigOggi === tettoC
-        ? { titolo: `Sei al tetto: ${tettoC} di ${tettoC}.`, testo: "Niente altre sigarette oggi. Scegli una delle azioni sotto." }
+        ? { titolo: `Sei al tetto: ${tettoC} di ${tettoC}.`, testo: "Sei al limite di oggi. Scegli una delle azioni sotto." }
         : { titolo: `Hai sforato il tetto di ${sigOggi - tettoC}.`, testo: `Oltre ${tettoC} sigarette al giorno fa male. Riparti dalla prossima voglia: scegli una delle azioni sotto.` };
   const tetto = f.tettoGiorno || 4;
   const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
   const sforo = smokedToday > tetto;
-  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">sigarette oggi</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Hai raggiunto il tetto: niente altre sigarette oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : smokedToday === tetto ? "#e0a800" : "#2e7d32"}"></div></div></section>`;
+  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> di ${tetto}</span></div><div class="muted small">sigarette oggi</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? "Sei al tetto di oggi." : `Ne restano ${tetto - smokedToday}.`}</p><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${sforo ? 100 : tettoPct}%;height:100%;background:${sforo ? "#c0392b" : smokedToday === tetto ? "#e0a800" : "#2e7d32"}"></div></div></section>`;
   return `${bannerTetto}${fumoCigOggiHtml()}
     <section class="card" style="text-align:center;padding:14px 10px">
 
