@@ -208,7 +208,8 @@ function targets(k) {
   const fat = Math.round((kcal * 0.28) / 9);
   // il taglio per gli sgarri arriva al massimo al 30 per cento in meno del limite base: resta un limite moderato, non un taglio netto
   const carbsBase = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  const minimoCarb = Math.round(carbsBase * 0.7);
+  // minimo per il giorno dopo uno sgarro: 75 g, indicazione del medico riportata dal paziente, da confermare per iscritto
+  const minimoCarb = Math.min(75, carbsBase);
   const carbs = Math.max(minimoCarb, carbsBase - debito);
   return { ...b, kcal, protein, fat, carbs, plan: planOut };
 }
