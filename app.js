@@ -445,7 +445,12 @@ function render() {
   document.querySelectorAll(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === view.tab));
   const main = $("#main");
   if (!S.profile && view.tab !== "fumo" && view.tab !== "giornata") { view.tab = "profilo"; main.innerHTML = renderProfile(true); return; }
-  main.innerHTML = { fumo: () => renderFumo(), giornata: () => renderGiornata(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  // se una schermata non si disegna, mostro l'errore invece di una pagina vuota
+  try {
+    main.innerHTML = { fumo: () => renderFumo(), giornata: () => renderGiornata(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+  } catch (err) {
+    main.innerHTML = `<section class="card"><h2>Errore nella schermata</h2><p class="small">${esc(String(err && err.message || err))}</p><p class="muted small">Scrivi a chi ti ha dato l'app questo messaggio, e intanto apri il Profilo o un'altra scheda.</p></section>`;
+  }
   casella.forEach(([id, v]) => { const el = document.getElementById(id); if (!el) return; if (el.type === "checkbox") el.checked = v; else el.value = v; });
   window.scrollTo(0, resetScroll ? 0 : keepY);
   if (scrollToId) { const el = document.getElementById(scrollToId); scrollToId = null; if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
