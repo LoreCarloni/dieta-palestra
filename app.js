@@ -206,9 +206,10 @@ function targets(k) {
   const debito = debitoCarboidrati(addDays(k, -1));
   const planOut = plan ? { ...plan, cutKcal: b.kcal - kcal } : null;
   const fat = Math.round((kcal * 0.28) / 9);
-  // il taglio per gli sgarri non scende mai sotto 50 g di carboidrati al giorno (o sotto il limite base, se e gia piu basso)
+  // il taglio per gli sgarri arriva al massimo al 30 per cento in meno del limite base: resta un limite moderato, non un taglio netto
   const carbsBase = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  const carbs = Math.max(Math.min(50, carbsBase), carbsBase - debito);
+  const minimoCarb = Math.round(carbsBase * 0.7);
+  const carbs = Math.max(minimoCarb, carbsBase - debito);
   return { ...b, kcal, protein, fat, carbs, plan: planOut };
 }
 
