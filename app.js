@@ -126,7 +126,11 @@ function day(k, create = false) {
     if (!create) return emptyDay();
     S.days[k] = emptyDay();
   }
-  return S.days[k];
+  // i giorni salvati con versioni vecchie possono non avere tutte le liste: le completo
+  const d = S.days[k];
+  const base = emptyDay();
+  for (const key of Object.keys(base)) if (d[key] === undefined || d[key] === null) d[key] = base[key];
+  return d;
 }
 
 function weightAt(k) {
@@ -189,7 +193,7 @@ const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Ta
 // carboidrati in eccesso rispetto al limite di un giorno passato (quelli registrati meno il limite base)
 function debitoCarboidrati(j) {
   const d = day(j);
-  const eaten = d.meals.reduce((a, m) => a + (m.c || 0), 0) + d.drinks.reduce((a, x) => a + (x.c || 0), 0);
+  const eaten = (d.meals || []).reduce((a, m) => a + (m.c || 0), 0) + (d.drinks || []).reduce((a, x) => a + (x.c || 0), 0);
   if (!eaten) return 0;
   return Math.max(0, Math.round(eaten - baseTargets(j).carbs));
 }
