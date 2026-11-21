@@ -1433,7 +1433,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   {
     const fGia = parseDiary(out.join("\n")).reduce((x, y) => x + (y.f || 0), 0);
     const needF = tg.fat - t.f - ff - fGia;
-    if (needF > 5 && needK > 220 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19)); add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); }
+    if (needF > 5 && needK > 201 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19), Math.floor(needK / 201)); if (n >= 1) add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); }
   }
   // proteine magre senza carboidrati per tutti: fesa di tacchino cruda, se mancano ancora proteine e restano calorie
   if (needP > 5 && needK > 120 && !gia("Fesa")) { const fg = Math.min(300, Math.max(100, Math.ceil(needP / 0.24 / 10) * 10), Math.floor(needK / 1.07 / 10) * 10); if (fg >= 100) add("Fesa di tacchino (cruda)", fg, [107, 24, 0, 1.2]); }
