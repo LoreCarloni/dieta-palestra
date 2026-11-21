@@ -1,3 +1,6 @@
+// errori durante l'avvio o il disegno: vengono mostrati a schermo invece di lasciare la pagina vuota
+const erroriApp = [];
+function segnalaErrore(dove, e) { const msg = `${dove}: ${(e && e.message) || e}`; if (!erroriApp.includes(msg)) erroriApp.push(msg); }
 "use strict";
 
 // ---------- Stato e persistenza ----------
@@ -438,7 +441,7 @@ function render() {
   applicaLingua();
   // la casella per aggiungere un cibo tiene quello che hai scritto anche se la pagina si ridisegna
   const casella = ["pl-q", "pl-g", "pl-pasto", "pl-forza"].map((id) => { const el = document.getElementById(id); return el ? [id, el.type === "checkbox" ? el.checked : el.value] : null; }).filter(Boolean);
-  refreshForecast();
+  try { refreshForecast(); } catch (e) { segnalaErrore("previsione", e); }
   // se la finestra della previsione e aperta, la ridisegno con le ultime modifiche
   if (view.dialogPlan && dlg().open) { const y = dlg().scrollTop; const q = (document.getElementById("pl-q") || {}).value || ""; openDialog(planDialogHtml()); dlg().scrollTop = y; const nq = document.getElementById("pl-q"); if (nq) nq.value = q; }
   const keepY = window.scrollY;
@@ -448,6 +451,7 @@ function render() {
   // se una schermata non si disegna, mostro l'errore invece di una pagina vuota
   try {
     main.innerHTML = { fumo: () => renderFumo(), giornata: () => renderGiornata(), oggi: renderToday, misure: renderMeasures, report: renderReport, coach: renderCoach, profilo: () => renderProfile(false) }[view.tab]();
+    if (erroriApp.length) main.innerHTML = `<section class="card"><h2>Errore</h2>${erroriApp.map((x) => `<p class="small">${esc(x)}</p>`).join("")}<p class="muted small">Copia questo testo e mandalo: serve per correggere l'app. Il resto dell'app funziona.</p></section>` + main.innerHTML;
   } catch (err) {
     main.innerHTML = `<section class="card"><h2>Errore nella schermata</h2><p class="small">${esc(String(err && err.message || err))}</p><p class="muted small">Scrivi a chi ti ha dato l'app questo messaggio, e intanto apri il Profilo o un'altra scheda.</p></section>`;
   }
@@ -3817,7 +3821,7 @@ function pulisciPreferiti() {
   const nuova = (S.favFoods || []).filter((r) => { const k = chiave(r); if (visti.has(k)) return false; visti.add(k); return true; });
   if (nuova.length !== (S.favFoods || []).length) { S.favFoods = nuova; save(); }
 }
-pulisciPreferiti();
-if (S.plannedDinner) save(); // all'avvio ripulisco anche la previsione gia salvata
-applyHabits(todayKey());
-render();
+try { pulisciPreferiti(); } catch (e) { segnalaErrore("pulizia preferiti", e); }
+try { if (S.plannedDinner) save(); } catch (e) { segnalaErrore("pulizia previsione", e); } // all'avvio ripulisco anche la previsione gia salvata
+try { applyHabits(todayKey()); } catch (e) { segnalaErrore("abitudini", e); }
+try { render(); } catch (e) { segnalaErrore("disegno", e); const m = document.getElementById("main"); if (m) m.innerHTML = `<section class="card"><h2>Errore</h2>${erroriApp.map((x) => `<p class="small">${esc(x)}</p>`).join("")}</section>`; }
