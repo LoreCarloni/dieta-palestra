@@ -98,6 +98,8 @@ function tieniUnPreferito(righe) {
   return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
 }
 function save() {
+  // copia di sicurezza dentro l'app: aggiornata al massimo ogni due ore, se il browser la permette
+  try { const t = Date.now(); if (t - Number(localStorage.getItem("dieta-palestra-snap-t") || 0) > 2 * 3600 * 1000) { localStorage.setItem("dieta-palestra-snap", JSON.stringify(S)); localStorage.setItem("dieta-palestra-snap-t", String(t)); } } catch (e) {}
   _searchCache.clear(); // dopo ogni salvataggio le ricerche si rifanno, cosi le modifiche agli alimenti si vedono
   _favHitCache.clear();
   if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).filter((l) => /bloccat/i.test(l) || rigaPreferita(l) || parseDiary(l).reduce((a, x) => a + x.kcal, 0) > 0).join("\n"); // le righe senza calorie (per esempio un albume senza valori) non restano
@@ -454,6 +456,13 @@ function applicaLingua() {
     b.textContent = S.lang === "en" ? NAV_EN[b.dataset.tab] || it : it;
   });
 }
+// promemoria del backup: se non esporti il file da piu di un giorno, lo ricorda in cima alla schermata
+function avvisoBackup() {
+  const ultimo = S.lastExport ? new Date(S.lastExport).getTime() : 0;
+  if (Date.now() - ultimo < 24 * 3600 * 1000) return "";
+  const quando = ultimo ? new Date(ultimo).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "mai";
+  return `<section class="card"><p><b>${T("Backup da fare", "Backup due")}</b>: ${T("ultimo file esportato", "last file exported")} ${quando}. ${T("Vai nel Profilo e tocca Esporta backup.", "Go to Profile and tap Export backup.")}</p></section>`;
+}
 function render() {
   applicaLingua();
   // la casella per aggiungere un cibo tiene quello che hai scritto anche se la pagina si ridisegna
@@ -683,6 +692,7 @@ function renderToday() {
     ${d.meals.length ? "" : `<p class="muted small">${T("Ancora nulla. Aggiungi quello che mangi durante la giornata.", "Nothing yet. Add what you eat during the day.")}</p>`}`;
 
   return `
+  ${avvisoBackup()}
   ${view.date === todayKey() ? weekCard() : ""}
   <div class="datebar">
     <button class="icon" data-act="prev-day" aria-label="Giorno precedente">‹</button>
@@ -1166,6 +1176,7 @@ function renderProfile(first) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
+  ${avvisoBackup()}
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
   ${first ? `<section class="card intro"><h2>${T("Benvenuto", "Welcome")}</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
   <form class="card" id="profile-form">
@@ -3550,7 +3561,7 @@ function act(a, el) {
       return;
     }
     case "ics": return download("promemoria-dieta.ics", buildIcs(), "text/calendar");
-    case "export": return download(`backup-dieta-${todayKey()}.json`, JSON.stringify(S, null, 2), "application/json");
+    case "export": S.lastExport = new Date().toISOString(); save(); return download(`backup-dieta-${todayKey()}.json`, JSON.stringify(S, null, 2), "application/json");
     case "reset":
       if (confirm("Cancellare tutti i dati? Operazione irreversibile.") && confirm("Sei sicuro?")) { S = defaultState(); save(); }
       break;
