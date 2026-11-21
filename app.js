@@ -1326,6 +1326,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       // un abbinamento con pochi carboidrati (albume, polvere, latte) si propone anche se i carboidrati sono gia al limite
       // i preferiti restano come li hai impostati: nessuna riduzione dei grammi
       const fatt = 1;
+      // stesso limite dei carboidrati: un abbinamento con troppi carboidrati per il rimanente oggi non viene riproposto
+      if (cCombo > 15 && cCombo > needC + 3) return;
       // un abbinamento e una sola riga: primo il cibo principale (non la polvere), poi "con" l'altro cibo, ciascuno con i suoi grammi
       const ordinati = [...combo].sort((a, b) => (/whey|polvere/i.test(a.pz) ? 1 : 0) - (/whey|polvere/i.test(b.pz) ? 1 : 0));
       const parti = ordinati.map((x) => {
@@ -1348,6 +1350,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const fissi = (S.favGrams || {})[nome];
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
     if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${nome}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
+    // se i carboidrati di oggi sono gia al limite, un preferito con carboidrati non viene riproposto (resta nella lista)
+    if (fissi && per[2] * fissi / 100 > 15 && per[2] * fissi / 100 > needC + 3) return;
     if (fissi) { addSum(nome, fissi, per); picked++; return; }
     const pol = /whey|proteine in polvere/i.test(hit.name);
     const perG = (i) => (per[i] > 0 ? Math.floor(((i === 0 ? needK : i === 2 ? needC : tg.fat - t.f - ff)) / (per[i] / 100) / 5) * 5 : 200);
