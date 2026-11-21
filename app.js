@@ -1,3 +1,6 @@
+// memorie delle ricerche: definite per prime, perche il salvataggio le svuota anche all'avvio
+var _searchCache = new Map();
+var _favHitCache = new Map();
 // qualsiasi errore che blocca l'app all'avvio compare a schermo, invece di lasciare la pagina nera
 window.addEventListener("error", (ev) => {
   const m = document.getElementById("main");
@@ -95,8 +98,8 @@ function tieniUnPreferito(righe) {
   return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
 }
 function save() {
-  if (typeof _searchCache !== "undefined") _searchCache.clear(); // dopo ogni salvataggio le ricerche si rifanno, cosi le modifiche agli alimenti si vedono
-  if (typeof _favHitCache !== "undefined") _favHitCache.clear();
+  _searchCache.clear(); // dopo ogni salvataggio le ricerche si rifanno, cosi le modifiche agli alimenti si vedono
+  _favHitCache.clear();
   if (S.plannedDinner) S.plannedDinner = tieniUnPreferito(S.plannedDinner.split("\n").filter((x) => x.trim())).filter((l) => /bloccat/i.test(l) || rigaPreferita(l) || parseDiary(l).reduce((a, x) => a + x.kcal, 0) > 0).join("\n"); // le righe senza calorie (per esempio un albume senza valori) non restano
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert("Impossibile salvare i dati: " + e.message); }
 }
@@ -1102,7 +1105,6 @@ function gramiAutomatici(hit) {
 }
 // alimento del database per un preferito: la pasta si pesa sempre da cruda
 // il risultato di favHit si ricorda finche non cambiano gli alimenti personali: la ricerca nel database e lenta
-const _favHitCache = new Map();
 function favHitCached(nome) {
   const key = nome + "|" + (S.customFoods || []).length;
   if (!_favHitCache.has(key)) _favHitCache.set(key, favHit(nome));
@@ -1638,7 +1640,6 @@ function tokenScore(t, words) {
   return best;
 }
 // la ricerca nel database si ricorda per ogni testo: il calcolo dei totali la ripete molte volte
-const _searchCache = new Map();
 function searchFoods(q) {
   const key = String(q) + "|" + (S.customFoods || []).length;
   if (!_searchCache.has(key)) { if (_searchCache.size > 2000) _searchCache.clear(); _searchCache.set(key, searchFoodsRaw(q)); }
