@@ -1,3 +1,8 @@
+// qualsiasi errore che blocca l'app all'avvio compare a schermo, invece di lasciare la pagina nera
+window.addEventListener("error", (ev) => {
+  const m = document.getElementById("main");
+  if (m && !m.innerHTML.trim()) m.innerHTML = `<section class="card"><h2>Errore</h2><p class="small">${String((ev && ev.message) || "errore sconosciuto").replace(/[<>&]/g, "")}${ev && ev.lineno ? " (riga " + ev.lineno + ")" : ""}</p><p class="muted small">Copia questo testo e mandalo: serve per correggere l'app.</p></section>`;
+});
 // errori durante l'avvio o il disegno: vengono mostrati a schermo invece di lasciare la pagina vuota
 const erroriApp = [];
 function segnalaErrore(dove, e) { const msg = `${dove}: ${(e && e.message) || e}`; if (!erroriApp.includes(msg)) erroriApp.push(msg); }
@@ -28,6 +33,15 @@ function load() {
   }
 }
 let S = load();
+// all'avvio ogni giorno salvato riceve le liste che mancano (dati di versioni vecchie), cosi nessun calcolo si blocca
+S.days = S.days && typeof S.days === "object" ? S.days : {};
+for (const k of Object.keys(S.days)) {
+  const d = S.days[k];
+  if (!d || typeof d !== "object") { delete S.days[k]; continue; }
+  const base = emptyDay();
+  for (const key of Object.keys(base)) if (d[key] === undefined || d[key] === null) d[key] = base[key];
+  if (!Array.isArray(d.meals)) d.meals = []; if (!Array.isArray(d.drinks)) d.drinks = []; if (!Array.isArray(d.ex)) d.ex = [];
+}
 S.reminders = { ...defaultState().reminders, ...S.reminders };
 S.measures = S.measures || [];
 S.wanted = S.wanted || [];
