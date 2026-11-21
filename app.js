@@ -186,6 +186,13 @@ function plannedHtml(k, t, tg) {
 }
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
+// carboidrati in eccesso rispetto al limite di un giorno passato (quelli registrati meno il limite base)
+function debitoCarboidrati(j) {
+  const d = day(j);
+  const eaten = d.meals.reduce((a, m) => a + (m.c || 0), 0) + d.drinks.reduce((a, x) => a + (x.c || 0), 0);
+  if (!eaten) return 0;
+  return Math.max(0, Math.round(eaten - baseTargets(j).carbs));
+}
 function targets(k) {
   const b = baseTargets(k);
   const plan = planFor(k);
@@ -195,7 +202,8 @@ function targets(k) {
   const med = medicalKcal();
   let kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
   // recupero: l'eccesso di carboidrati del giorno prima toglie grammi di carboidrati da oggi, le calorie restano quelle del target
-  const debito = (S.carbDebt || {})[addDays(k, -1)] || 0;
+  // l'eccesso di carboidrati di ieri (cibi e bevande registrati) si calcola direttamente dai dati di ieri, senza bisogno di premere Rigenera
+  const debito = debitoCarboidrati(addDays(k, -1));
   const planOut = plan ? { ...plan, cutKcal: b.kcal - kcal } : null;
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4) - debito);
