@@ -212,12 +212,19 @@ function plannedHtml(k, t, tg) {
 }
 // target concordato con il medico, usato solo durante il recupero
 const medicalKcal = () => parseInt((((S.myPlan || []).find((x) => x.name === "Target kcal (medico)")) || {}).qty, 10) || 0;
-// carboidrati in eccesso rispetto al limite di un giorno passato (quelli registrati meno il limite base)
-function debitoCarboidrati(j) {
-  const d = day(j);
-  const eaten = (d.meals || []).reduce((a, m) => a + (m.c || 0), 0) + (d.drinks || []).reduce((a, x) => a + (x.c || 0), 0);
-  if (!eaten) return 0;
-  return Math.max(0, Math.round(eaten - baseTargets(j).carbs));
+// carboidrati di recupero: si accumula l'eccesso dei giorni registrati da quando inizia lo sgarro fino a ieri,
+// e ogni giorno sotto il limite lo riduce, finche il totale torna a zero. Ricalcolato ogni volta, senza salvataggi.
+function debitoAccumulato(k) {
+  let B = 0;
+  for (let i = 21; i >= 1; i--) {
+    const j = addDays(k, -i);
+    const d = day(j);
+    const registrati = (d.meals || []).length + (d.drinks || []).length;
+    if (!registrati) continue; // giorni senza registrazione non contano
+    const eaten = (d.meals || []).reduce((a, m) => a + (m.c || 0), 0) + (d.drinks || []).reduce((a, x) => a + (x.c || 0), 0);
+    B = Math.max(0, B + (eaten - baseTargets(j).carbs));
+  }
+  return Math.round(B);
 }
 function targets(k) {
   const b = baseTargets(k);
@@ -229,7 +236,7 @@ function targets(k) {
   let kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
   // recupero: l'eccesso di carboidrati del giorno prima toglie grammi di carboidrati da oggi, le calorie restano quelle del target
   // l'eccesso di carboidrati di ieri (cibi e bevande registrati) si calcola direttamente dai dati di ieri, senza bisogno di premere Rigenera
-  const debito = debitoCarboidrati(addDays(k, -1));
+  const debito = debitoAccumulato(k);
   const planOut = plan ? { ...plan, cutKcal: b.kcal - kcal } : null;
   const fat = Math.round((kcal * 0.28) / 9);
   // il taglio per gli sgarri arriva al massimo al 30 per cento in meno del limite base: resta un limite moderato, non un taglio netto
