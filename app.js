@@ -2973,7 +2973,8 @@ function act(a, el) {
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
       // Rigenera ricalcola tutto: resta solo cio che hai bloccato, le altre righe (anche quelle non proposte dall'app) vengono rifatte
-      const kept = sortPlanLines(S.plannedDinner).filter((l) => /bloccato/i.test(l) || rigaPreferita(l));
+      // oggi: si tengono le righe gia previste che entrano nei limiti (e le bloccate), cosi Rigenera non cambia idea senza un motivo; aggiunge solo cio che manca
+      const kept = (view.date === todayKey() ? vistaPrevisione().split("\n") : sortPlanLines(S.plannedDinner)).filter((l) => l.trim() && (/bloccato/i.test(l) || rigaPreferita(l) || view.date === todayKey()));
       S.autoLines = []; S.autoAll = [];
       S.plannedDinner = kept.join("\n");
       S.forecastSnap = null; S.autoForecast = true;
