@@ -476,7 +476,9 @@ function copiaSicurezzaHtml() {
   if (!snap) return "";
   const t = Number((() => { try { return localStorage.getItem("dieta-palestra-snap-t"); } catch (e) { return 0; } })() || 0);
   const quando = t ? new Date(t).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
-  return `<section class="card"><h2>${T("Copia di sicurezza", "Safety copy")}</h2><p class="small">${T("Copia salvata", "Copy saved")} ${quando}.</p><button class="btn ghost wide" data-act="snap-restore">${T("Ripristina questa copia", "Restore this copy")}</button></section>`;
+  let ieriCopia = "";
+  try { const c = JSON.parse(snap); const ieri = addDays(todayKey(), -1); const n = c.fumo && c.fumo.smokedDays ? c.fumo.smokedDays[ieri] : undefined; ieriCopia = n === undefined ? T("Nella copia, per ieri, nessun numero salvato.", "In the copy, no number saved for yesterday.") : T(`Nella copia, ieri risultavano ${n} sigarette.`, `In the copy, yesterday showed ${n} cigarettes.`); } catch (e) {}
+  return `<section class="card"><h2>${T("Copia di sicurezza", "Safety copy")}</h2><p class="small">${T("Copia salvata", "Copy saved")} ${quando}.</p><p class="small">${ieriCopia}</p><button class="btn ghost wide" data-act="snap-restore">${T("Ripristina questa copia", "Restore this copy")}</button></section>`;
 }
 function render() {
   applicaLingua();
