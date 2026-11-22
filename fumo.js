@@ -757,7 +757,8 @@ function renderFumo() {
   const tecOggi = fumoPensieroDiOggi();
   const perDay = f.smokedDays || {};
   const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
-  const smokedToday = perDay[todayKey()] || 0;
+  // il riquadro in cima segue il giorno scelto con Giorno prima / dopo (oggi se non ne scegli un altro)
+  const smokedToday = perDay[view.fumoDay || todayKey()] || 0;
   const weekRows = dayKeys.map((k) => `<div class="row"><div>${esc(fmtDate(k, { weekday: "short", day: "numeric", month: "short" }))}</div><div class="row-r">${perDay[k] || 0}</div></div>`).join("");
   const done = FUMO_TRAGUARDI.filter((m) => st.hours >= m.h);
   const next = FUMO_TRAGUARDI.find((m) => st.hours < m.h);
