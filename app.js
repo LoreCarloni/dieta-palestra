@@ -1675,7 +1675,9 @@ function searchFoodsRaw(q) {
   if (alias) q = FOOD_ALIAS[alias];
   const tokens = norm(q).split(/[^a-z0-9]+/).filter((t) => t.length > 1 && !["al", "alla", "di", "con", "e", "il", "la"].includes(t));
   if (!tokens.length) return [];
+  // un alimento senza calorie (per esempio una voce salvata a zero per errore) non sostituisce quello del database
   return allFoods()
+    .filter((f) => f.perServing || (Number(f.kcal) > 0))
     .map((f) => {
       const words = norm(f.name).split(/[^a-z0-9]+/).filter(Boolean);
       const scores = tokens.map((t) => tokenScore(t, words));
