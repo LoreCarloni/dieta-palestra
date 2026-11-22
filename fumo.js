@@ -213,11 +213,12 @@ function fumoDiaryCard() {
     <section class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
-          <div style="font-size:1.2rem;font-weight:700;letter-spacing:-0.01em">${T("Registro di oggi", "Today's log")}</div>
+          <div style="font-size:1.2rem;font-weight:700;letter-spacing:-0.01em">${day === todayKey() ? T("Registro di oggi", "Today's log") : esc(fmtDate(day, { weekday: "long", day: "numeric", month: "long" }))}</div>
           <div style="font-size:1rem;color:var(--muted);margin-top:2px">${acts} ${T(acts === 1 ? "azione" : "azioni", acts === 1 ? "action" : "actions")} · ${smoked} ${T(smoked === 1 ? "sigaretta" : "sigarette", smoked === 1 ? "cigarette" : "cigarettes")}</div>
         </div>
         <button class="btn ghost small-btn" data-act="fumo-registro-toggle">${T("Mostra", "Show")}</button>
       </div>
+      <div class="btns" style="justify-content:space-between;margin-top:10px"><button class="btn ghost small-btn" data-act="fumo-day-prev">${T("Giorno prima", "Previous day")}</button><button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button></div>
     </section>`;
   return `
     <section class="card">
