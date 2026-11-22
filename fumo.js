@@ -760,6 +760,7 @@ function renderFumo() {
   const dayKeys = Array.from({ length: 7 }, (_, i) => addDays(todayKey(), -i));
   // il riquadro in cima segue il giorno scelto con Giorno prima / dopo (oggi se non ne scegli un altro)
   const smokedToday = perDay[view.fumoDay || todayKey()] || 0;
+  const giornoScelto = view.fumoDay || todayKey();
   const weekRows = dayKeys.map((k) => `<div class="row"><div>${esc(fmtDate(k, { weekday: "short", day: "numeric", month: "short" }))}</div><div class="row-r">${perDay[k] || 0}</div></div>`).join("");
   const done = FUMO_TRAGUARDI.filter((m) => st.hours >= m.h);
   const next = FUMO_TRAGUARDI.find((m) => st.hours < m.h);
@@ -780,7 +781,7 @@ function renderFumo() {
   const sforo = smokedToday > tetto;
   const verdePct = sforo ? Math.round((tetto / smokedToday) * 100) : tettoPct;
   const barraHtml = `<div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden;display:flex" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${verdePct}%;height:100%;background:#2e7d32"></div>${sforo ? `<div style="width:${100 - verdePct}%;height:100%;background:#c0392b"></div>` : ""}</div>`;
-  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> ${T("di", "of")} ${tetto}</span></div><div class="muted small">${T("sigarette oggi", "cigarettes today")}</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? T("Sei al tetto di oggi.", "You are at today's cap.") : `${T("Ne restano ", "Left: ")}${tetto - smokedToday}${T(".", ".")}`}</p>${barraHtml}</section>`;
+  const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> ${T("di", "of")} ${tetto}</span></div><div class="muted small">${T("sigarette oggi", "cigarettes today")}</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? T("Sei al tetto di oggi.", "You are at today's cap.") : `${T("Ne restano ", "Left: ")}${tetto - smokedToday}${T(".", ".")}`}</p>${barraHtml}${view.fumoDay && view.fumoDay !== todayKey() ? `<div style="margin-top:10px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span class="small">${T("Correggi il numero di questo giorno:", "Correct this day's number:")}</span><input id="fumo-set-n" type="number" inputmode="numeric" min="0" value="${smokedToday}" style="width:4.5em"><button class="btn ghost small-btn" data-act="fumo-set-day">${T("Salva", "Save")}</button></div>` : ""}</section>`;
   return `${bannerTetto}${fumoCigOggiHtml()}
     <section class="card" style="text-align:center;padding:14px 10px">
 
@@ -1280,6 +1281,15 @@ function fumoAct(a, el) {
       save(); render(); toast(T("Sigaretta tolta", "Cigarette removed"));
       return true;
     }
+    case "fumo-set-day": {
+      // correggi a mano il numero di sigarette di un giorno passato
+      const giorno = view.fumoDay || todayKey();
+      const v = Math.max(0, Math.round(Number(String(document.getElementById("fumo-set-n")?.value || "0").replace(",", ".")) || 0));
+      S.fumo.smokedDays = S.fumo.smokedDays || {};
+      S.fumo.smokedDays[giorno] = v;
+      save(); render(); toast(T("Numero aggiornato", "Number updated"));
+      return true;
+    }
     case "fumo-add-cig": {
       // una sigaretta in piu oggi, senza cronometro: stesso conteggio del tetto
       S.fumo.smokedDays = S.fumo.smokedDays || {};
@@ -1480,7 +1490,7 @@ document.addEventListener("submit", (e) => {
       S.fumo.log = [...(S.fumo.log || []), { at: r.at, kind: "smoke", n: r.n }];
       S.fumo.smoked = (S.fumo.smoked || 0) + r.n;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
-      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + r.n;
+      S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + r.n;
     } else {
       S.giornata = S.giornata || { log: [] };
       S.giornata.log = [...S.giornata.log, r.min ? { at: r.at, text: r.text, min: r.min } : { at: r.at, text: r.text }];
@@ -1506,7 +1516,7 @@ document.addEventListener("submit", (e) => {
       S.fumo.log = [...(S.fumo.log || []), { at, kind: "smoke", n }];
       S.fumo.smoked = (S.fumo.smoked || 0) + n;
       S.fumo.smokedDays = S.fumo.smokedDays || {};
-      S.fumo.smokedDays[day] = (S.fumo.smokedDays[day] || 0) + n;
+      S.fumo.smokedDays[todayKey()] = (S.fumo.smokedDays[todayKey()] || 0) + n;
     } else {
       if (!text) { toast(T("Scrivi cosa hai fatto", "Write what you did")); return; }
       S.fumo.log = [...(S.fumo.log || []), { at, kind: "act", text }];
