@@ -470,6 +470,14 @@ function avvisoBackup() {
   const quando = ultimo ? new Date(ultimo).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "mai";
   return `<section class="card"><p><b>${T("Backup da fare", "Backup due")}</b>: ${T("ultimo file esportato", "last file exported")} ${quando}. ${T("Vai nel Profilo e tocca Esporta backup.", "Go to Profile and tap Export backup.")}</p></section>`;
 }
+// copia di sicurezza interna: si puo ripristinare se i dati di un giorno risultano mancanti
+function copiaSicurezzaHtml() {
+  const snap = (() => { try { return localStorage.getItem("dieta-palestra-snap"); } catch (e) { return null; } })();
+  if (!snap) return "";
+  const t = Number((() => { try { return localStorage.getItem("dieta-palestra-snap-t"); } catch (e) { return 0; } })() || 0);
+  const quando = t ? new Date(t).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  return `<section class="card"><h2>${T("Copia di sicurezza", "Safety copy")}</h2><p class="small">${T("Copia salvata", "Copy saved")} ${quando}.</p><button class="btn ghost wide" data-act="snap-restore">${T("Ripristina questa copia", "Restore this copy")}</button></section>`;
+}
 function render() {
   applicaLingua();
   // la casella per aggiungere un cibo tiene quello che hai scritto anche se la pagina si ridisegna
@@ -1184,6 +1192,7 @@ function renderProfile(first) {
   const tg = S.profile ? targets(todayKey()) : null;
   return `
   ${avvisoBackup()}
+  ${copiaSicurezzaHtml()}
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
   ${first ? `<section class="card intro"><h2>${T("Benvenuto", "Welcome")}</h2><p>Inserisci i tuoi dati: calcolo calorie, proteine e acqua per il tuo obiettivo. I dati restano solo su questo dispositivo.</p></section>` : ""}
   <form class="card" id="profile-form">
@@ -3440,6 +3449,14 @@ function act(a, el) {
       const d = day(k, true);
       d.meals.push(...src.filter((m) => !d.meals.some((x) => x.name === m.name)).map((m) => ({ ...m, id: uid(), auto: false })));
       toast("Copiato da ieri"); break;
+    }
+    case "snap-restore": {
+      if (!confirm(T("Sostituire i dati attuali con la copia di sicurezza?", "Replace current data with the safety copy?"))) return true;
+      const snap = localStorage.getItem("dieta-palestra-snap");
+      if (!snap) return toast(T("Nessuna copia disponibile", "No copy available"));
+      const nuovo = JSON.parse(snap);
+      S = nuovo; save(); render(); toast(T("Copia ripristinata", "Copy restored"));
+      return true;
     }
     case "lang-it": S.lang = "it"; save(); render(); return true;
     case "lang-en": S.lang = "en"; save(); render(); return true;
