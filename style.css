@@ -380,11 +380,11 @@ main > .card, main > section.card { margin-left: -16px; margin-right: -16px; max
 h2 .muted.small { white-space: nowrap; flex: none; text-transform: none; font-size: 0.8rem; letter-spacing: 0; }
 
 /* barra in basso: sette voci, testo piu piccolo e senza a capo, cosi si leggono tutte */
-.nav button { font-size: 0.72rem; padding: 14px 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: clip; min-width: 0; }
+.nav button { font-size: 0.7rem; padding: 10px 0; letter-spacing: -0.01em; white-space: normal; line-height: 1.15; overflow: visible; text-overflow: clip; min-width: 0; display: flex; align-items: center; justify-content: center; text-align: center; }
 
 /* Fumo e Giornata sono le schede piu usate: evidenziate con un fondo colorato */
-.nav button[data-tab="fumo"], .nav button[data-tab="giornata"] { color: var(--accent); font-weight: 800; background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 12px; margin: 6px 3px; padding: 11px 0; }
-.nav button[data-tab="fumo"].active, .nav button[data-tab="giornata"].active { background: var(--accent); color: var(--card); }
+
+
 
 /* pulsanti delle righe della previsione: grandi, con colore quando attivi */
 .plan-acts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
