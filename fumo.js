@@ -750,17 +750,24 @@ function fumoCigOggiHtml() {
   if (!righe.length) return `<section class="card"><p class="muted small">${T("Nessuna sigaretta registrata oggi.", "No cigarettes logged today.")}</p></section>`;
   return `<section class="card"><h3>Sigarette di oggi</h3>${righe.map(({ e, i }) => `<div class="row"><div>Sigaretta alle ${esc(new Date(e.at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div><button class="link small-link" data-act="fumo-del-cig" data-i="${i}" aria-label="Togli">×</button></div>`).join("")}</section>`;
 }
-// sigarette permesse in un giorno: il tetto meno lo sforo accumulato nei giorni registrati precedenti (minimo 1)
-function fumoPermesse(k, tettoBase) {
-  const perDay = (S.fumo && S.fumo.smokedDays) || {};
-  let B = 0;
-  for (let i = 21; i >= 1; i--) {
-    const j = addDays(k, -i);
+// Scala: si parte da 12 sigarette oggi e si scende di una al giorno fino all'obiettivo sano (4).
+// Dalla scala si tolgono le sigarette in piu fumate nei giorni precedenti; il recupero avviene man mano che si e sotto.
+function fumoPermesse(k, obiettivoSano) {
+  const f = S.fumo || {};
+  if (!f.scalaStart) { f.scalaStart = todayKey(); }
+  const partenza = f.scalaPartenza || 12;
+  const perDay = f.smokedDays || {};
+  const giorniDa = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000);
+  const base = (j) => Math.max(obiettivoSano, partenza - giorniDa(f.scalaStart, j));
+  let E = 0;
+  for (let j = f.scalaStart; j < k; j = addDays(j, 1)) {
     if (perDay[j] === undefined) continue; // giorni senza registrazione non contano
-    B = Math.max(0, B + (perDay[j] - tettoBase));
+    const permessaJ = Math.max(1, base(j) - E);
+    E = Math.max(0, E + (perDay[j] - permessaJ));
   }
-  return Math.max(1, Math.round(tettoBase - B));
+  return Math.max(1, base(k) - E);
 }
+
 function renderFumo() {
   if (!S.fumo) return renderFumoSetup();
   if (view.fumoEdit) return renderFumoSetup(true);
