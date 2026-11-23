@@ -218,7 +218,6 @@ function fumoDiaryCard() {
         </div>
         <button class="btn ghost small-btn" data-act="fumo-registro-toggle">${T("Mostra", "Show")}</button>
       </div>
-      <div class="btns" style="justify-content:space-between;margin-top:10px"><button class="btn ghost small-btn" data-act="fumo-day-prev">${T("Giorno prima", "Previous day")}</button><button class="btn ghost small-btn" data-act="fumo-day-next" ${day >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button></div>
     </section>`;
   return `
     <section class="card">
@@ -782,7 +781,9 @@ function renderFumo() {
   const verdePct = sforo ? Math.round((tetto / smokedToday) * 100) : tettoPct;
   const barraHtml = `<div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden;display:flex" aria-label="Sigarette di oggi rispetto al tetto"><div style="width:${verdePct}%;height:100%;background:#2e7d32"></div>${sforo ? `<div style="width:${100 - verdePct}%;height:100%;background:#c0392b"></div>` : ""}</div>`;
   const bannerTetto = `<section class="card" style="text-align:center;padding:14px 10px"><div style="font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">${smokedToday}<span class="muted" style="font-size:1.4rem"> ${T("di", "of")} ${tetto}</span></div><div class="muted small">${T("sigarette oggi", "cigarettes today")}</div><p style="margin:8px 0 6px">${sforo ? `Hai sforato il tetto di ${smokedToday - tetto}.` : smokedToday === tetto ? T("Sei al tetto di oggi.", "You are at today's cap.") : `${T("Ne restano ", "Left: ")}${tetto - smokedToday}${T(".", ".")}`}</p>${barraHtml}${view.fumoDay && view.fumoDay !== todayKey() ? `<div style="margin-top:10px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap"><span class="small">${T("Correggi il numero di questo giorno:", "Correct this day's number:")}</span><input id="fumo-set-n" type="number" inputmode="numeric" min="0" value="${smokedToday}" style="width:4.5em"><button class="btn ghost small-btn" data-act="fumo-set-day">${T("Salva", "Save")}</button></div>` : ""}</section>`;
-  return `${bannerTetto}${fumoCigOggiHtml()}
+  const dataScelta = view.fumoDay || todayKey();
+  const navGiorno = `<section class="card" style="padding:10px"><div class="btns" style="justify-content:space-between;align-items:center"><button class="btn ghost small-btn" data-act="fumo-day-prev">${T("Giorno prima", "Previous day")}</button><div style="font-weight:700;text-align:center">${dataScelta === todayKey() ? T("Oggi", "Today") : esc(fmtDate(dataScelta, { weekday: "long", day: "numeric", month: "long" }))}</div><button class="btn ghost small-btn" data-act="fumo-day-next" ${dataScelta >= todayKey() ? "disabled" : ""}>${T("Giorno dopo", "Next day")}</button></div></section>`;
+  return `${navGiorno}${bannerTetto}${fumoCigOggiHtml()}
     <section class="card" style="text-align:center;padding:14px 10px">
 
       <div class="muted small">${T("sigarette oggi", "cigarettes today")}</div>
