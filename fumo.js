@@ -750,6 +750,17 @@ function fumoCigOggiHtml() {
   if (!righe.length) return `<section class="card"><p class="muted small">${T("Nessuna sigaretta registrata oggi.", "No cigarettes logged today.")}</p></section>`;
   return `<section class="card"><h3>Sigarette di oggi</h3>${righe.map(({ e, i }) => `<div class="row"><div>Sigaretta alle ${esc(new Date(e.at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }))}</div><button class="link small-link" data-act="fumo-del-cig" data-i="${i}" aria-label="Togli">×</button></div>`).join("")}</section>`;
 }
+// sigarette permesse in un giorno: il tetto meno lo sforo accumulato nei giorni registrati precedenti (minimo 1)
+function fumoPermesse(k, tettoBase) {
+  const perDay = (S.fumo && S.fumo.smokedDays) || {};
+  let B = 0;
+  for (let i = 21; i >= 1; i--) {
+    const j = addDays(k, -i);
+    if (perDay[j] === undefined) continue; // giorni senza registrazione non contano
+    B = Math.max(0, B + (perDay[j] - tettoBase));
+  }
+  return Math.max(1, Math.round(tettoBase - B));
+}
 function renderFumo() {
   if (!S.fumo) return renderFumoSetup();
   if (view.fumoEdit) return renderFumoSetup(true);
@@ -775,7 +786,8 @@ function renderFumo() {
       : sigOggi === tettoC
         ? { titolo: `Sei al tetto: ${tettoC} di ${tettoC}.`, testo: T("Sei al limite di oggi. Scegli una delle azioni sotto.", "You are at today's limit. Pick one of the actions below.") }
         : { titolo: T(`Hai sforato il tetto di ${sigOggi - tettoC}.`, `You went over the cap by ${sigOggi - tettoC}.`), testo: T(`Oltre ${tettoC} sigarette al giorno fa male. Riparti dalla prossima voglia: scegli una delle azioni sotto.`, `More than ${tettoC} cigarettes a day is harmful. Restart at the next craving: pick an action below.`) };
-  const tetto = f.tettoGiorno || 4;
+  // il tetto del giorno scende di quanto hai sforato nei giorni precedenti, e risale man mano che recuperi (minimo 1)
+  const tetto = fumoPermesse(giornoScelto, f.tettoGiorno || 4);
   const tettoPct = Math.min(100, Math.round((smokedToday / tetto) * 100));
   const sforo = smokedToday > tetto;
   const verdePct = sforo ? Math.round((tetto / smokedToday) * 100) : tettoPct;
