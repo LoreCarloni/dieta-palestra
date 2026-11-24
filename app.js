@@ -95,7 +95,16 @@ function tieniUnPreferito(righe) {
   const chiaveRiga = (l) => norm(l.split(" con ")[0].replace(/,?\s*bloccat[ao]\b/ig, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/ig, "").replace(/,\s*[\d.,]+\s*g.*$/i, "")).trim();
   const migliori = new Map();
   righe.forEach((l) => { if (!rigaPreferita(l)) return; const k = chiaveRiga(l); const prev = migliori.get(k); if (!prev || (/bloccat/i.test(l) && !/bloccat/i.test(prev))) migliori.set(k, l); });
-  return righe.filter((l) => !rigaPreferita(l) || migliori.get(chiaveRiga(l)) === l);
+  // ogni cibo compare una volta sola nella previsione, anche se non e un preferito (per esempio le nocciole ripetute)
+  const viste = new Set();
+  return righe.filter((l) => {
+    if (rigaPreferita(l)) return migliori.get(chiaveRiga(l)) === l;
+    const k = chiaveRiga(l);
+    if (!k || /bicchiere/i.test(l)) return true;
+    if (viste.has(k)) return false;
+    viste.add(k);
+    return true;
+  });
 }
 function save() {
   // copia di sicurezza dentro l'app: aggiornata al massimo ogni due ore, se il browser la permette
