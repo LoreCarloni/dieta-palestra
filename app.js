@@ -397,6 +397,7 @@ function proteinFiller(k, righe) {
     ["Fesa di tacchino (cruda)", 107, 24, 100, 300],
     ["Tonno al naturale", 103, 25.1, 80, 240],
     ["Merluzzo o nasello", 71, 17, 100, 300],
+    ["Uova di gallina, intero, cotto, alla coque o sodo", 128, 12.4, 100, 200],
   ];
   const scelto = candidati.find(([nome]) => !ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) && !escluso(nome, k));
   // una sola proteina magra per sera: se ce n'e gia una nella previsione (anche preferita), non ne aggiungo un'altra
