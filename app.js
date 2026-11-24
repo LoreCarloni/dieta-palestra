@@ -2799,7 +2799,8 @@ function act(a, el) {
       const senza = voci.filter((v) => !v.g);
       if (gCasella > 0 && senza.length) senza[senza.length - 1].g = String(gCasella);
       const trovati = voci.map((v) => ({ ...v, hit: favHitCached(v.nome) }));
-      if (!trovati.length || trovati.some((x) => !x.hit)) return toast("Scegli un cibo dall'elenco");
+      // solo cibi del database, con i valori: il nome deve coincidere, altrimenti si sceglie dall'elenco
+      if (!trovati.length || trovati.some((x) => !x.hit || !(x.hit.kcal > 0) || norm(x.hit.name) !== norm(x.nome))) return toast("Scegli un cibo dall'elenco di ricerca, senza scrivere il nome a mano");
       const righe = trovati.map((x) => {
         const g = x.g ? Number(String(x.g).replace(",", ".")) : (/whey|polvere/i.test(x.nome) ? 15 : /olio/i.test(x.nome) ? 10 : (x.hit.portion > 0 ? Math.min(200, x.hit.portion) : 100));
         return `${x.hit.name}, ${g} g`;
