@@ -1461,16 +1461,19 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // lo yogurt di default solo se non e gia nei preferiti abbinati (niente due yogurt)
   // gusti personali: yogurt, albume e cotoletta di default, solo sul dispositivo dell'autore
   if (S.gustiPersonali) { // con una lista di preferiti, la previsione usa solo quelli
-  if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
-  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(270, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
-  const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
-  if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
-  }
   // grassi: le nocciole (30 g, circa 19 g di grassi) fino a due porzioni, se mancano ancora grassi e restano calorie
   {
     const fGia = parseDiary(out.join("\n")).reduce((x, y) => x + (y.f || 0), 0);
     const needF = tg.fat - t.f - ff - fGia;
-    if (needF > 5 && needK > 201 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19), Math.floor(needK / 201)); if (n >= 1) add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); }
+    // le nocciole non prendono piu di circa un terzo delle calorie rimaste, cosi restano spazio alle proteine
+    // se le proteine sono gia coperte le calorie vanno ai grassi; altrimenti restano anche alle proteine
+    const kNoci = needP > 5 ? needK * 0.35 : needK;
+    if (needF > 5 && needK > 150 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19), Math.floor(kNoci / 201)); if (n >= 1) add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); else if (kNoci >= 100) add("Nocciole", 15, [671, 13.8, 6.1, 64.1]); }
+  }
+  if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
+  if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(270, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
+  const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
+  if (needP > 5 && momCut && momCut.p > 0 && !/cotoletta/i.test(planText)) { const kg = Math.floor(Math.max(0, needK) / (momCut.kcal / 100) / 10) * 10; const g = Math.min(60, kg, Math.round(needP / (momCut.p / 100) / 10) * 10); if (g >= 50) add(momCut.name, g, [momCut.kcal, momCut.p, momCut.c, momCut.f]); }
   }
   // proteine magre senza carboidrati per tutti: fesa di tacchino cruda, se mancano ancora proteine e restano calorie
   if (needP > 5 && needK > 120 && !gia("Fesa")) { const fg = Math.min(300, Math.max(100, Math.ceil(needP / 0.24 / 10) * 10), Math.floor(needK / 1.07 / 10) * 10); if (fg >= 100) add("Fesa di tacchino (cruda)", fg, [107, 24, 0, 1.2]); }
