@@ -1220,7 +1220,7 @@ function renderProfile(first) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
-  <p class="muted small" style="text-align:center">${T("Versione dell'app: v324", "App version: v324")}</p>
+  <p class="muted small" style="text-align:center">${T("Versione dell'app: v337", "App version: v337")}</p>
   <section class="card"><h2>${T("Gusti abituali", "Usual tastes")}</h2><p class="muted small">${S.gustiPersonali ? T("Attivi: la previsione puo proporre i cibi abituali dell'autore (yogurt, albume, cotoletta, nocciole).", "On: the forecast may suggest the author's usual foods.") : T("Disattivi: la previsione usa solo i tuoi preferiti e i cibi generici.", "Off: the forecast uses only your favorites and generic foods.")}</p><button class="btn ghost wide" data-act="toggle-gusti">${S.gustiPersonali ? T("Disattiva", "Turn off") : T("Attiva", "Turn on")}</button></section>
   ${avvisoBackup()}
   ${copiaSicurezzaHtml()}
