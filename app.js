@@ -3232,7 +3232,8 @@ function act(a, el) {
       const target = visti[+el.dataset.i];
       if (!target) break;
       S.escluseGiorno = S.escluseGiorno || {};
-      S.escluseGiorno[view.date] = [...(S.escluseGiorno[view.date] || []), foodGroup(foodKey(target))];
+      // il cibo da escludere e quello prima della virgola (per esempio Albume, bicchiere 1 diventa Albume)
+      S.escluseGiorno[view.date] = [...(S.escluseGiorno[view.date] || []), foodGroup(target.split(/,|\s+con\s+/i)[0].trim())];
       unblock([target]);
       const righe = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
       const j = righe.findIndex((l) => l === target || foodGroup(foodKey(l)) === foodGroup(foodKey(target)));
