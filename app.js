@@ -387,11 +387,12 @@ function proteinFiller(k, righe) {
   let kLeft = tg.kcal - t.kcal - pd.reduce((a, x) => a + x.kcal, 0);
   const out = [];
   const ha = (re) => righe.some((l) => re.test(l));
-  if (needP > 5 && kLeft > 60 && !ha(/^albume/i)) {
+  // un cibo tolto oggi con la X non torna: controllo l'esclusione del giorno
+  if (needP > 5 && kLeft > 60 && !ha(/^albume/i) && !escluso("Albume", k)) {
     const g = Math.min(270, Math.round(needP / 0.107 / 10) * 10, Math.floor(kLeft / 0.45 / 10) * 10);
     if (g >= 100) { out.push(`Albume, ${g} g`); needP -= g * 0.107; kLeft -= g * 0.45; }
   }
-  if (needP > 5 && kLeft > 120 && !ha(/^fesa/i)) {
+  if (needP > 5 && kLeft > 120 && !ha(/^fesa/i) && !escluso("Fesa di tacchino (cruda)", k)) {
     const g = Math.min(300, Math.round(needP / 0.24 / 10) * 10, Math.floor(kLeft / 1.07 / 10) * 10);
     if (g >= 100) out.push(`Fesa di tacchino (cruda), ${g} g`);
   }
