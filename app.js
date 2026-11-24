@@ -392,8 +392,8 @@ function proteinFiller(k, righe) {
   const ha = (re) => righe.some((l) => re.test(l));
   // una sola proteina magra per volta, la prima che non e gia nella giornata e che non hai tolto oggi con la X
   const candidati = [
-    ["Albume", 43, 10.7, 100, 270],
     ["Petto di pollo (crudo)", 100, 23.3, 100, 250],
+    ["Albume", 43, 10.7, 100, 270],
     ["Fesa di tacchino (cruda)", 107, 24, 100, 300],
     ["Tonno al naturale", 103, 25.1, 80, 240],
     ["Merluzzo o nasello", 71, 17, 100, 300],
