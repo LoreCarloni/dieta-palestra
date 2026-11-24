@@ -3226,19 +3226,19 @@ function act(a, el) {
       break;
     }
     case "plan-del-one": {
-      const lines = sortPlanLines(S.plannedDinner);
-      const target = lines[+el.dataset.i];
-      if (target) {
-        // tolgo la riga e le sue copie (stesso cibo, anche con grammi o nome scritti in modo diverso)
-        // solo questa riga (e il suo stesso nome): le altre righe della previsione restano
-        // tolgo esattamente la riga toccata (anche se ce ne sono altre uguali)
-        const idx = +el.dataset.i;
-        unblock([target]);
-        S.plannedDinner = lines.filter((_, k) => k !== idx).join("\n");
-        S.planManual = true;
-
-        if (S.autoLines) { const j = S.autoLines.indexOf(target); if (j >= 0) S.autoLines.splice(j, 1); }
-      } else S.plannedDinner = lines.join("\n");
+      // la X toglie la riga che vedi (stessa lista della previsione) e non la ripropone per questa giornata
+      const visti = vistaPrevisione().split("\n").filter((x) => x.trim());
+      const target = visti[+el.dataset.i];
+      if (!target) break;
+      S.escluseGiorno = S.escluseGiorno || {};
+      S.escluseGiorno[view.date] = [...(S.escluseGiorno[view.date] || []), foodGroup(foodKey(target))];
+      unblock([target]);
+      const righe = (S.plannedDinner || "").split("\n").filter((x) => x.trim());
+      const j = righe.findIndex((l) => l === target || foodGroup(foodKey(l)) === foodGroup(foodKey(target)));
+      if (j >= 0) righe.splice(j, 1);
+      S.plannedDinner = righe.join("\n");
+      S.planManual = true;
+      if (S.autoLines) { const q = S.autoLines.indexOf(target); if (q >= 0) S.autoLines.splice(q, 1); }
       break;
     }
     case "plan-clear": {
