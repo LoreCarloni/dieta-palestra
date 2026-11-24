@@ -1212,6 +1212,7 @@ function renderProfile(first) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
+  <p class="muted small" style="text-align:center">${T("Versione dell'app: v324", "App version: v324")}</p>
   ${avvisoBackup()}
   ${copiaSicurezzaHtml()}
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
@@ -1261,7 +1262,6 @@ function renderProfile(first) {
   </section>
   <section class="card">
     <h2>${T("Dati e backup", "Data and backup")}</h2>
-    <p class="muted small">${T("Versione dell'app: v324", "App version: v324")}</p>
     <p class="muted small">Ricalcolo storico: confronta i pasti passati con i valori aggiornati e applica solo le voci che scegli.</p>
     <div class="btns"><button class="btn" data-act="hist-check">${T("Confronta giornate passate", "Compare past days")}</button></div>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
