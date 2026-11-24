@@ -399,7 +399,9 @@ function proteinFiller(k, righe) {
     ["Merluzzo o nasello", 71, 17, 100, 300],
   ];
   const scelto = candidati.find(([nome]) => !ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) && !escluso(nome, k));
-  if (scelto && needP > 5 && kLeft > 60) {
+  // una sola proteina magra per sera: se ce n'e gia una nella previsione (anche preferita), non ne aggiungo un'altra
+  const haCarne = righe.some((l) => /pollo|tacchino|cotolett|fesa|albume|tonno|merluzzo|petto|manzo|pesce/i.test(l));
+  if (scelto && needP > 5 && kLeft > 60 && !haCarne) {
     const [nome, kc, pp, minG, maxG] = scelto;
     const g = Math.min(maxG, Math.round(needP / (pp / 100) / 10) * 10, Math.floor(kLeft / (kc / 100) / 10) * 10);
     if (g >= minG) { out.push(`${nome}, ${g} g`); needP -= g * pp / 100; kLeft -= g * kc / 100; }
