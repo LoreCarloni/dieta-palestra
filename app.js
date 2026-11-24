@@ -1284,7 +1284,14 @@ const planRank = (x) => (x.name === "Target kcal (medico)" ? 99 : (PLAN_ORDER.fi
 const foodGroup = (name) => norm(name).split(/[^a-z0-9]+/).filter((w) => w.length > 2).slice(0, 2).join(" ");
 // riga gia nella previsione che corrisponde a un tuo preferito (anche con il nome del database)
 function rigaPreferita(l) {
-  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => { const h = favHitCached(pz); return [pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim())); }));
+  // la riga e preferita se il suo cibo e quello di una voce salvata: stesso nome, oppure stesso alimento nel database
+  const nomeRiga = String(l).replace(/:.*$/, "").split(/,|\s+con\s+/i)[0].trim();
+  const hRiga = nomeRiga ? favHitCached(nomeRiga) : null;
+  return (S.favFoods || []).some((r) => r.split(" + ").some((pz) => {
+    const h = favHitCached(pz);
+    if ([pz, h ? h.name : pz].some((x) => norm(x).trim().length > 2 && norm(l).includes(norm(x).trim()))) return true;
+    return !!h && !!hRiga && h.name === hRiga.name;
+  }));
 }
 function favoriteFoods(k) {
   const count = new Map();
