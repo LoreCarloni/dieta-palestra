@@ -1510,6 +1510,18 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { addSum("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
   }
+  // carboidrati: se il totale supera il limite, riduco la pasta o il pane (grammi non fissi) a passi di 5 g
+  {
+    const cOf = (l) => parseDiary(l).reduce((x, y) => x + (y.c || 0), 0);
+    const tc = () => out.reduce((x, l) => x + cOf(l), 0);
+    for (let i = 0; i < out.length && tc() > tg.carbs + 1; i++) {
+      const m = out[i].match(/^((?:Pasta integrale|Pane bianco)[^,]*), (\d+) g/);
+      if (!m || (S.favGrams || {})[m[1]]) continue;
+      let g = Number(m[2]);
+      while (g > 0 && tc() > tg.carbs + 1) { g -= 5; out[i] = g > 0 ? `${m[1]}, ${g} g` : ""; }
+    }
+    for (let i = out.length - 1; i >= 0; i--) if (!out[i]) out.splice(i, 1);
+  }
   // nessun superamento: se il totale va oltre le calorie rimaste, tolgo le righe aggiunte in automatico (non i preferiti) finche rientra
   {
     const kRim = tg.kcal - t.kcal;
