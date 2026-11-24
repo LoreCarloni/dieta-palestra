@@ -363,7 +363,8 @@ const sortPlanLines = (text) => {
 // le righe della previsione come le vedi a schermo (senza doppioni): i totali devono usare solo queste
 function vistaPrevisione() {
   // le righe non bloccate non vanno oltre le calorie e i carboidrati rimasti di oggi: quelle in piu non si vedono ne si contano
-  const righe = sortPlanLines(S.plannedDinner || "");
+  // una riga con 0 grammi non e un cibo da mangiare: non viene mostrata ne contata
+  const righe = sortPlanLines(S.plannedDinner || "").filter((l) => !/,\s*0(\.0*)?\s*g\b/i.test(l));
   const k = todayKey();
   const mangiati = day(k).meals || [];
   const tg = targets(k);
