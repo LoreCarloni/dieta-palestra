@@ -1809,6 +1809,7 @@ function editDialog(kind, id, k) {
     ${qty ? '<p class="muted small">Se cambi la quantità, calorie e macro si riscalano in proporzione; puoi poi correggerli a mano.</p>' : ""}
     <div class="field"><label for="ed-date">${T("Data", "Date")}</label><input id="ed-date" type="date" value="${k}" max="${todayKey()}"></div>
     <div class="btns"><button class="btn ghost" data-act="ed-date-set" data-d="${addDays(k, -1)}">Giorno prima</button><button class="btn ghost" data-act="ed-date-set" data-d="${todayKey()}">Oggi</button></div>
+    ${kind === "meal" ? '<button class="btn ghost wide" data-act="entry-fav">Aggiungi ai preferiti</button>' : ""}
     <button class="btn primary wide" data-act="save-entry">Salva modifiche</button>`);
   dlg().dataset.kind = kind; dlg().dataset.id = id; dlg().dataset.from = k;
   dlg().dataset.orig = JSON.stringify({ qty: qty || 0, kcal: it.kcal, p: it.p || 0, c: it.c || 0, f: it.f || 0 });
@@ -3362,6 +3363,16 @@ function act(a, el) {
     }
     case "edit-entry": return editDialog(el.dataset.kind, el.dataset.id, k);
     case "ed-date-set": $("#ed-date").value = el.dataset.d; return;
+    case "entry-fav": {
+      // aggiunge il cibo registrato alla lista dei preferiti, senza toccare la voce del diario
+      const from = dlg().dataset.from, kind = dlg().dataset.kind, id = dlg().dataset.id;
+      const it = entryList(from, kind).find((x) => x.id === id);
+      if (!it) break;
+      S.favFoods = S.favFoods || [];
+      if (S.favFoods.some((r) => norm(r).trim() === norm(it.name).trim())) { toast("Già nei preferiti"); break; }
+      S.favFoods.push(it.name); save(); toast("Aggiunto ai preferiti");
+      break;
+    }
     case "save-entry": {
       const from = dlg().dataset.from, kind = dlg().dataset.kind, id = dlg().dataset.id;
       const it = entryList(from, kind).find((x) => x.id === id);
