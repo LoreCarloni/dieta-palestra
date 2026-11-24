@@ -432,9 +432,8 @@ function refreshForecast() {
     // con righe bloccate la previsione si ricalcola come Rigenera: le bloccate e i preferiti restano, il resto si completa fino ai target
     const bloccate = righeAttuali.filter((l) => /bloccat/i.test(l));
     const base = righeAttuali.filter((l) => /bloccat/i.test(l) || rigaPreferita(l));
-    const nuova = bloccate.length
-      ? [...base, ...autoPlan(bloccate.join("\n"), base.join("\n"), k).split("\n").filter((l) => l.trim() && !base.includes(l))]
-      : autoPlan("", "", k).split("\n").filter((l) => l.trim());
+    // i preferiti (yogurt, JUST WHEY e simili) restano sempre: il resto si ricalcola
+    const nuova = [...base, ...autoPlan(bloccate.join("\n"), base.join("\n"), k).split("\n").filter((l) => l.trim() && !base.includes(l))];
     if (nuova.join("\n") !== righeAttuali.join("\n") && nuova.length) { S.plannedDinner = nuova.join("\n"); S.autoLines = nuova; S.autoAll = nuova; save(); }
   }
   // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
