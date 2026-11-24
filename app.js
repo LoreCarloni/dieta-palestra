@@ -1504,6 +1504,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { add("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
   }
+  // nessun superamento: se il totale va oltre le calorie rimaste, tolgo le righe aggiunte in automatico (non i preferiti) finche rientra
+  {
+    const kRim = tg.kcal - t.kcal;
+    const kRiga = (l) => parseDiary(l).reduce((x, y) => x + (y.kcal || 0), 0);
+    const isPref = (l) => (S.favFoods || []).some((r) => r.split(" + ").some((pz) => norm(pz).trim().length > 2 && norm(l).includes(norm(pz).trim())));
+    let tot = out.reduce((x, l) => x + kRiga(l), 0);
+    for (let i = out.length - 1; i >= 0 && tot > kRim; i--) { if (isPref(out[i])) continue; tot -= kRiga(out[i]); out.splice(i, 1); }
+  }
   return out.join("\n");
 }
 // Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
