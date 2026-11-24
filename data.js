@@ -119,6 +119,16 @@ const FOODS = [
   ["Fiocchi d'avena", 367, 8.0, 66.8, 7.5, 40, "Cereali", "CREA 2019: Fiocchi d'avena"],
   ["Minestrone, cotto", 45, 2.0, 7.8, 0.4, 250, "Verdure", "CREA 2019: Minestrone, cotto"],
   ["Pomodori, maturi", 23, 1.0, 3.5, 0.2, 150, "Verdure", "CREA 2019: Pomodori, maturi, freschi"],
+  ["Pasta Rummo integrale (cruda)",330,13.3,64.8,2.2,78,"Cereali","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Olio extravergine d'oliva (olio evo)",900,0,0,100,10,"Grassi","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Fetta di pane",268,8.1,59.5,0.5,25,"Cereali","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Pesce impanato",250,14,20,13,100,"Proteine","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Fettina (generica)",107,24,0,1.2,100,"Proteine","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Sottiletta",250,17,4,18,20,"Latticini","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Steak di manzo",180,21,0,10,150,"Proteine","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Senape",66,4,6,4,10,"Condimenti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Salsa barbecue",170,1,38,0.5,30,"Condimenti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Uva passa",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
@@ -143,6 +153,7 @@ const DRINKS = [
   ["Spritz", 80, 8, 200, false, true],
   ["Cocktail (gin tonic e simili)", 90, 7, 200, false, true],
   ["Superalcolico", 230, 0, 40, false, true],
+  ["Baileys",325,11,40,false,true],
 ].map(([name, kcal, c, portion, hydr, alc]) => ({ name, kcal, c, portion, hydr, alc }));
 
 // Attività: MET (equivalente metabolico). kcal = MET x peso kg x ore.
