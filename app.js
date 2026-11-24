@@ -54,7 +54,7 @@ S.planMin = S.planMin || {};
 // Quantità fisse della giornata, modificabili dalla scheda Oggi.
 // I valori di partenza valgono solo per chi ha gia un profilo: un nuovo utente parte da una lista vuota.
 // i gusti di partenza personali restano sul dispositivo che li ha gia (dell'autore); chi inizia da zero parte vuoto
-if (S.gustiPersonali === undefined) S.gustiPersonali = !!S.profile;
+if (S.gustiPersonali === undefined) S.gustiPersonali = false; // i gusti dell'autore restano solo sul suo dispositivo: per gli altri nessun default personale
 const GUSTI_PERSONALI = {
   myPlan: [
     { name: "Yogurt greco", qty: "2 vasetti da 150 g" },
