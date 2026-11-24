@@ -1498,12 +1498,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   // verdura: riempie senza calorie, solo quando le proteine sono coperte e restano calorie; altrimenti ci pensa la carne
   if (needP <= 5 && needK > 30) out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
   // completamento verso i target: grassi con le nocciole, carboidrati con il pane entro il limite, proteine con la fesa; si ripete finche le calorie o i target non sono raggiunti
-  for (let giro = 0; giro < 4; giro++) {
+  // ogni giro somma la quantita nell'alimento gia presente (addSum), cosi il ciclo non resta bloccato su una riga gia messa
+  for (let giro = 0; giro < 12; giro++) {
     let fatto = false;
-    if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { add("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
-    else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { add("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
+    if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { addSum("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
+    else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { addSum("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
     else if (needF() > 5 && needK > 90 && !gia("Olio")) { const cucchiai = Math.min(3, Math.ceil(needF() / 9), Math.floor(needK / 90)); if (cucchiai >= 1) { add("Olio extravergine d'oliva", 10 * cucchiai, [900, 0, 0, 100]); fatto = true; } }
-    else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { add("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
+    else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { addSum("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
   }
   // nessun superamento: se il totale va oltre le calorie rimaste, tolgo le righe aggiunte in automatico (non i preferiti) finche rientra
