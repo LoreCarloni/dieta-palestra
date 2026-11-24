@@ -129,6 +129,10 @@ const FOODS = [
   ["Senape",66,4,6,4,10,"Condimenti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Salsa barbecue",170,1,38,0.5,30,"Condimenti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Uva passa",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["JUST WHEY (integratore proteico)",370,80,5,3,30,"Proteine","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Formaggio da panino",300,18,3,25,20,"Latticini","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Kinder Bueno White",538,7,55,33,39,"Dolci","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Gyros (pita con carne)",250,15,20,12,250,"Piatti pronti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
@@ -154,6 +158,7 @@ const DRINKS = [
   ["Cocktail (gin tonic e simili)", 90, 7, 200, false, true],
   ["Superalcolico", 230, 0, 40, false, true],
   ["Baileys",325,11,40,false,true],
+  ["Latte di soia (non zuccherato)",33,0.6,250,true,false],
 ].map(([name, kcal, c, portion, hydr, alc]) => ({ name, kcal, c, portion, hydr, alc }));
 
 // Attività: MET (equivalente metabolico). kcal = MET x peso kg x ore.
