@@ -133,6 +133,8 @@ const FOODS = [
   ["Formaggio da panino",300,18,3,25,20,"Latticini","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Kinder Bueno White",538,7,55,33,39,"Dolci","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Gyros (pita con carne)",250,15,20,12,250,"Piatti pronti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Uva sultanina",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Frutta secca mista",600,16,17,50,30,"Frutta secca","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
