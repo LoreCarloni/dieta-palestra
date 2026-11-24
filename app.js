@@ -1471,6 +1471,13 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (needF > 5 && needK > 150 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19), Math.floor(kNoci / 201)); if (n >= 1) add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); else if (kNoci >= 100) add("Nocciole", 15, [671, 13.8, 6.1, 64.1]); }
     // se le nocciole non entrano nelle calorie rimaste, l'olio extravergine (senza carboidrati) completa i grassi, a cucchiai da 10 g, fino a 30 g
   }
+  // grassi: se restano grassi da coprire dopo le nocciole, l'olio extravergine (senza carboidrati) entra prima dei carboidrati
+  {
+    const fGia = parseDiary(out.join("\n")).reduce((x, y) => x + (y.f || 0), 0);
+    const grassiMancanti = tg.fat - t.f - ff - fGia;
+    // l'olio copre solo i grassi che restano davvero, lasciando margine per i piccoli grassi degli altri alimenti
+    if (grassiMancanti > 15 && needK > 90 && !gia("Olio")) { const cucchiai = Math.min(3, Math.floor((grassiMancanti - 5) / 9), Math.floor(needK / 90)); if (cucchiai >= 1) add("Olio extravergine d'oliva", 10 * cucchiai, [900, 0, 0, 100]); }
+  }
   if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(270, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
   const momCut = allFoods().find((f) => /come la fa mamma/i.test(f.name));
