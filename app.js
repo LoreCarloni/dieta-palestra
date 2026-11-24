@@ -1261,7 +1261,7 @@ function renderProfile(first) {
   </section>
   <section class="card">
     <h2>${T("Dati e backup", "Data and backup")}</h2>
-    <p class="muted small">${T("Versione dell'app: v323", "App version: v323")}</p>
+    <p class="muted small">${T("Versione dell'app: v324", "App version: v324")}</p>
     <p class="muted small">Ricalcolo storico: confronta i pasti passati con i valori aggiornati e applica solo le voci che scegli.</p>
     <div class="btns"><button class="btn" data-act="hist-check">${T("Confronta giornate passate", "Compare past days")}</button></div>
     <p class="muted small">I dati sono salvati solo in questo browser. Fai un backup ogni tanto.</p>
