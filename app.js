@@ -54,7 +54,9 @@ S.planMin = S.planMin || {};
 // Quantità fisse della giornata, modificabili dalla scheda Oggi.
 // I valori di partenza valgono solo per chi ha gia un profilo: un nuovo utente parte da una lista vuota.
 // i gusti di partenza personali restano sul dispositivo che li ha gia (dell'autore); chi inizia da zero parte vuoto
-if (S.gustiPersonali === undefined) S.gustiPersonali = false; // i gusti dell'autore restano solo sul suo dispositivo: per gli altri nessun default personale
+// i gusti dell'autore valgono solo sul suo dispositivo, aperto una volta con ?autore=1: per gli altri sono sempre spenti
+if (new URLSearchParams(location.search).get("autore") === "1") S.autore = true;
+S.gustiPersonali = S.autore === true;
 const GUSTI_PERSONALI = {
   myPlan: [
     { name: "Yogurt greco", qty: "2 vasetti da 150 g" },
@@ -1221,7 +1223,6 @@ function renderProfile(first) {
   const tg = S.profile ? targets(todayKey()) : null;
   return `
   <p class="muted small" style="text-align:center">${T("Versione dell'app: v337", "App version: v337")}</p>
-  <section class="card"><h2>${T("Cibi abituali", "Usual foods")}</h2><button class="btn${S.gustiPersonali ? " primary" : " ghost"} wide" data-act="toggle-gusti">${S.gustiPersonali ? T("Sì", "Yes") : T("No", "No")}</button></section>
   ${avvisoBackup()}
   ${copiaSicurezzaHtml()}
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
@@ -3256,11 +3257,6 @@ function act(a, el) {
       S.plannedDinner = righe.join("\n");
       S.planManual = true;
       if (S.autoLines) { const q = S.autoLines.indexOf(target); if (q >= 0) S.autoLines.splice(q, 1); }
-      break;
-    }
-    case "toggle-gusti": {
-      S.gustiPersonali = !S.gustiPersonali; save();
-      toast(S.gustiPersonali ? "Cibi abituali: sì" : "Cibi abituali: no");
       break;
     }
     case "plan-clear": {
