@@ -426,6 +426,14 @@ function refreshForecast() {
     return;
   }
   const t = totals(k), tg = targets(k);
+  // la previsione di oggi si costruisce da sola all'apertura, senza premere Rigenera: solo se non l'hai modificata a mano e non ci sono righe bloccate
+  if (!future && k === todayKey() && !S.planManual) {
+    const righeAttuali = (S.plannedDinner || "").split("\n").filter((l) => l.trim());
+    if (!righeAttuali.some((l) => /bloccat/i.test(l))) {
+      const nuova = autoPlan("", "", k).split("\n").filter((l) => l.trim());
+      if (nuova.join("\n") !== righeAttuali.join("\n") && nuova.length) { S.plannedDinner = nuova.join("\n"); S.autoLines = nuova; S.autoAll = nuova; save(); }
+    }
+  }
   // gia oltre il target di oggi: la previsione non propone altro, tolgo le righe non bloccate (le bloccate restano)
   // la previsione non puo superare calorie e carboidrati rimasti: si tengono le righe che entrano (vistaPrevisione)
   // se mancano ancora proteine e restano calorie, si aggiunge albume o fesa di tacchino, senza carboidrati
