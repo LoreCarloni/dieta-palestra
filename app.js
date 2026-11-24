@@ -1221,7 +1221,7 @@ function renderProfile(first) {
   const tg = S.profile ? targets(todayKey()) : null;
   return `
   <p class="muted small" style="text-align:center">${T("Versione dell'app: v337", "App version: v337")}</p>
-  <section class="card"><h2>${T("Gusti abituali", "Usual tastes")}</h2><p class="muted small">${S.gustiPersonali ? T("Attivi: la previsione puo proporre i cibi abituali dell'autore (yogurt, albume, cotoletta, nocciole).", "On: the forecast may suggest the author's usual foods.") : T("Disattivi: la previsione usa solo i tuoi preferiti e i cibi generici.", "Off: the forecast uses only your favorites and generic foods.")}</p><button class="btn ghost wide" data-act="toggle-gusti">${S.gustiPersonali ? T("Disattiva", "Turn off") : T("Attiva", "Turn on")}</button></section>
+  <section class="card"><h2>${T("Cibi abituali", "Usual foods")}</h2><button class="btn${S.gustiPersonali ? " primary" : " ghost"} wide" data-act="toggle-gusti">${S.gustiPersonali ? T("Sì", "Yes") : T("No", "No")}</button></section>
   ${avvisoBackup()}
   ${copiaSicurezzaHtml()}
   <section class="card"><h2>${T("Lingua", "Language")}</h2><div class="btns"><button class="btn${S.lang === "it" ? " primary" : ""}" data-act="lang-it">Italiano</button><button class="btn${S.lang === "en" ? " primary" : ""}" data-act="lang-en">English</button></div></section>
@@ -3260,7 +3260,7 @@ function act(a, el) {
     }
     case "toggle-gusti": {
       S.gustiPersonali = !S.gustiPersonali; save();
-      toast(S.gustiPersonali ? "Gusti abituali attivi" : "Gusti abituali disattivati");
+      toast(S.gustiPersonali ? "Cibi abituali: sì" : "Cibi abituali: no");
       break;
     }
     case "plan-clear": {
