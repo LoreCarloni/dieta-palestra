@@ -1322,6 +1322,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   let needK = tg.kcal - t.kcal - fk, needP = tg.protein - t.p - fp, needC = tg.carbs - t.c - fc;
   const out = [];
   const gia = (n) => { const w = norm(n).split(" ")[0]; return out.some((l) => norm(l).includes(w)) || planText.split("\n").some((l) => l.trim() && norm(l).includes(w)); };
+  let nocciolePorzioni = 0;
+  const needF = () => { const fGia = parseDiary(out.join("\n")).reduce((x, y) => x + (y.f || 0), 0); return tg.fat - t.f - ff - fGia; };
   const add = (name, g, per) => { // per = [kcal, p, c, f] per 100 g
     if (escluso(name, k)) return; // scelto da te: oggi non lo riporto
     // stesso alimento gia proposto: non lo raddoppio
@@ -1474,6 +1476,14 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   }
   // verdura: riempie senza calorie, solo quando le proteine sono coperte e restano calorie; altrimenti ci pensa la carne
   if (needP <= 5 && needK > 30) out.push("Verdura cotta senza condimento, 150 g: circa 30 kcal, 2 g di proteine, 6 g di carboidrati, 0 g di grassi");
+  // completamento verso i target: grassi con le nocciole, carboidrati con il pane entro il limite, proteine con la fesa; si ripete finche le calorie o i target non sono raggiunti
+  for (let giro = 0; giro < 4; giro++) {
+    let fatto = false;
+    if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { add("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
+    else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { add("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
+    else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { add("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
+    if (!fatto) break;
+  }
   return out.join("\n");
 }
 // Ricerca nel database per la previsione: scegli un alimento e scrivi i grammi
