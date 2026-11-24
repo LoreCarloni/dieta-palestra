@@ -400,6 +400,8 @@ function proteinFiller(k, righe) {
     const [nome, kc, pp, minG, maxG] = scelto;
     const g = Math.min(maxG, Math.round(needP / (pp / 100) / 10) * 10, Math.floor(kLeft / (kc / 100) / 10) * 10);
     if (g >= minG) { out.push(`${nome}, ${g} g`); needP -= g * pp / 100; kLeft -= g * kc / 100; }
+    // accanto alla proteina, l'insalata: poche calorie, e riempie il piatto
+    if (!ha(/^insalata/i) && !escluso("Insalata", k) && kLeft >= 22) out.push("Insalata, 100 g");
   }
   return out;
 }
