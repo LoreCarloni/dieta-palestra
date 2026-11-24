@@ -1506,7 +1506,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     let fatto = false;
     if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { addSum("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
     else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { addSum("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
-    else if (needF() > 5 && needK > 90 && !gia("Olio")) { const cucchiai = Math.min(3, Math.ceil(needF() / 9), Math.floor(needK / 90)); if (cucchiai >= 1) { add("Olio extravergine d'oliva", 10 * cucchiai, [900, 0, 0, 100]); fatto = true; } }
+    else if (needF() > 5 && needK > 90) { const riga = out.find((l) => /^olio/i.test(l)); const nomeOlio = riga ? riga.split(",")[0] : "Olio extravergine d'oliva"; const cucchiai = Math.min(3, Math.ceil(needF() / 9), Math.floor(needK / 90)); if (cucchiai >= 1) { addSum(nomeOlio, 10 * cucchiai, [900, 0, 0, 100]); fatto = true; } }
     else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { addSum("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
   }
