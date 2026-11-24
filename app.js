@@ -1469,6 +1469,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // se le proteine sono gia coperte le calorie vanno ai grassi; altrimenti restano anche alle proteine
     const kNoci = needP > 5 ? needK * 0.35 : needK;
     if (needF > 5 && needK > 150 && !gia("Nocciole")) { const n = Math.min(2, Math.ceil(needF / 19), Math.floor(kNoci / 201)); if (n >= 1) add("Nocciole", 30 * n, [671, 13.8, 6.1, 64.1]); else if (kNoci >= 100) add("Nocciole", 15, [671, 13.8, 6.1, 64.1]); }
+    // se le nocciole non entrano nelle calorie rimaste, l'olio extravergine (senza carboidrati) completa i grassi, a cucchiai da 10 g, fino a 30 g
   }
   if (needP > 5 && !gia("Yogurt")) { add("Yogurt greco 0%", 150, yog && yog.p > 0 ? [yog.kcal, yog.p, yog.c, yog.f] : [51, 9, 4, 0]); }
   if (needP > 5) { const kmax = Math.floor(Math.max(0, needK) / 0.45 / 10) * 10; const ag = Math.min(270, kmax, Math.max(100, Math.ceil(needP / 0.107 / 10) * 10)); if (ag >= 100) add("Albume", ag, ALB); }
@@ -1492,6 +1493,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     let fatto = false;
     if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { add("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
     else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { add("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
+    else if (needF() > 5 && needK > 90 && !gia("Olio")) { const cucchiai = Math.min(3, Math.ceil(needF() / 9), Math.floor(needK / 90)); if (cucchiai >= 1) { add("Olio extravergine d'oliva", 10 * cucchiai, [900, 0, 0, 100]); fatto = true; } }
     else if (needP > 5 && needK > 120) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { add("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
   }
