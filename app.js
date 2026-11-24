@@ -1413,7 +1413,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
         const altri = trovati.filter((x) => x !== alb);
         for (let k = 1; k <= nBicchieri; k++) {
           const parti = [alb, ...altri].filter(Boolean).map((x, j) => {
-            const fis = (S.favGrams || {})[x.pz] || base0(x.pz);
+            const fis = base0(x.pz); // la quantita non e mai fissata dai preferiti
             const nome = j === 0 ? `${x.pz}, bicchiere ${k}` : x.pz;
             return { testo: `${nome}, ${fis} g`, x, fis };
           });
@@ -1431,7 +1431,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
       // un abbinamento e una sola riga: primo il cibo principale (non la polvere), poi "con" l'altro cibo, ciascuno con i suoi grammi
       const ordinati = [...combo].sort((a, b) => (/whey|polvere/i.test(a.pz) ? 1 : 0) - (/whey|polvere/i.test(b.pz) ? 1 : 0));
       const parti = ordinati.map((x) => {
-        const fis = (S.favGrams || {})[x.pz];
+        const fis = null; // la quantita non e mai fissata dai preferiti
         const g = Math.max(10, Math.round(x.g * fatt / 5) * 5);
         const gr = fis ? fis : (/whey|polvere/i.test(x.pz) ? Math.min(g, 15) : g);
         needK -= x.per[0] * gr / 100; needP -= x.per[1] * gr / 100; needC -= x.per[2] * gr / 100;
@@ -1447,7 +1447,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     if (!hit || out.some((l) => l.startsWith(hit.name + ",")) || planText.split("\n").some((l) => l.trim().toLowerCase().startsWith(hit.name.toLowerCase() + ",") || l.trim().toLowerCase().startsWith(nome.toLowerCase() + ","))) return;
     const per = [hit.kcal, hit.p, hit.c, hit.f];
     // quantita scelta da te per questo preferito: la uso cosi com'e
-    const fissi = (S.favGrams || {})[nome];
+    const fissi = null; // la quantita non e mai fissata dai preferiti
     const bicchieri = (S.favGlasses || {})[nome] || (/albume/i.test(hit.name) ? bicchieriSugg(hit) : 0);
     if ((fissi || /albume/i.test(hit.name)) && bicchieri) { for (let k = 1; k <= bicchieri; k++) add(`${nome}, bicchiere ${k}`, fissi || 135, per); picked++; return; }
     // se i carboidrati di oggi sono gia al limite, un preferito con carboidrati non viene riproposto (resta nella lista)
@@ -1523,7 +1523,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     const tc = () => out.reduce((x, l) => x + cOf(l), 0);
     for (let i = 0; i < out.length && tc() > tg.carbs + 1; i++) {
       const m = out[i].match(/^((?:Pasta integrale|Pane bianco)[^,]*), (\d+) g/);
-      if (!m || (S.favGrams || {})[m[1]]) continue;
+      if (!m) continue;
       let g = Number(m[2]);
       while (g > 0 && tc() > tg.carbs + 1) { g -= 5; out[i] = g > 0 ? `${m[1]}, ${g} g` : ""; }
     }
@@ -2051,7 +2051,7 @@ function dayComment(k) {
     if (pick) {
       const gap = Math.round(tg.protein - t.p - pl.p);
       // la porzione e quella che usi tu (es. 135 g di albume), altrimenti 100 g
-      const porzione = (S.favGrams || {})[pick.name] || 100;
+      const porzione = 100;
       const proteinePorzione = pick.p * porzione / 100;
       const n = Math.min(3, Math.ceil(gap / proteinePorzione));
       newFood = { name: pick.name, gap, n, porzione, covered: Math.round(n * proteinePorzione), rest: Math.max(0, gap - Math.round(n * proteinePorzione)) };
@@ -2826,7 +2826,7 @@ function act(a, el) {
       if (!trovati.length) return toast("Non trovo questo cibo nel database");
       const pasto = pastoDiPreferito(norm(pezzi[0]));
       const righe = trovati.map((x) => {
-        const g = (S.favGrams || {})[x.pz] || (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
+        const g = (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
         return `${x.hit.name}, ${g} g`;
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
