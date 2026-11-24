@@ -387,14 +387,19 @@ function proteinFiller(k, righe) {
   let kLeft = tg.kcal - t.kcal - pd.reduce((a, x) => a + x.kcal, 0);
   const out = [];
   const ha = (re) => righe.some((l) => re.test(l));
-  // un cibo tolto oggi con la X non torna: controllo l'esclusione del giorno
-  if (needP > 5 && kLeft > 60 && !ha(/^albume/i) && !escluso("Albume", k)) {
-    const g = Math.min(270, Math.round(needP / 0.107 / 10) * 10, Math.floor(kLeft / 0.45 / 10) * 10);
-    if (g >= 100) { out.push(`Albume, ${g} g`); needP -= g * 0.107; kLeft -= g * 0.45; }
-  }
-  if (needP > 5 && kLeft > 120 && !ha(/^fesa/i) && !escluso("Fesa di tacchino (cruda)", k)) {
-    const g = Math.min(300, Math.round(needP / 0.24 / 10) * 10, Math.floor(kLeft / 1.07 / 10) * 10);
-    if (g >= 100) out.push(`Fesa di tacchino (cruda), ${g} g`);
+  // una sola proteina magra per volta, la prima che non e gia nella giornata e che non hai tolto oggi con la X
+  const candidati = [
+    ["Albume", 43, 10.7, 100, 270],
+    ["Petto di pollo (crudo)", 100, 23.3, 100, 250],
+    ["Fesa di tacchino (cruda)", 107, 24, 100, 300],
+    ["Tonno al naturale", 103, 25.1, 80, 240],
+    ["Merluzzo o nasello", 71, 17, 100, 300],
+  ];
+  const scelto = candidati.find(([nome]) => !ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) && !escluso(nome, k));
+  if (scelto && needP > 5 && kLeft > 60) {
+    const [nome, kc, pp, minG, maxG] = scelto;
+    const g = Math.min(maxG, Math.round(needP / (pp / 100) / 10) * 10, Math.floor(kLeft / (kc / 100) / 10) * 10);
+    if (g >= minG) { out.push(`${nome}, ${g} g`); needP -= g * pp / 100; kLeft -= g * kc / 100; }
   }
   return out;
 }
