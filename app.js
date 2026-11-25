@@ -1622,8 +1622,7 @@ function openDialog(html) {
   if (!d.open) d.showModal();
   // con la finestra aperta la pagina dietro resta ferma
   document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden";
-  const f = d.querySelector("[autofocus]");
-  if (f) setTimeout(() => f.focus(), 50);
+  // nessun campo viene selezionato da solo: la tastiera compare solo quando tocchi la casella
 }
 // chiusura con scorrimento e dissolvenza, come un foglio di iPhone
 function closeDialogAnimata() {
@@ -1674,7 +1673,7 @@ function foodDialog() {
     <h3>Aggiungi alimento</h3>
     ${duplicatesBanner()}
     <input id="f-slot" type="hidden" value="giorno">
-    <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off" autofocus>
+    <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off">
     <div id="f-list" class="list"></div>
     <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><label class="btn label-file">Leggi etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
   renderFoodList("");
@@ -2194,7 +2193,7 @@ function planDayDialog(id, label) {
   openDialog(`
     <h3>Giorno ${esc(label)}: ${esc(p.name)}</h3>
     <ul class="plan-ex">${dd.exercises.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>
-    <div class="field"><label for="pd-min">Durata in minuti</label><input id="pd-min" type="number" inputmode="numeric" min="1" value="60" autofocus></div>
+    <div class="field"><label for="pd-min">Durata in minuti</label><input id="pd-min" type="number" inputmode="numeric" min="1" value="60"></div>
     <button class="btn primary wide" data-act="plan-log" data-id="${id}" data-label="${esc(label)}">Registra allenamento di oggi</button>`);
 }
 
@@ -2221,7 +2220,7 @@ function activityDialog() {
   openDialog(`
     <h3>Scrivi o incolla le attività</h3>
     <p class="muted small">Una riga per attività con i minuti, per esempio: Krav Maga, 75 minuti, corso serale. Le attività non in elenco usano una stima generica.</p>
-    <div class="field"><textarea id="act-text" rows="7" placeholder="Incolla qui" autofocus></textarea></div>
+    <div class="field"><textarea id="act-text" rows="7" placeholder="Incolla qui"></textarea></div>
     <button class="btn primary wide" data-act="activity-save">${T("Aggiungi", "Add")}</button>`);
 }
 
@@ -2326,7 +2325,7 @@ function diaryDialog(prefill = "") {
   openDialog(`
     <h3>Incolla un riepilogo dei pasti</h3>
     <p class="muted small">Una riga per alimento, con le calorie e, se vuoi, proteine, carboidrati e grassi, per esempio: Caffè con zucchero: circa 10 kcal, 2,5 g di carboidrati. Le righe di totale vengono ignorate.</p>
-    <div class="field"><textarea id="di-text" rows="9" placeholder="Incolla qui il riepilogo" autofocus></textarea></div>
+    <div class="field"><textarea id="di-text" rows="9" placeholder="Incolla qui il riepilogo"></textarea></div>
     <button class="btn primary wide" data-act="diary-parse">Analizza</button>`);
   if (prefill) $("#di-text").value = prefill;
 }
@@ -2361,7 +2360,7 @@ function importDialog() {
     <p class="muted small">Una riga per alimento, valori per 100 g, separati da punto e virgola: nome; kcal; proteine; carboidrati; grassi; porzione in grammi. Esempio:</p>
     <pre class="ex">Croissant al pistacchio bar; 413; 6,2; 45,3; 22,3; 80
 Mozzarella di bufala; 288; 16,7; 0,4; 24,4; 125</pre>
-    <div class="field"><textarea id="imp-text" rows="8" placeholder="Incolla qui la lista" autofocus></textarea></div>
+    <div class="field"><textarea id="imp-text" rows="8" placeholder="Incolla qui la lista"></textarea></div>
     <button class="btn primary wide" data-act="import-list">Aggiungi alla lista</button>`);
 }
 
@@ -2477,8 +2476,8 @@ function qtyDialog(f, slot) {
     <h3>${esc(f.name)}</h3>
     <p class="muted small">Per 100 g: ${r0(f.kcal)} kcal, proteine ${f.p} g, carboidrati ${f.c} g, grassi ${f.f} g</p>
     <p class="muted small">${isVerified(f) ? `Verificato. Fonte: ${esc(f.src)}.` : `Stima non verificata${f.src ? ` (${esc(f.src)})` : ""}. Se hai l'etichetta del prodotto, usala per correggere i valori.`}</p>
-    ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1" autofocus></div>` : ""}
-    <div class="field"><label>${f.parts ? "Quanto ne mangi adesso (grammi del piatto)" : "Quantità in grammi"}</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || (f.parts ? Math.round(f.parts.reduce((a, x) => a + (+x.g || 0), 0)) : 100) || 100}"${f.piece ? "" : " autofocus"}></div>
+    ${f.piece ? `<div class="field"><label for="q-n">Pezzi (da ${f.piece} g)</label><input id="q-n" type="text" inputmode="decimal" value="1"></div>` : ""}
+    <div class="field"><label>${f.parts ? "Quanto ne mangi adesso (grammi del piatto)" : "Quantità in grammi"}</label><input id="q-g" type="text" inputmode="decimal"value="${f.piece || f.portion || (f.parts ? Math.round(f.parts.reduce((a, x) => a + (+x.g || 0), 0)) : 100) || 100}"${f.piece ? "" : ""}></div>
     <div class="chips">${f.parts ? "" : [0.5, 1, 1.5, 2].map((x) => `<button class="chip" data-act="qty" data-g="${Math.round((f.portion || 100) * x)}">${Math.round((f.portion || 100) * x)} g</button>`).join("")}</div>
     <div class="field"><label for="q-pz">Quanti ne mangi uguali (es. 3 bicchieri)</label><input id="q-pz" type="text" inputmode="numeric" value="1"></div>
     <div id="q-prev" class="preview"></div>
@@ -2502,7 +2501,7 @@ function drinkQty(i) {
   const x = DRINKS[i];
   openDialog(`
     <h3>${esc(x.name)}</h3>
-    <div class="field"><label>Quantità in ml</label><input id="d-ml" type="number" inputmode="numeric" min="1" value="${x.portion}" autofocus></div>
+    <div class="field"><label>Quantità in ml</label><input id="d-ml" type="number" inputmode="numeric" min="1" value="${x.portion}"></div>
     <div class="chips">${[x.portion, x.portion * 2].map((m) => `<button class="chip" data-act="dqty" data-ml="${m}">${m} ml</button>`).join("")}</div>
     <button class="btn primary wide" data-act="save-drink" data-i="${i}">Aggiungi</button>`);
 }
@@ -2511,7 +2510,7 @@ function exerciseDialog(prefill = {}) {
   openDialog(`
     <h3>Aggiungi allenamento</h3>
     <div class="field"><label>Attività</label><select id="e-type">${EXERCISES.map((e, i) => `<option value="${i}" ${e.name === prefill.name ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select></div>
-    <div class="field"><label>Durata in minuti</label><input id="e-min" type="number" inputmode="numeric" min="1" value="${prefill.min || 45}" autofocus></div>
+    <div class="field"><label>Durata in minuti</label><input id="e-min" type="number" inputmode="numeric" min="1" value="${prefill.min || 45}"></div>
     <div class="field"><label>Note (esercizi, carichi, sensazioni)</label><input id="e-note" type="text" value="${esc(prefill.note || "")}"></div>
     <button class="btn primary wide" data-act="save-ex">Aggiungi</button>`);
 }
@@ -2535,7 +2534,7 @@ function customFoodDialog(prefill = "") {
       <label class="btn ghost wide label-file">Fotografa l'etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label>
     </div>
     <div class="field"><label>Preferito: lo propone sempre nella previsione</label><select id="c-fav"><option value="0">No</option><option value="1">Sì</option></select></div>
-    <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}" autofocus></div>
+    <div class="field"><label>Nome</label><input id="c-name" type="text" value="${esc(prefill)}"></div>
     <div class="grid2">
       <div class="field"><label>kcal per 100 g</label><input id="c-kcal" type="number" inputmode="decimal" min="0"></div>
       <div class="field"><label>Porzione tipica (g)</label><input id="c-portion" type="number" inputmode="decimal" min="1" value="100"></div>
@@ -2566,7 +2565,7 @@ function quickKcalDialog() {
   openDialog(`
     <h3>Inserimento rapido</h3>
     <p class="muted small">Usalo solo quando non puoi pesare, ad esempio al ristorante. Stima per eccesso.</p>
-    <div class="field"><label>Descrizione</label><input id="k-name" type="text" placeholder="Pranzo al ristorante" autofocus></div>
+    <div class="field"><label>Descrizione</label><input id="k-name" type="text" placeholder="Pranzo al ristorante"></div>
     <div class="grid2">
       <div class="field"><label>kcal totali</label><input id="k-kcal" type="number" inputmode="numeric" min="0"></div>
       <div class="field"><label>Proteine stimate (g)</label><input id="k-p" type="number" inputmode="numeric" min="0" value="0"></div>
@@ -2579,7 +2578,7 @@ function weightDialog() {
   openDialog(`
     <h3>Peso di oggi</h3>
     <p class="muted small">Al mattino, a digiuno, dopo il bagno.</p>
-    <div class="field"><label>Peso (kg)</label><input id="w-val" type="number" inputmode="decimal" step="0.1" value="${d.weight ?? r1(weightAt(view.date))}" autofocus></div>
+    <div class="field"><label>Peso (kg)</label><input id="w-val" type="number" inputmode="decimal" step="0.1" value="${d.weight ?? r1(weightAt(view.date))}"></div>
     <button class="btn primary wide" data-act="save-weight">Salva</button>`);
 }
 
@@ -2714,7 +2713,7 @@ function act(a, el) {
         openDialog(`
           <h3>${esc(f.name)}</h3>
           <p class="muted small">Per porzione: ${r0(f.kcal)} kcal, P ${r1(f.p)} C ${r1(f.c)} G ${r1(f.f)}</p>
-          <div class="field"><label for="ps-g">Quanti grammi ne mangi?</label><input id="ps-g" type="text" inputmode="decimal" placeholder="es. 50" autofocus></div>
+          <div class="field"><label for="ps-g">Quanti grammi ne mangi?</label><input id="ps-g" type="text" inputmode="decimal" placeholder="es. 50"></div>
           <p class="muted small">Oppure, se preferisci, quante porzioni da ${r0(f.portion || 100)} g:</p>
           <div class="field"><label for="ps-n">Quante porzioni?</label><input id="ps-n" type="text" inputmode="decimal" value="1"></div>
           <button class="btn primary wide" data-act="ps-add" data-food="${esc(JSON.stringify(f))}">Aggiungi</button>`);
@@ -2986,7 +2985,7 @@ function act(a, el) {
       return openDialog(`
         <h3>Aggiungi o correggi un alimento</h3>
         <p class="muted small">Cerca</p>
-        <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi" autofocus></div>
+        <div class="field"><input id="fv-q" type="text" placeholder="Es. fiocchi"></div>
         <button class="btn primary wide" data-act="fv-search">Cerca</button>
         <button class="btn ghost wide" data-act="fv-mine">I miei alimenti</button>
         <div id="fv-res"></div>
@@ -3099,7 +3098,7 @@ function act(a, el) {
       return openDialog(`
         <h3>Quantità</h3>
         <p class="muted small">${esc(line.replace(/,?\s*bloccato\b/ig, "").replace(/,\s*[\d.,]+\s*g\b.*$/i, ""))}</p>
-        <div class="field"><label for="pg-g">Grammi</label><input id="pg-g" type="text" inputmode="decimal" value="${esc(cur)}" autofocus></div>
+        <div class="field"><label for="pg-g">Grammi</label><input id="pg-g" type="text" inputmode="decimal" value="${esc(cur)}"></div>
         <p class="muted small">Per pesare solo il cibo: appoggia il piatto vuoto sulla bilancia, premi azzera (tara), poi metti il cibo sul piatto: il peso che legge è quello del cibo, senza piatto e posate. Senza bilancia, un cucchiaio da tavola di zucca cotta pesa circa 15 o 20 grammi. Al ristorante chiedi al cameriere quanti grammi è una porzione: spesso lo sanno o lo pesano.</p>
         <button class="btn primary wide" data-act="plan-grams-save" data-i="${el.dataset.i}">Salva</button>`);
     }
@@ -3792,7 +3791,7 @@ function dishDialog(name) {
   openDialog(`
     <h3>Piatto composto</h3>
     <p class="muted small">Puoi cambiare ogni ingrediente: grammi, cucchiai o peso del cucchiaio. Se non sai una quantità, lascia vuoto: resta una stima.</p>
-    <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" value="${esc(name)}" autofocus><div id="dish-sugg" class="chips"></div></div>
+    <div class="field"><label for="dish-name">Nome del piatto</label><input id="dish-name" type="text" placeholder="Pasta e zucca" value="${esc(name)}"><div id="dish-sugg" class="chips"></div></div>
     <div id="dish-rows"></div>
     <button class="btn ghost wide" data-act="dish-load">Carica il piatto salvato con questo nome</button>
     <button class="btn ghost wide" data-act="dish-add-row">Aggiungi ingrediente</button>
