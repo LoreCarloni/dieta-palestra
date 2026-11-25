@@ -1646,7 +1646,7 @@ function recentFoods() {
   Object.keys(S.days).sort().reverse().slice(0, 30).forEach((k) => S.days[k].meals.forEach((m) => { if (m.ref && !seen.has(m.name)) seen.set(m.name, m.ref); }));
   return [...seen.values()].slice(0, 12);
 }
-function allFoods() { return [...S.customFoods.map((f) => ({ ...f, cat: "I miei alimenti" })), ...FOODS]; }
+function allFoods() { return [...S.customFoods.map((f) => ({ ...f, cat: "I miei alimenti" })), ...(window.SHARED_FOODS || []), ...FOODS]; }
 
 // Doppioni tra i propri alimenti: stessi valori, nomi diversi (o uguali con spazi diversi).
 function duplicateGroups() {
@@ -2693,6 +2693,7 @@ function act(a, el) {
       // il prodotto va in archivio; non entra nel diario finche non lo cerchi e lo aggiungi
       S.customFoods = S.customFoods.filter((x) => x.barcode !== f.barcode).concat(f);
       save();
+      pubblicaAlimentoScansionato(f);
       closeDialog();
       return toast(`Salvato nell'archivio: ${f.name}. Per mangiarlo cercalo nella ricerca.`);
     }
@@ -3977,6 +3978,49 @@ ensureRagu();
   document.addEventListener("touchend", end, { passive: true });
   document.addEventListener("touchcancel", end, { passive: true });
 })();
+
+// ---------- Lista condivisa dei cibi scansionati (Firebase Firestore) ----------
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyARBfgYePWXwTNlZ0TFt_p4Ctw7h0tXroc",
+  authDomain: "app-dieta-74214.firebaseapp.com",
+  projectId: "app-dieta-74214",
+  storageBucket: "app-dieta-74214.firebasestorage.app",
+  messagingSenderId: "416261064610",
+  appId: "1:416261064610:web:da4815ae3f27e2529814fb"
+};
+let _fb = null;
+async function firebaseDb() {
+  if (_fb) return _fb;
+  try {
+    const appMod = await import("https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js");
+    const fsMod = await import("https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js");
+    _fb = { fs: fsMod, db: fsMod.getFirestore(appMod.initializeApp(FIREBASE_CONFIG)) };
+    return _fb;
+  } catch (e) { return null; }
+}
+// all'avvio scarica i cibi scansionati da tutti gli utenti
+async function caricaAlimentiScansionati() {
+  const x = await firebaseDb();
+  if (!x) return;
+  try {
+    const snap = await x.fs.getDocs(x.fs.collection(x.db, "alimenti_scansionati"));
+    const lista = [];
+    snap.forEach((d) => lista.push(d.data()));
+    window.SHARED_FOODS = lista;
+    if (typeof render === "function") render();
+  } catch (e) {}
+}
+// un prodotto scansionato da un utente va nella lista di tutti (chiave: codice a barre)
+async function pubblicaAlimentoScansionato(f) {
+  if (!f || !f.barcode) return;
+  const x = await firebaseDb();
+  if (!x) return;
+  try {
+    const voce = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, portion: f.portion || 100, barcode: String(f.barcode), src: f.src || "Etichetta: codice a barre", cat: "Scansionati" };
+    await x.fs.setDoc(x.fs.doc(x.db, "alimenti_scansionati", String(f.barcode)), voce);
+  } catch (e) {}
+}
+caricaAlimentiScansionati();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
