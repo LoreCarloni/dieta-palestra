@@ -3350,7 +3350,7 @@ function act(a, el) {
           <h3>Ottimo, la vita bassa è scesa di ${fmtN(drop)} cm!</h3>
           <p>Rispetto alla misura precedente la pancia sta cedendo: è il segnale che la dieta sta funzionando.</p>
           <p class="small">Negli ultimi 7 giorni hai mangiato in media ${r0(st.kcal)} kcal contro un obiettivo di ${r0(tgw.kcal)}, con ${r0(st.p)} g di proteine al giorno. Il deficit fa il lavoro, e le proteine proteggono il muscolo.</p>
-          <p class="small">Attenzione: un centimetro può dipendere anche dall'acqua e dal momento della misura. Mantieni la regolarità, e quando la settimana è in linea puoi tornare a un'alimentazione più normale, anche con la pasta a pranzo se la vuoi.</p>
+          <p class="small">Una differenza di un centimetro può dipendere dall'acqua e dall'ora della misura. Misura sempre nello stesso modo, e osserva la tendenza di più settimane.</p>
           <button class="btn primary wide" data-act="dlg-close">Continua così</button>`);
         break;
       }
