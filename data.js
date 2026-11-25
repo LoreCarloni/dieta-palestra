@@ -136,6 +136,14 @@ const FOODS = [
   ["Uva sultanina",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Frutta secca mista",600,16,17,50,30,"Frutta secca","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Uova sode",128,12.4,0,8.7,100,"Proteine","CREA 2019: Uova di gallina, intero, cotto, alla coque o sodo"],
+  ["American sandwich (Morato)",254,9.2,49,2.1,39,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Acty Flakes",391,10,73,5,30,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Pasta Rummo integrale",271,10,50,2,78,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Fiocchi d'avena integrali",367,8,66.8,7.5,10,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Petto di tacchino cotto",135,29,0,2,150,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Yogurt greco magro",60,10,3.3,0.3,150,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Patate al forno",90,2,18,0,150,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Frittata di uova",200,14,1,16,50,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
