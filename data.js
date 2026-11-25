@@ -135,6 +135,7 @@ const FOODS = [
   ["Gyros (pita con carne)",250,15,20,12,250,"Piatti pronti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Uva sultanina",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Frutta secca mista",600,16,17,50,30,"Frutta secca","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
+  ["Uova sode",128,12.4,0,8.7,100,"Proteine","CREA 2019: Uova di gallina, intero, cotto, alla coque o sodo"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
