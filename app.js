@@ -502,7 +502,7 @@ function avvisoBackup() {
   const ultimo = S.lastExport ? new Date(S.lastExport).getTime() : 0;
   if (Date.now() - ultimo < 24 * 3600 * 1000) return "";
   const quando = ultimo ? new Date(ultimo).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "mai";
-  return `<section class="card"><p><b>${T("Backup da fare", "Backup due")}</b>: ${T("ultimo file esportato", "last file exported")} ${quando}. ${T("Vai nel Profilo e tocca Esporta backup.", "Go to Profile and tap Export backup.")}</p></section>`;
+  return `<p class="muted small">${T("Backup da fare: ultimo file ", "Backup due: last file ")}${quando}. ${T("Profilo, Esporta backup.", "Profile, Export backup.")}</p>`;
 }
 // copia di sicurezza interna: si puo ripristinare se i dati di un giorno risultano mancanti
 function copiaSicurezzaHtml() {
