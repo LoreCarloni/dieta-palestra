@@ -2691,9 +2691,11 @@ function act(a, el) {
       delete f.missing;
       const twin = sameValuesFood(f);
       if (twin) { closeDialog(); return toast(`Ha gli stessi valori di "${twin.name}": non serve aggiungerlo, usa quello.`); }
+      // il prodotto va in archivio; non entra nel diario finche non lo cerchi e lo aggiungi
       S.customFoods = S.customFoods.filter((x) => x.barcode !== f.barcode).concat(f);
       save();
-      return qtyDialog(f, dlg().dataset.slot);
+      closeDialog();
+      return toast(`Salvato nell'archivio: ${f.name}. Per mangiarlo cercalo nella ricerca.`);
     }
     case "food-cat": return foodCat(el.dataset.c);
     case "ps-add": {
