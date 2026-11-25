@@ -3259,7 +3259,7 @@ function act(a, el) {
       const j = righe.findIndex((l) => l === target || foodGroup(foodKey(l)) === foodGroup(foodKey(target)));
       if (j >= 0) righe.splice(j, 1);
       S.plannedDinner = righe.join("\n");
-      S.planManual = true;
+      S.planManual = false; // dopo la X la previsione si completa da sola con gli altri cibi
       if (S.autoLines) { const q = S.autoLines.indexOf(target); if (q >= 0) S.autoLines.splice(q, 1); }
       break;
     }
