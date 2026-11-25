@@ -254,11 +254,8 @@ function targets(k) {
   const carbsBase = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   // minimo per il giorno dopo uno sgarro: 75 g, indicazione del medico riportata dal paziente, da confermare per iscritto
   const minimoCarb = Math.min(75, carbsBase);
-  let carbs = Math.max(minimoCarb, carbsBase - debito);
-  // dopo uno sgarro di ieri (piu di 75 g di carboidrati registrati) oggi il limite non supera 75 g
-  const ieri = day(addDays(k, -1));
-  const cIeri = [...(ieri.meals || []), ...(ieri.drinks || [])].reduce((a, x) => a + (x.c || 0), 0);
-  if (cIeri > 75) carbs = Math.min(carbs, 75);
+  // il recupero si distribuisce su 7 giorni: ogni giorno si toglie un settimo dell'eccesso accumulato
+  const carbs = Math.max(minimoCarb, carbsBase - Math.round(debito / 7));
   return { ...b, kcal, protein, fat, carbs, plan: planOut };
 }
 
