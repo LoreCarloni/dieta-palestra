@@ -1671,11 +1671,11 @@ function duplicatesBanner() {
 function foodDialog() {
   openDialog(`
     <h3>Aggiungi alimento</h3>
+    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><label class="btn label-file">Leggi etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>
     ${duplicatesBanner()}
     <input id="f-slot" type="hidden" value="giorno">
     <input id="f-search" type="search" placeholder="Cerca: pasta, pollo, mela" autocomplete="off">
-    <div id="f-list" class="list"></div>
-    <div class="btns"><button class="btn" data-act="scan-barcode">Scansiona codice a barre</button><label class="btn label-file">Leggi etichetta<input id="label-file" type="file" accept="image/*" class="visually-hidden"></label><button class="btn ghost" data-act="custom-food">Alimento non in lista</button><button class="btn ghost" data-act="import-dialog">Incolla una lista</button><button class="btn ghost" data-act="quick-kcal">Solo calorie</button></div>`);
+    <div id="f-list" class="list"></div>`);
   renderFoodList("");
 }
 const norm = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bcroissant\b/g, "cornetto").replace(/\bbrioche\b/g, "cornetto");
