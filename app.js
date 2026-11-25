@@ -2127,7 +2127,7 @@ function commentHtml(k) {
   const j = c.journey;
   const head = j && j.over ? `<p class="headline">Dall'inizio: ${j.over} giorni con sgarri su ${j.days} tracciati (${j.pct}%).</p>` : "";
   const fresh = c.newFood ? `<p class="action">${T(`Ti mancano ${c.newFood.gap} g di proteine. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "bicchieri" : "bicchiere"} da ${c.newFood.porzione} g, cioè ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `Il resto, circa ${c.newFood.rest} g, da carne o pesce.` : ""}`, `You are ${c.newFood.gap} g short of protein. ${esc(c.newFood.name)}: ${c.newFood.n} ${c.newFood.n > 1 ? "glasses" : "glass"} of ${c.newFood.porzione} g, that is ${c.newFood.covered} g. ${c.newFood.rest > 0 ? `The rest, about ${c.newFood.rest} g, from meat or fish.` : ""}`)}</p>` : "";
-  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span></h2>${causa.map(advice).join("")}${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}</section>`;
+  return `<section class="card plan-card"><h2>Adesso<span class="pill ${c.verdict.lvl === "good" ? "ok" : ""}">${esc(c.verdict.text)}</span><button class="btn ghost" data-act="adesso-compact">${view.adessoCompatta ? "Espandi" : "Compatta"}</button></h2>${view.adessoCompatta ? "" : `${causa.map(advice).join("")}${head}${c.lines.filter((l) => l.text.startsWith("Previsto")).map(advice).join("")}${fresh}${dinner.map(advice).join("")}${rest.length ? `<details class="more"><summary>Dettagli (${rest.length})</summary>${rest.map(advice).join("")}</details>` : ""}`}</section>`;
 }
 
 // ---------- Dettaglio di un nutriente: da dove arriva ----------
@@ -3267,6 +3267,7 @@ function act(a, el) {
       break;
     }
     case "fav-compact": view.favCompatta = !view.favCompatta; break;
+    case "adesso-compact": view.adessoCompatta = !view.adessoCompatta; break;
     case "plan-clear": {
       if (!confirm("Cancellare tutta la previsione di oggi?")) break;
       S.plannedDinner = "";
