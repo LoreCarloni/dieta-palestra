@@ -144,6 +144,7 @@ const FOODS = [
   ["Yogurt greco magro",60,10,3.3,0.3,150,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
   ["Patate al forno",90,2,18,0,150,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
   ["Frittata di uova",200,14,1,16,50,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
+  ["Tiramisù",260,5,25,15,110,"Dolci","Stima inserita dall'utente, per 100 g: da confermare"],
 ].map(([name, kcal, p, c, f, portion, cat, src, piece]) => ({ name, kcal, p, c, f, portion, cat, src, piece }));
 
 // Bevande: valori per 100 ml. hydr indica se conta per l'idratazione, alc se contiene alcol.
