@@ -717,8 +717,9 @@ function weekCard() {
   const cls = diffTot > 0.05 * sumT ? "bad" : "good";
   const word = diffDay > 0 ? "sopra" : "sotto";
   return `<section class="card week-card"><h2>${T("Questa settimana", "This week")}</h2>
-    <div class="muted small">${T(`nella settimana ${diffTot > 0 ? "sei sopra" : "sei sotto"} il target. In media, ${Math.abs(diffDay)} kcal al giorno ${word}.`, `this week you are ${diffTot > 0 ? "above" : "below"} the target. On average, ${Math.abs(diffDay)} kcal per day ${word}.`)}</div>
-    <div class="muted small">${T("Proteine", "Protein")}: ${r0(sumP)} ${T("di", "of")} ${r0(sumPT)} g ${T("in totale", "in total")}.</div>${prev !== null ? `<div class="prev-week">Settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)} kcal al giorno</div>` : ""}</section>`;
+    <div class="week-big ${cls}">${diffDay > 0 ? "+" : "-"}${Math.abs(diffDay)} kcal</div>
+    <div class="muted small">${T(`al giorno ${word} il target, in media questa settimana`, `per day ${word} the target, on average this week`)}</div>
+    <div class="week-prot"><div class="week-prot-bar"><span style="width:${Math.min(100, sumPT ? (sumP / sumPT) * 100 : 0).toFixed(0)}%"></span></div><div class="muted small">${T("Proteine", "Protein")}: ${r0(sumP)} ${T("di", "of")} ${r0(sumPT)} g</div></div>${prev !== null ? `<div class="prev-week">Settimana scorsa: ${prev > 0 ? "+" : ""}${r0(prev)} kcal al giorno</div>` : ""}</section>`;
 }
 
 function renderToday() {
