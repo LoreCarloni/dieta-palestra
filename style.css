@@ -422,3 +422,5 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 /* Preferiti: il menu del pasto e piccolo e non occupa la riga, il nome del cibo resta il titolo */
 .fav-section .fav-row select.fav-slot { width: auto; max-width: 9em; padding: 3px 8px; font-size: 0.8rem; border-radius: 8px; }
 .fav-section .fav-row .fav-food { font-size: 1rem; }
+/* Preferiti: i tasti tornano leggibili, il menu del pasto resta piccolo */
+.fav-section .fav-row .pa { font-size: 0.9rem; padding: 6px 12px; min-height: 36px; opacity: 1; border-radius: 10px; }
