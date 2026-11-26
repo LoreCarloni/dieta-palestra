@@ -367,7 +367,10 @@ const sortPlanLines = (text) => {
 function vistaPrevisione() {
   // le righe non bloccate non vanno oltre le calorie e i carboidrati rimasti di oggi: quelle in piu non si vedono ne si contano
   // una riga con 0 grammi non e un cibo da mangiare: non viene mostrata ne contata
-  const righe = sortPlanLines(S.plannedDinner || "").filter((l) => !/,\s*0(\.0*)?\s*g\b/i.test(l));
+  let righe = sortPlanLines(S.plannedDinner || "").filter((l) => !/,\s*0(\.0*)?\s*g\b/i.test(l));
+  // pollo e tacchino non nello stesso pasto: se c'e gia un pollame bloccato o preferito, tolgo quelli proposti in automatico
+  const isPollame = (l) => /pollo|tacchino|cotolett|fesa|petto/i.test(l);
+  if (righe.some((l) => isPollame(l) && (/bloccat/i.test(l) || rigaPreferita(l)))) righe = righe.filter((l) => !(isPollame(l) && !/bloccat/i.test(l) && !rigaPreferita(l)));
   const k = todayKey();
   const mangiati = day(k).meals || [];
   const tg = targets(k);
