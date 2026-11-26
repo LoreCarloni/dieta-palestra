@@ -2850,7 +2850,16 @@ function act(a, el) {
       if (!riga) break;
       const pezzi = riga.split("+").map((x) => x.trim()).filter(Boolean);
       const trovati = pezzi.map((pz) => ({ pz, hit: favHitCached(pz) })).filter((x) => x.hit);
-      if (!trovati.length) return toast("Non trovo questo cibo nel database");
+      if (!trovati.length) {
+        // il cibo non e nel database (per esempio una voce personale): blocco la riga gia presente nella previsione di oggi
+        const nomeBase = norm(pezzi[0]).split("(")[0].trim();
+        const righeOggi = (S.plannedDinner || "").split("\n");
+        const j = righeOggi.findIndex((l) => norm(l).includes(nomeBase) && !/bloccat/i.test(l));
+        if (j < 0) return toast("Questo cibo non e nella previsione di oggi");
+        righeOggi[j] = righeOggi[j].replace(/\s*$/, "") + ", bloccato";
+        S.plannedDinner = righeOggi.join("\n"); save(); render();
+        return toast("Bloccato per oggi");
+      }
       const pasto = pastoDiPreferito(norm(pezzi[0]));
       const righe = trovati.map((x) => {
         const g = (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
