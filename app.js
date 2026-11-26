@@ -371,6 +371,11 @@ function vistaPrevisione() {
   // pollo e tacchino non nello stesso pasto: se c'e gia un pollame bloccato o preferito, tolgo quelli proposti in automatico
   const isPollame = (l) => /pollo|tacchino|cotolett|fesa|petto/i.test(l);
   if (righe.some((l) => isPollame(l) && (/bloccat/i.test(l) || rigaPreferita(l)))) righe = righe.filter((l) => !(isPollame(l) && !/bloccat/i.test(l) && !rigaPreferita(l)));
+  // una sola verdura o insalata al giorno: se ce n'e gia una bloccata o preferita, tolgo le altre; altrimenti ne tengo una
+  const isVerdura = (l) => /verdura|insalata/i.test(l);
+  const tenuta = (l) => /bloccat/i.test(l) || rigaPreferita(l);
+  if (righe.some((l) => isVerdura(l) && tenuta(l))) righe = righe.filter((l) => !(isVerdura(l) && !tenuta(l)));
+  else { let visto = false; righe = righe.filter((l) => { if (!isVerdura(l) || tenuta(l)) return true; if (visto) return false; visto = true; return true; }); }
   const k = todayKey();
   const mangiati = day(k).meals || [];
   const tg = targets(k);
