@@ -1655,7 +1655,16 @@ function myPlanCard() {
   return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">${T("Previsione della giornata","Day forecast")} <span class="pill ok">${T("Modifica","Edit")}</span></h2>${warn}${optional}<button class="btn ghost wide" style="margin-bottom:14px" data-act="plan-toggle">${view.planOpen === false ? T("Apri la previsione", "Open the forecast") : T("Chiudi la previsione", "Close the forecast")}</button>${view.planOpen === false ? "" : `${left < 0 && k === todayKey() ? `<p class="muted small">${T("Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.","You have already reached today's target: the forecast suggests no more food. Your favorites stay in the list.")}</p>` : planItemsHtml(false)}`}<div class="field"><label class="muted small">${T("Aggiungi un cibo a un pasto","Add a food to a meal")}</label><div class="fav-add"><input id="pl-q" type="search" placeholder="${T("Scrivi un cibo","Type a food")}" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">${T("Aggiungi", "Add")}</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">${T("Rigenera","Regenerate")}</button><button class="btn danger" data-act="plan-clear">${T("Cancella","Clear")}</button>` : ""}</div></section>`;
 }
 // nelle finestre, toccare un pulsante non toglie il focus al campo: il primo tocco salva davvero, senza spostamenti
-document.addEventListener("pointerdown", (e) => { if (e.target.closest && e.target.closest("#dlg-body button")) e.preventDefault(); }, { passive: false });
+// Salva delle finestre: il salvataggio parte al primo tocco, e il clic che segue viene ignorato
+document.addEventListener("pointerdown", (e) => {
+  const b = e.target.closest && e.target.closest("#dlg-body [data-act=\"save-entry\"]");
+  if (!b) { if (e.target.closest && e.target.closest("#dlg-body button")) e.preventDefault(); return; }
+  e.preventDefault();
+  window._saltaClic = true;
+  setTimeout(() => { window._saltaClic = false; }, 600);
+  act("save-entry", b);
+}, { passive: false });
+document.addEventListener("click", (e) => { if (window._saltaClic) { window._saltaClic = false; e.stopPropagation(); e.preventDefault(); } }, true);
 // swipe in giu: chiude la finestra quando il contenuto e in cima (con il dito in qualsiasi punto della finestra)
 function attivaSwipeChiusura(d) {
   if (d._swipe) return;
