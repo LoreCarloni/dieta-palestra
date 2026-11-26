@@ -1483,6 +1483,8 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     // lo yogurt si propone a confezione intera (150 g)
     if (/yogurt/i.test(hit.name)) g = g >= 100 ? 150 : 0;
     if (pol) g = Math.min(g, 15);
+    // un preferito non occupa tutto il budget: la quantita resta entro una porzione tipica del cibo
+    if (hit.portion > 0 && !/bicchiere/i.test(nome)) g = Math.min(g, Math.max(hit.portion, 30));
     if (g < (/olio/i.test(hit.name) ? 10 : 30)) return;
     add(hit.name, g, per); picked++;
   });
