@@ -1479,13 +1479,15 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
     let g = Math.min(200, perG(0), perG(2), perG(3));
     // l'olio e un cucchiaio (10 g): non dipende dal budget dei grassi
     if (/olio/i.test(hit.name)) g = 10;
-    if (/cotoletta/i.test(hit.name)) g = Math.min(g, 60);
+    // carne e pesce: una porzione tra 100 e 150 g, mai meno (niente 30 g di pollo)
+    const carneG = /pollo|tacchino|cotolett|fesa|petto|pesce|tonno|merluzzo/i.test(hit.name);
+    if (carneG) g = Math.min(g, 150);
     // lo yogurt si propone a confezione intera (150 g)
     if (/yogurt/i.test(hit.name)) g = g >= 100 ? 150 : 0;
     if (pol) g = Math.min(g, 15);
     // un preferito non occupa tutto il budget: la quantita resta entro una porzione tipica del cibo
     if (hit.portion > 0 && !/bicchiere/i.test(nome)) g = Math.min(g, Math.max(hit.portion, 30));
-    if (g < (/olio/i.test(hit.name) ? 10 : 30)) return;
+    if (g < (/olio/i.test(hit.name) ? 10 : carneG ? 100 : 30)) return;
     add(hit.name, g, per); picked++;
   });
   // proteine in polvere: solo se hai un integratore verificato (etichetta o codice a barre), mai valori generici
