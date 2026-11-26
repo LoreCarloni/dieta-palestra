@@ -1654,19 +1654,22 @@ function myPlanCard() {
   const optional = false && left < 0 && planned === 0 && k === todayKey() ? `<p class="muted small">Sei ${r0(-left)} kcal sopra il target di oggi. Se stasera vuoi comunque mangiare qualcosa di magro, la scelta più leggera è albume: 200 g, circa 90 kcal e 21 g di proteine. È facoltativo, decidi tu.</p>` : "";
   return `<section class="card"><h2 class="plan-h2 plan-tap btn wide" data-act="myplan-edit">${T("Previsione della giornata","Day forecast")} <span class="pill ok">${T("Modifica","Edit")}</span></h2>${warn}${optional}<button class="btn ghost wide" data-act="plan-toggle">${view.planOpen === false ? T("Apri la previsione", "Open the forecast") : T("Chiudi la previsione", "Close the forecast")}</button>${view.planOpen === false ? "" : `${left < 0 && k === todayKey() ? `<p class="muted small">${T("Hai già raggiunto il target di oggi: la previsione non propone altro cibo. I tuoi preferiti restano nella lista.","You have already reached today's target: the forecast suggests no more food. Your favorites stay in the list.")}</p>` : planItemsHtml(false)}`}<div class="field"><label class="muted small">${T("Aggiungi un cibo a un pasto","Add a food to a meal")}</label><div class="fav-add"><input id="pl-q" type="search" placeholder="${T("Scrivi un cibo","Type a food")}" autocomplete="off"><input id="pl-g" type="number" inputmode="decimal" placeholder="grammi" style="width:6.5em"><label class="muted small" style="white-space:nowrap"><input id="pl-forza" type="checkbox"> ${T("per forza", "no matter what")}</label><select id="pl-pasto"><option value="">Scegli il pasto</option>${PASTI.map((p) => `<option value="${p}">${p[0].toUpperCase() + p.slice(1)}</option>`).join("")}</select><button class="btn primary" data-act="pl-add">${T("Aggiungi", "Add")}</button></div></div><div id="pl-list" class="list"></div><div class="btns">${S.plannedDinner ? `<button class="btn" data-act="plan-regen">${T("Rigenera","Regenerate")}</button><button class="btn danger" data-act="plan-clear">${T("Cancella","Clear")}</button>` : ""}</div></section>`;
 }
-// swipe in giu dall'alto della finestra: la chiude (come nelle app di sistema)
+// swipe in giu: chiude la finestra quando il contenuto e in cima (con il dito in qualsiasi punto della finestra)
 function attivaSwipeChiusura(d) {
   if (d._swipe) return;
   d._swipe = true;
-  let y0 = null;
-  d.addEventListener("touchstart", (e) => { y0 = e.touches[0].clientY; }, { passive: true });
-  d.addEventListener("touchend", (e) => {
+  let y0 = null, inCima = false;
+  const inCimaOra = () => d.scrollTop <= 0 && ((document.getElementById("dlg-body") || d).scrollTop <= 0);
+  d.addEventListener("pointerdown", (e) => { y0 = e.clientY; inCima = inCimaOra(); }, { passive: true });
+  const chiudi = (e) => {
     if (y0 === null) return;
-    const dy = e.changedTouches[0].clientY - y0;
+    const dy = e.clientY - y0;
+    const ok = inCima && dy > 80 && inCimaOra();
     y0 = null;
-    const inAlto = (d.scrollTop <= 0) && ((document.getElementById("dlg-body") || d).scrollTop <= 0);
-    if (dy > 90 && inAlto) closeDialog();
-  }, { passive: true });
+    if (ok) closeDialog();
+  };
+  d.addEventListener("pointerup", chiudi, { passive: true });
+  d.addEventListener("pointercancel", () => { y0 = null; }, { passive: true });
 }
 function openDialog(html) {
   const d = dlg();
