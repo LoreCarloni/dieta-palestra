@@ -3200,6 +3200,8 @@ function act(a, el) {
     case "plan-regen": {
       // dopo Rigenera la previsione si chiude: si riapre col pulsante, senza scorrere
       view.planOpen = false;
+      // dopo Rigenera la vista resta sul pulsante della previsione, senza saltare piu in basso
+      setTimeout(() => { const b = document.querySelector("[data-act=\"plan-toggle\"]"); if (b) b.scrollIntoView({ block: "start" }); }, 200);
       // le righe bloccate restano come le hai scritte (stessi grammi), anche dopo Rigenera
       const bloccatePrima = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && /bloccat/i.test(l));
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
