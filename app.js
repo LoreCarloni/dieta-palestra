@@ -398,10 +398,10 @@ function proteinFiller(k, righe) {
   const candidati = [
     ["Albume", 43, 10.7, 100, 270],
     ["Uova di gallina, intero, cotto, alla coque o sodo", 128, 12.4, 100, 200],
-    ["Petto di pollo (crudo)", 100, 23.3, 100, 250],
-    ["Fesa di tacchino (cruda)", 107, 24, 100, 300],
-    ["Tonno al naturale", 103, 25.1, 80, 240],
-    ["Merluzzo o nasello", 71, 17, 100, 300],
+    ["Petto di pollo (crudo)", 100, 23.3, 100, 150],
+    ["Fesa di tacchino (cruda)", 107, 24, 100, 150],
+    ["Tonno al naturale", 103, 25.1, 100, 150],
+    ["Merluzzo o nasello", 71, 17, 100, 150],
   ];
   const famiglia = (nome) => (/tonno|merluzzo/i.test(nome) ? "pesce" : /pollo|tacchino|fesa|petto/i.test(nome) ? "carne" : "altro");
   const pesceGia = righe.some((l) => /tonno|merluzzo|nasello|salmone|pesce/i.test(l));
@@ -2885,7 +2885,9 @@ function act(a, el) {
       }
       const pasto = pastoDiPreferito(norm(pezzi[0]));
       const righe = trovati.map((x) => {
-        const g = (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
+        let g = (/whey|polvere/i.test(x.pz) ? 15 : gramiAutomatici(x.hit));
+        // carne e pesce: da 100 a 150 g
+        if (/pollo|tacchino|cotolett|fesa|petto|manzo|tonno|merluzzo|nasello|pesce/i.test(x.pz)) g = Math.min(150, Math.max(100, g));
         return `${x.hit.name}, ${g} g`;
       });
       const primo = righe[0].replace(/^(.+?), (\d+ g)$/, `$1 (${pasto}), $2`);
