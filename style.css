@@ -419,3 +419,6 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 .fav-section .fav-tools { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: 2px; }
 .fav-section .fav-slot { font-size: 0.75rem; padding: 2px 6px; border-radius: 8px; }
 .fav-section .fav-pair, .fav-section #fav-new { font-size: 0.9rem; }
+/* Preferiti: il menu del pasto e piccolo e non occupa la riga, il nome del cibo resta il titolo */
+.fav-section .fav-row select.fav-slot { width: auto; max-width: 9em; padding: 3px 8px; font-size: 0.8rem; border-radius: 8px; }
+.fav-section .fav-row .fav-food { font-size: 1rem; }
