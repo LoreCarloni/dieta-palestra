@@ -3160,8 +3160,8 @@ function act(a, el) {
       closeDialog(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
     }
     case "plan-grams": {
-      // cambia i grammi di questa riga della previsione
-      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      // cambia i grammi di questa riga della previsione (la stessa che vedi a schermo)
+      const line = vistaPrevisione().split("\n").filter((x) => x.trim())[+el.dataset.i];
       if (!line) break;
       const cur = (line.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, ""])[1];
       return openDialog(`
@@ -3172,10 +3172,14 @@ function act(a, el) {
         <button class="btn primary wide" data-act="plan-grams-save" data-i="${el.dataset.i}">Salva</button>`);
     }
     case "plan-grams-save": {
-      const lines = sortPlanLines(S.plannedDinner);
-      const idx = +el.dataset.i;
+      // la riga viene cercata per testo nel piano salvato: la posizione a schermo puo non coincidere
+      const visti = vistaPrevisione().split("\n").filter((x) => x.trim());
+      const target = visti[+el.dataset.i];
+      const lines = (S.plannedDinner || "").split("\n");
+      let idx = lines.indexOf(target);
+      if (idx < 0 && target) idx = lines.findIndex((l) => foodGroup(foodKey(l)) === foodGroup(foodKey(target)));
       const g = val("#pg-g").replace(",", ".").trim();
-      if (!lines[idx] || !(+g > 0)) return toast("Inserisci i grammi");
+      if (idx < 0 || !lines[idx] || !(+g > 0)) return toast("Inserisci i grammi");
       lines[idx] = lines[idx].replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${g}$2g`);
       // se il cibo non e bloccato, chiedo subito: senza blocco il ricalcolo potrebbe toglierlo
       if (!/bloccat/i.test(lines[idx]) && confirm(`Bloccare ${lines[idx].replace(/,\s*[\d.,]+\s*g\b.*$/i, "")} a ${g} g per oggi? Cosi il ricalcolo non lo toglie.`)) lines[idx] = lines[idx] + ", bloccato";
@@ -3185,7 +3189,7 @@ function act(a, el) {
     }
     case "plan-block-one": {
       // blocca: il cibo resta nella previsione e non viene ridotto dal ricalcolo, ma non passa tra i mangiati
-      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      const line = vistaPrevisione().split("\n").filter((x) => x.trim())[+el.dataset.i];
       if (!line) break;
       const next = /bloccato/i.test(line) ? line.replace(/,?\s*bloccato\b/ig, "").trim() : line.trim() + ", bloccato";
       S.plannedDinner = S.plannedDinner.split("\n").map((x) => (x === line ? next : x)).join("\n");
@@ -3194,7 +3198,7 @@ function act(a, el) {
     }
     case "plan-fav": {
       // il preferito della riga va nella lista "I miei cibi preferiti": lo aggiunge o lo toglie
-      const line = sortPlanLines(S.plannedDinner)[+el.dataset.i];
+      const line = vistaPrevisione().split("\n").filter((x) => x.trim())[+el.dataset.i];
       if (!line) break;
       const nome = foodKey(line).replace(/:.*$/, "").split(/ con /)[0].trim();
       const primo = (line.split(/ con /)[0] || "").replace(/,?\s*[\d.,]+\s*g\b.*$/i, "").replace(/\s*\(.*?\)\s*$/, "").trim();
