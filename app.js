@@ -3199,6 +3199,8 @@ function act(a, el) {
     case "plan-regen": {
       // dopo Rigenera la previsione si chiude: si riapre col pulsante, senza scorrere
       view.planOpen = false;
+      // le righe bloccate restano come le hai scritte (stessi grammi), anche dopo Rigenera
+      const bloccatePrima = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && /bloccat/i.test(l));
       // toglie solo le proposte automatiche (albume, yogurt, tacchino, pane, verdura e quelle gia generate), tiene le righe scritte a mano
       const autoRe = /^(albume|yogurt greco 0%|proteine in polvere|just whey|cotoletta di tacchino|petto di tacchino cotto|pane bianco|pasta integrale|pasta di semola|riso|verdura cotta senza condimento)\b/i;
       const known = new Set(S.autoAll || []);
@@ -3215,6 +3217,7 @@ function act(a, el) {
       S.autoAll = gen; S.autoLines = gen;
       // Rigenera compatta la lista: un cibo compare una volta sola, anche se e stato proposto piu volte
       let tutte = tieniUnPreferito([...kept, ...gen]);
+      tutte = [...bloccatePrima, ...tutte.filter((l) => !/bloccat/i.test(l) && !bloccatePrima.some((b) => foodGroup(foodKey(b)) === foodGroup(foodKey(l))))];
       // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
       const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
       // priorita ai carboidrati: entro il 20% in piu del target, il resto va tolto (non bloccato) o ridotto
