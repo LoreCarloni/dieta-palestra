@@ -3157,7 +3157,8 @@ function act(a, el) {
     }
     case "fv-add": {
       S.plannedDinner = [S.plannedDinner, `${el.dataset.name}, ${el.dataset.g} g`].filter((x) => x && x.trim()).join("\n");
-      closeDialog(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
+      // la finestra resta aperta: si puo aggiungere subito un altro cibo
+      render(); toast(`${el.dataset.name} aggiunto alla previsione`); break;
     }
     case "plan-grams": {
       // cambia i grammi di questa riga della previsione (la stessa che vedi a schermo)
