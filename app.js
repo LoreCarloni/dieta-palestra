@@ -2907,7 +2907,8 @@ function act(a, el) {
       const tolte = (S.plannedDinner || "").split("\n").filter((l) => l.trim() && !gruppi.includes(foodGroup(foodKey(l))));
       S.plannedDinner = [...tolte, nuova].filter((x) => x && x.trim()).join("\n");
       S.planManual = false;
-      save(); toast(`${trovati[0].hit.name} bloccato per ${pasto}`); render();
+      S.lastAdded = nuova;
+      save(); toast(`${trovati[0].hit.name} bloccato per oggi (${pasto})`); render();
       break;
     }
     case "pl-pick": {
@@ -3154,7 +3155,10 @@ function act(a, el) {
       const g = val("#pg-g").replace(",", ".").trim();
       if (!lines[idx] || !(+g > 0)) return toast("Inserisci i grammi");
       lines[idx] = lines[idx].replace(/(\d+(?:[.,]\d+)?)(\s*)g\b/, `${g}$2g`);
+      // se il cibo non e bloccato, chiedo subito: senza blocco il ricalcolo potrebbe toglierlo
+      if (!/bloccat/i.test(lines[idx]) && confirm(`Bloccare ${lines[idx].replace(/,\s*[\d.,]+\s*g\b.*$/i, "")} a ${g} g per oggi? Cosi il ricalcolo non lo toglie.`)) lines[idx] = lines[idx] + ", bloccato";
       S.plannedDinner = lines.join("\n");
+      S.lastAdded = lines[idx];
       closeDialog(); toast("Grammi aggiornati"); break;
     }
     case "plan-block-one": {
