@@ -1637,7 +1637,8 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
     const fd = byName(key);
     const badge = fd ? sourceBadge(fd) : "";
     const pastoRiga = (x.match(/\((colazione|pranzo|spuntino|cena)\)/i) || [])[1] || "";
-    const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/i, "");
+    // nel titolo solo il nome del cibo: i grammi sono nel pulsante qui sotto
+    const shown = x.replace(/,?\s*bloccato\b/i, "").replace(/^Aggiungi alimento\s*/i, "").replace(/\s*\((colazione|pranzo|spuntino|cena)\)/i, "").replace(/,\s*[\d.,]+\s*g\b/gi, "");
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const its = parseDiary(x);
     const nums = its.length ? `<span class="muted small">${Math.round(its.reduce((a, y) => a + y.kcal, 0))} kcal, C ${Math.round(its.reduce((a, y) => a + (y.c || 0), 0))} g</span>` : `<span class="muted small">valori mancanti</span>`;
