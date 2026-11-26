@@ -323,6 +323,8 @@ const pastoDiDefault = (nome) => {
   if (/yogurt/.test(nome)) return "colazione";
   if (/pasta|riso|pane/.test(nome)) return "pranzo";
   if (/albume|latte|fiocchi|cereal/.test(nome)) return "spuntino";
+  // carne e pesce non si mangiano a cena: di default vanno a pranzo
+  if (/pollo|tacchino|cotolett|fesa|petto|manzo|carne|pesce|tonno|merluzzo|nasello|salmone|gyros|polpett|salsiccia/.test(nome)) return "pranzo";
   return "cena";
 };
 // l'ora dopo la quale un pasto di oggi non viene piu proposto
