@@ -414,8 +414,11 @@ function proteinFiller(k, righe) {
   const famiglia = (nome) => (/tonno|merluzzo/i.test(nome) ? "pesce" : /pollo|tacchino|fesa|petto/i.test(nome) ? "carne" : "altro");
   const pesceGia = righe.some((l) => /tonno|merluzzo|nasello|salmone|pesce/i.test(l));
   const carneGia = righe.some((l) => /pollo|tacchino|cotolett|fesa|petto|manzo|polpett|salsiccia/i.test(l));
+  // le uova hanno anche grassi: le propongo solo se restano grassi da coprire
+  const grassiLeft = tg.fat - t.f - pd.reduce((a, x) => a + (x.f || 0), 0);
   const scelto = candidati.find(([nome]) => {
     if (ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) || escluso(nome, k)) return false;
+    if (/uova/i.test(nome) && grassiLeft < 15) return false;
     const f = famiglia(nome);
     if (f === "pesce" && carneGia) return false;
     if (f === "carne" && pesceGia) return false;
