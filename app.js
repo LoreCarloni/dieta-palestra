@@ -1349,6 +1349,17 @@ function favoriteFoods(k) {
   void out;
   return pref.slice(0, 12);
 }
+// media dei carboidrati degli ultimi 7 giorni registrati: se supera il target, la previsione non propone pasta o pane
+function carbiSettimanaSopra(k) {
+  let somma = 0, giorni = 0;
+  for (let i = 1; i <= 7; i++) {
+    const d = day(addDays(k, -i));
+    if (!((d.meals || []).length + (d.drinks || []).length)) continue;
+    giorni++;
+    somma += (d.meals || []).reduce((a, m) => a + (m.c || 0), 0) + (d.drinks || []).reduce((a, x) => a + (x.c || 0), 0);
+  }
+  return giorni > 0 && somma / giorni > baseTargets(k).carbs + 5;
+}
 function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   const t = totals(k), tg = targets(k);
   const src = [...blockedText.split("\n").filter((x) => x.trim()).map((l) => l.trim() + ", bloccato"), ...planText.split("\n").filter((x) => x.trim())];
@@ -1524,7 +1535,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   }
   // carboidrati: pasta solo se entra e se servono
   // pasta a pranzo: la quantità che entra nei carboidrati rimasti, anche se le calorie sono strette
-  if (needC > 4 && !gia("Pasta") && !gia("Pane")) {
+  if (needC > 4 && !gia("Pasta") && !gia("Pane") && !carbiSettimanaSopra(k)) {
     // carboidrati aggiunti solo se stanno nelle calorie rimaste: mai oltre il fabbisogno della giornata
     const pg = Math.min(60, Math.round((needC / 0.64) / 5) * 5, Math.floor(Math.max(0, needK) / 3.4 / 5) * 5);
     if (pg >= 40) add("Pasta integrale", pg, PAS); // la pasta si blocca per il pasto scelto, come ogni altro cibo
@@ -1537,7 +1548,7 @@ function autoPlan(blockedText = "", planText = "", k = todayKey()) {
   for (let giro = 0; giro < 12; giro++) {
     let fatto = false;
     if (needF() > 5 && needK > 201 && nocciolePorzioni < 4) { addSum("Nocciole", 30, [671, 13.8, 6.1, 64.1]); nocciolePorzioni++; fatto = true; }
-    else if (needC > 10 && needK > 150) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { addSum("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
+    else if (needC > 10 && needK > 150 && !carbiSettimanaSopra(k)) { const g = Math.min(100, Math.floor(Math.min(needC / 0.595, needK / 2.68) / 10) * 10); if (g >= 30) { addSum("Pane bianco", g, [268, 8.1, 59.5, 0.5]); fatto = true; } }
     else if (needF() > 5 && needK > 90) { const riga = out.find((l) => /^olio/i.test(l)); const nomeOlio = riga ? riga.split(",")[0] : "Olio extravergine d'oliva"; const cucchiai = Math.min(3, Math.ceil(needF() / 9), Math.floor(needK / 90)); if (cucchiai >= 1) { addSum(nomeOlio, 10 * cucchiai, [900, 0, 0, 100]); fatto = true; } }
     else if (needP > 5 && needK > 120 && !out.concat(String(blockedText || "").split("\n"), String(planText || "").split("\n")).some((l) => /pollo|tacchino|cotolett|fesa|petto/i.test(l))) { const g = Math.min(300, Math.floor(Math.min(needP / 0.24, needK / 1.07) / 10) * 10); if (g >= 50) { addSum("Fesa di tacchino (cruda)", g, [107, 24, 0, 1.2]); fatto = true; } }
     if (!fatto) break;
