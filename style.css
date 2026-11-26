@@ -410,3 +410,12 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 .week-prot { margin-top: 10px; }
 .week-prot-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-bottom: 4px; }
 .week-prot-bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+/* Preferiti: ogni cibo e una riga separata, con i suoi comandi sotto il nome */
+.fav-section .fav-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.fav-section .fav-row:last-child { border-bottom: none; }
+.fav-section .fav-food { font-weight: 600; font-size: 0.95rem; }
+.fav-section .fav-plus { color: var(--muted, #6b7a99); font-size: 0.8rem; }
+.fav-section .fav-row .pa { font-size: 0.75rem; padding: 2px 8px; min-height: 26px; border-radius: 8px; opacity: 0.85; }
+.fav-section .fav-tools { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: 2px; }
+.fav-section .fav-slot { font-size: 0.75rem; padding: 2px 6px; border-radius: 8px; }
+.fav-section .fav-pair, .fav-section #fav-new { font-size: 0.9rem; }
