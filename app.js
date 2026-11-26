@@ -323,8 +323,8 @@ const pastoDiDefault = (nome) => {
   if (/yogurt/.test(nome)) return "colazione";
   if (/pasta|riso|pane/.test(nome)) return "pranzo";
   if (/albume|latte|fiocchi|cereal/.test(nome)) return "spuntino";
-  // carne e pesce non si mangiano a cena: di default vanno a pranzo
-  if (/pollo|tacchino|cotolett|fesa|petto|manzo|carne|pesce|tonno|merluzzo|nasello|salmone|gyros|polpett|salsiccia/.test(nome)) return "pranzo";
+  // il pesce di default va a pranzo, la carne a cena
+  if (/tonno|merluzzo|nasello|salmone|pesce/.test(nome)) return "pranzo";
   return "cena";
 };
 // l'ora dopo la quale un pasto di oggi non viene piu proposto
@@ -394,13 +394,25 @@ function proteinFiller(k, righe) {
   const out = [];
   const ha = (re) => righe.some((l) => re.test(l));
   // una sola proteina magra per volta, la prima che non e gia nella giornata e che non hai tolto oggi con la X
+  // proteine magre per la previsione: carne a cena, pesce a pranzo, mai carne e pesce nello stesso giorno
   const candidati = [
     ["Albume", 43, 10.7, 100, 270],
     ["Uova di gallina, intero, cotto, alla coque o sodo", 128, 12.4, 100, 200],
+    ["Petto di pollo (crudo)", 100, 23.3, 100, 250],
+    ["Fesa di tacchino (cruda)", 107, 24, 100, 300],
+    ["Tonno al naturale", 103, 25.1, 80, 240],
+    ["Merluzzo o nasello", 71, 17, 100, 300],
   ];
-  // se c'e gia pollame, non ne aggiungo altro: pesce e uova restano possibili, cosi le proteine arrivano al target
-  const haPollame = righe.some((l) => /pollo|tacchino|cotolett|fesa|petto|manzo/i.test(l));
-  const scelto = candidati.find(([nome]) => !ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) && !escluso(nome, k) && !(haPollame && /pollo|tacchino|fesa|petto/i.test(nome)));
+  const famiglia = (nome) => (/tonno|merluzzo/i.test(nome) ? "pesce" : /pollo|tacchino|fesa|petto/i.test(nome) ? "carne" : "altro");
+  const pesceGia = righe.some((l) => /tonno|merluzzo|nasello|salmone|pesce/i.test(l));
+  const carneGia = righe.some((l) => /pollo|tacchino|cotolett|fesa|petto|manzo|polpett|salsiccia/i.test(l));
+  const scelto = candidati.find(([nome]) => {
+    if (ha(new RegExp("^" + nome.split(/[ ,(]/)[0], "i")) || escluso(nome, k)) return false;
+    const f = famiglia(nome);
+    if (f === "pesce" && carneGia) return false;
+    if (f === "carne" && pesceGia) return false;
+    return true;
+  });
   // una sola proteina magra per sera: se ce n'e gia una nella previsione (anche preferita), non ne aggiungo un'altra
   if (scelto && needP > 5 && kLeft > 60) {
     const [nome, kc, pp, minG, maxG] = scelto;
