@@ -3204,7 +3204,8 @@ function act(a, el) {
       const leftK = targets(view.date).kcal - totals(view.date).kcal;
       const gen = plannedK > leftK ? [] : autoPlan(S.blockedToday || "", kept.join("\n"), view.date).split("\n").filter((x) => x.trim());
       S.autoAll = gen; S.autoLines = gen;
-      let tutte = [...kept, ...gen];
+      // Rigenera compatta la lista: un cibo compare una volta sola, anche se e stato proposto piu volte
+      let tutte = tieniUnPreferito([...kept, ...gen]);
       // se le voci bloccate superano le calorie rimaste, tolgo le voci non bloccate (dalla fine) finche entra
       const sopra = () => parseDiary(tutte.join("\n")).reduce((a, x) => a + x.kcal, 0) > leftK;
       // priorita ai carboidrati: entro il 20% in piu del target, il resto va tolto (non bloccato) o ridotto
