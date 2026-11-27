@@ -1251,6 +1251,7 @@ function renderProfile(first) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   const tg = S.profile ? targets(todayKey()) : null;
   return `
+  <button class="btn ghost wide" style="margin-bottom:14px" data-act="med-kcal">${T("Target calorie (medico)", "Medical calorie target")}: ${medicalKcal() || T("non impostato", "not set")}</button>
   <p class="muted small" style="text-align:center">${T("Versione dell'app: v337", "App version: v337")}</p>
   ${avvisoBackup()}
   ${copiaSicurezzaHtml()}
@@ -3377,6 +3378,16 @@ function act(a, el) {
     }
     case "adesso-compact": view.adessoCompatta = !view.adessoCompatta; break;
     case "plan-toggle": view.planOpen = view.planOpen === false; break;
+    case "med-kcal": {
+      // target calorie confermato dal medico: lo scrive l'utente, il codice non lo decide
+      const v = prompt("Target calorie confermato dal medico (kcal):", String(medicalKcal() || ""));
+      const n = parseInt(String(v || "").replace(/[^0-9]/g, ""), 10);
+      if (!(n > 0)) break;
+      S.myPlan = S.myPlan || [];
+      const voce = S.myPlan.find((x) => x.name === "Target kcal (medico)");
+      if (voce) voce.qty = String(n); else S.myPlan.push({ name: "Target kcal (medico)", qty: String(n) });
+      save(); toast(`Target medico: ${n} kcal`); break;
+    }
     case "plan-clear": {
       if (!confirm("Cancellare tutta la previsione di oggi?")) break;
       S.plannedDinner = "";
