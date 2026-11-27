@@ -405,7 +405,7 @@ function proteinFiller(k, righe) {
   // proteine magre per la previsione: carne a cena, pesce a pranzo, mai carne e pesce nello stesso giorno
   const candidati = [
     ["Albume", 43, 10.7, 100, 270],
-    ["Uova di gallina, intero, cotto, alla coque o sodo", 128, 12.4, 100, 200],
+    ["Uova sode", 128, 12.4, 60, 240],
     ["Petto di pollo (crudo)", 100, 23.3, 100, 150],
     ["Fesa di tacchino (cruda)", 107, 24, 100, 150],
     ["Tonno al naturale", 103, 25.1, 100, 150],
@@ -427,7 +427,9 @@ function proteinFiller(k, righe) {
   // una sola proteina magra per sera: se ce n'e gia una nella previsione (anche preferita), non ne aggiungo un'altra
   if (scelto && needP > 5 && kLeft > 60) {
     const [nome, kc, pp, minG, maxG] = scelto;
-    const g = Math.min(maxG, Math.round(needP / (pp / 100) / 10) * 10, Math.floor(kLeft / (kc / 100) / 10) * 10);
+    // le uova si contano a pezzi da 60 g
+    const gRaw = Math.min(maxG, Math.round(needP / (pp / 100) / 10) * 10, Math.floor(kLeft / (kc / 100) / 10) * 10);
+    const g = /uova/i.test(nome) ? Math.round(gRaw / 60) * 60 : gRaw;
     if (g >= minG) { out.push(`${nome}, ${g} g`); needP -= g * pp / 100; kLeft -= g * kc / 100; }
     // accanto alla proteina, l'insalata: poche calorie, e riempie il piatto
     if (!ha(/^insalata/i) && !escluso("Insalata", k) && kLeft >= 22) out.push("Insalata, 100 g");

@@ -135,7 +135,7 @@ const FOODS = [
   ["Gyros (pita con carne)",250,15,20,12,250,"Piatti pronti","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Uva sultanina",299,3.1,79,0.5,30,"Frutta","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
   ["Frutta secca mista",600,16,17,50,30,"Frutta secca","Stima (non verificata): valori indicativi, da confermare con l'etichetta"],
-  ["Uova sode",128,12.4,0,8.7,100,"Proteine","CREA 2019: Uova di gallina, intero, cotto, alla coque o sodo"],
+  ["Uova sode",128,12.4,0,8.7,60,"Proteine","CREA 2019: Uova di gallina, intero, cotto, alla coque o sodo",60],
   ["American sandwich (Morato)",254,9.2,49,2.1,39,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
   ["Acty Flakes",391,10,73,5,30,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
   ["Pasta Rummo integrale",271,10,50,2,78,"Archivio","Archivio personale: valori dal backup per 100 g, da confermare"],
