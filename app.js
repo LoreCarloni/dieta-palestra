@@ -244,7 +244,8 @@ function targets(k) {
   const refW = Math.min(b.w, (S.profile.goalWeight || b.w) + 10);
   const protein = Math.round((plan ? 2.2 : 2.0) * refW);
   const med = medicalKcal();
-  let kcal = plan ? (med > 0 ? med : Math.max(0, b.kcal - plan.cutKcal)) : b.kcal;
+  // il target confermato dal medico vale sempre, anche nei giorni normali
+  let kcal = med > 0 ? med : (plan ? Math.max(0, b.kcal - plan.cutKcal) : b.kcal);
   // recupero: l'eccesso di carboidrati del giorno prima toglie grammi di carboidrati da oggi, le calorie restano quelle del target
   // l'eccesso di carboidrati di ieri (cibi e bevande registrati) si calcola direttamente dai dati di ieri, senza bisogno di premere Rigenera
   const debito = debitoAccumulato(k);
