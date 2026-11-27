@@ -425,4 +425,4 @@ dialog { overscroll-behavior: contain; touch-action: pan-y; }
 /* Preferiti: i tasti tornano leggibili, il menu del pasto resta piccolo */
 .fav-section .fav-row .pa { font-size: 0.9rem; padding: 6px 12px; min-height: 36px; opacity: 1; border-radius: 10px; }
 /* Barra in basso: testo piu grande e tasti piu facili da toccare */
-.nav button { font-size: 0.8rem; padding: 14px 2px; min-height: 52px; }
+.nav button { font-size: 0.8rem; padding: 8px 2px; min-height: 40px; }
