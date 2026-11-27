@@ -1627,6 +1627,12 @@ function planLeggeHtml() {
   if (!righe.length) return `<p class="muted small">Tocca il titolo per creare la previsione.</p>`;
   return righe.map((x) => { const it = parseDiary(x)[0]; return `<div class="plan-item"><span class="plan-name">${esc(x.replace(/,?\s*bloccato\b/i, ""))}</span> ${it ? `<span class="muted small">${Math.round(it.kcal)} kcal</span>` : ""}</div>`; }).join("");
 }
+// quantita come la vedi: per le uova il numero di pezzi (da 60 g), per il resto i grammi
+function etichettaQuantita(x) {
+  const g = Number(String((x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "0"])[1]).replace(",", "."));
+  if (/uova/i.test(x) && g > 0) { const n = Math.max(1, Math.round(g / 60)); return `${n} ${n === 1 ? "uovo" : "uova"}`; }
+  return `${g || "?"} g`;
+}
 function planItemsHtml(conFrecce = true, pastoFiltro = null) {
   const lines = vistaPrevisione().split("\n").filter((x) => x.trim());
   if (!lines.length && (S.plannedDinner || "").trim()) return `<p class="muted small">Hai già superato calorie o carboidrati di oggi: la previsione non propone altro cibo. Le righe bloccate, se ci sono, restano visibili.</p>`;
@@ -1644,7 +1650,7 @@ function planItemsHtml(conFrecce = true, pastoFiltro = null) {
     // calorie e carboidrati di questa riga: se un valore e assurdo si vede subito
     const its = parseDiary(x);
     const nums = its.length ? `<span class="muted small">${Math.round(its.reduce((a, y) => a + y.kcal, 0))} kcal, C ${Math.round(its.reduce((a, y) => a + (y.c || 0), 0))} g</span>` : `<span class="muted small">valori mancanti</span>`;
-    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button>${pastoRiga ? ` <span class="muted small">a ${pastoRiga}</span>` : ""} ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">${T("Mangiato","Eaten")}</button><button class="pa" data-act="plan-grams" data-i="${i}">${(x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "?"])[1]} g</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? T("Bloccata", "Locked") : T("Blocca", "Lock")}</button>${rigaPreferita(x) ? `<button class="pa on" disabled>${T("Preferito", "Favorite")}</button>` : `<button class="pa" data-act="plan-fav" data-i="${i}">${T("Preferito", "Favorite")}</button>`}<button class="pa" data-act="plan-no-oggi" data-i="${i}">${T("Non oggi","Not today")}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
+    return `<div class="plan-item${S.lastAdded === x ? " nuovo" : ""}"><button class="link plan-name" data-act="plan-values" data-i="${i}">${esc(shown)}</button>${pastoRiga ? ` <span class="muted small">a ${pastoRiga}</span>` : ""} ${badge} ${nums}<div class="plan-acts">${conFrecce ? `<button class="pa" data-act="plan-up" data-i="${i}" aria-label="Sposta su">▲</button><button class="pa" data-act="plan-down" data-i="${i}" aria-label="Sposta giù">▼</button>` : ""}<button class="pa" data-act="plan-eat-one" data-i="${i}">${T("Mangiato","Eaten")}</button><button class="pa" data-act="plan-grams" data-i="${i}">${etichettaQuantita(x)}</button><button class="pa${/bloccato/i.test(x) ? " on" : ""}" data-act="plan-block-one" data-i="${i}">${/bloccato/i.test(x) ? T("Bloccata", "Locked") : T("Blocca", "Lock")}</button>${rigaPreferita(x) ? `<button class="pa on" disabled>${T("Preferito", "Favorite")}</button>` : `<button class="pa" data-act="plan-fav" data-i="${i}">${T("Preferito", "Favorite")}</button>`}<button class="pa" data-act="plan-no-oggi" data-i="${i}">${T("Non oggi","Not today")}</button><button class="pa" data-act="plan-del-one" data-i="${i}" aria-label="Togli questa riga">×</button></div></div>`;
   }).join("");
 }
 function myPlanCard() {
