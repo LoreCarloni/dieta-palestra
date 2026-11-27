@@ -1282,6 +1282,7 @@ function renderProfile(first) {
       <div class="stat"><div class="muted small">Grassi</div><div class="stat-v">${tg.fat} g</div></div>
       <div class="stat"><div class="muted small">${T("Acqua", "Water")}</div><div class="stat-v">${r1(tg.water / 1000)} L</div></div>
       <div class="stat"><div class="muted small">${T("Metabolismo basale", "Basal metabolic rate")}</div><div class="stat-v">${r0(tg.bmr)}</div></div>
+      <div class="stat"><div class="muted small">${T("Confronto: Harris-Benedict", "Comparison: Harris-Benedict")}</div><div class="stat-v">${r0(harrisBenedict(weightAt(view.date), S.profile))}</div></div>
     </div>
     <p class="muted small">Calcolo Mifflin St Jeor. Gli obiettivi si aggiornano in automatico quando registri un nuovo peso.</p></section>
   <section class="card">
@@ -1632,6 +1633,11 @@ function etichettaQuantita(x) {
   const g = Number(String((x.match(/(\d+(?:[.,]\d+)?)\s*g\b/) || [0, "0"])[1]).replace(",", "."));
   if (/uova/i.test(x) && g > 0) { const n = Math.max(1, Math.round(g / 60)); return `${n} ${n === 1 ? "uovo" : "uova"}`; }
   return `${g || "?"} g`;
+}
+// Confronto con un'altra formula (Harris-Benedict rivista), che usa gli stessi dati: peso, altezza, eta e sesso
+function harrisBenedict(peso, p) {
+  const h = p.height, e = p.age;
+  return p.sex === "m" ? 88.362 + 13.397 * peso + 4.799 * h - 5.677 * e : 447.593 + 9.247 * peso + 3.098 * h - 4.330 * e;
 }
 function planItemsHtml(conFrecce = true, pastoFiltro = null) {
   const lines = vistaPrevisione().split("\n").filter((x) => x.trim());
