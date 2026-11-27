@@ -1672,12 +1672,12 @@ function myPlanCard() {
 // nelle finestre, toccare un pulsante non toglie il focus al campo: il primo tocco salva davvero, senza spostamenti
 // Salva delle finestre: il salvataggio parte al primo tocco, e il clic che segue viene ignorato
 document.addEventListener("pointerdown", (e) => {
-  const b = e.target.closest && e.target.closest("#dlg-body [data-act=\"save-entry\"]");
+  const b = e.target.closest && e.target.closest("#dlg-body button.btn.primary[data-act]");
   if (!b) { if (e.target.closest && e.target.closest("#dlg-body button")) e.preventDefault(); return; }
   e.preventDefault();
   window._saltaClic = true;
   setTimeout(() => { window._saltaClic = false; }, 600);
-  act("save-entry", b);
+  act(b.dataset.act, b);
 }, { passive: false });
 document.addEventListener("click", (e) => { if (window._saltaClic) { window._saltaClic = false; e.stopPropagation(); e.preventDefault(); } }, true);
 // swipe in giu: chiude la finestra quando il contenuto e in cima (con il dito in qualsiasi punto della finestra)
