@@ -4145,6 +4145,13 @@ async function pubblicaAlimentoScansionato(f) {
 }
 caricaAlimentiScansionati();
 
+// ripartenza del conto fumo da oggi, da 11 (una sola volta, sul dispositivo dell'autore)
+if (S.autore === true && S.fumo && S.fumo.ripartenzaKey !== "2026-11-28") {
+  S.fumo.scalaStart = todayKey();
+  S.fumo.scalaPartenza = 11;
+  S.fumo.ripartenzaKey = "2026-11-28";
+  save();
+}
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
